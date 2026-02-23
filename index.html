@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MC Centinela Financiero | Dashboard</title>
+    <style>
+        :root { --primary: #00ff88; --bg: #050505; --card: #111; --text: #fff; --dim: #888; --red: #ff3333; }
+        body { font-family: sans-serif; background: var(--bg); color: var(--text); margin: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh; }
+        
+        header { width: 100%; max-width: 1000px; padding: 15px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #222; flex-wrap: wrap; gap: 10px; }
+        .h-left { display: flex; align-items: center; gap: 12px; }
+        .logo img { height: 48px; border-radius: 50%; transition: 0.3s; }
+        .logo img:hover { transform: scale(1.1); box-shadow: 0 0 10px var(--primary); }
+        .brand { display: flex; flex-direction: column; }
+        .t-row { display: flex; align-items: center; gap: 6px; }
+        .m-title { font-size: 1rem; font-weight: 900; text-transform: uppercase; }
+        .live { background: var(--red); color: #fff; font-size: 8px; padding: 2px 5px; border-radius: 3px; font-weight: bold; animation: pulse 1.5s infinite; }
+        .sub { font-size: 0.6rem; color: var(--dim); text-transform: uppercase; letter-spacing: 1px; }
+        
+        .h-right { text-align: right; }
+        .status { color: var(--primary); font-size: 0.7rem; font-weight: bold; display: flex; align-items: center; justify-content: flex-end; gap: 5px; }
+        .dot { height: 6px; width: 6px; background: var(--primary); border-radius: 50%; box-shadow: 0 0 8px var(--primary); }
+        .clock { font-size: 0.6rem; color: var(--dim); margin-top: 4px; font-family: monospace; }
+
+        main { width: 100%; max-width: 600px; padding: 20px; }
+        .card { background: var(--card); border-radius: 12px; padding: 20px; border-left: 4px solid var(--primary); box-shadow: 0 10px 30px rgba(0,0,0,0.5); }
+        
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+        @media (max-width: 600px) { header { justify-content: center; text-align: center; } .h-right { width: 100%; text-align: center; } .status { justify-content: center; } }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="h-left">
+            <a href="https://www.instagram.com/3d_mc_3d/" target="_blank" class="logo">
+                <img src="https://avatars.githubusercontent.com/u/70527971?s=48&v=4" alt="Logo">
+            </a>
+            <div class="brand">
+                <div class="t-row">
+                    <span class="m-title">Centinela Financiero</span>
+                    <span class="live">LIVE</span>
+                </div>
+                <span class="sub">Protocolo de Inteligencia de Mercado</span>
+            </div>
+        </div>
+        <div class="h-right">
+            <div class="status"><span class="dot"></span> ONLINE</div>
+            <div id="time" class="clock">--:--:--</div>
+        </div>
+    </header>
+    <main>
+        <div class="card">
+            <h2 style="color:var(--primary); margin:0 0 10px 0;">SISTEMA OPERATIVO</h2>
+            <p style="font-size:0.9rem; color:#ccc;">El radar está activo. Reemplazá este texto con las alertas que genere la IA para visualizarlas en PC o Celular.</p>
+        </div>
+    </main>
+    <script>
+        function update() { document.getElementById('time').innerText = "ACTUALIZADO: " + new Date().toLocaleTimeString(); }
+        setInterval(update, 1000); update();
+    </script>
+</body>
+</html>
