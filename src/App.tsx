@@ -48,32 +48,45 @@ export default function App() {
   }, []);
 
   return (
-    <div className="min-h-screen bg-bg text-white selection:bg-primary/30 font-['Segoe_UI',_Tahoma,_Geneva,_Verdana,_sans-serif]">
-      {/* HEADER RESPONSIVO */}
-      <header className="w-full px-5 py-4 flex justify-between items-center bg-black/80 backdrop-blur-md sticky top-0 z-[100]">
-        <a href="https://www.instagram.com/3d_mc_3d/" target="_blank" rel="noopener noreferrer" className="logo-link">
-          <img 
-            src="https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/MC%2048%20N.png" 
-            alt="Logo Centinela" 
-            className="h-10 transition-transform duration-300 hover:scale-110"
-          />
-        </a>
-        <div className="flex items-center gap-4">
-          <div className="status-badge bg-[#111] border border-primary text-primary px-3 py-1 rounded-full text-[12px] font-bold uppercase">
-            Escaneo 360 Activo
+    <div className="min-h-screen bg-bg text-white selection:bg-primary/30 font-sans flex flex-col items-center">
+      {/* HEADER SUPERIOR DETALLADO */}
+      <header className="w-full max-w-[1200px] p-5 grid grid-cols-1 sm:grid-cols-[auto_1fr_auto] items-center gap-5 border-b border-[#222] box-border sticky top-0 bg-bg/80 backdrop-blur-md z-[100]">
+        <div className="flex items-center">
+          <a href="https://www.instagram.com/3d_mc_3d/" target="_blank" rel="noopener noreferrer">
+            <img 
+              src="https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/MC%2048%20N.png" 
+              alt="MC Logo" 
+              className="h-[50px] cursor-pointer transition-all duration-300 hover:brightness-125"
+            />
+          </a>
+        </div>
+
+        <div className="flex flex-col">
+          <div className="flex items-center gap-[10px]">
+            <span className="text-[1.2rem] font-extrabold tracking-[1px] uppercase">Centinela Financiero</span>
+            <span className="bg-[#ff0000] text-white text-[10px] px-[6px] py-[2px] rounded-[4px] font-bold animate-pulse-custom">LIVE</span>
+          </div>
+          <span className="text-[0.75rem] text-text-dim uppercase tracking-[2px] mt-[2px]">Protocolo de Inteligencia de Mercado</span>
+        </div>
+
+        <div className="text-left sm:text-right font-mono">
+          <div className="text-primary text-[0.8rem] flex items-center sm:justify-end gap-[5px]">
+            <span className="h-2 w-2 bg-primary rounded-full inline-block"></span> Estado del Sistema: Online
+          </div>
+          <div className="text-[0.7rem] text-text-dim mt-1">
+            Última actualización: {lastScan || '--:--:--'}
           </div>
           <button 
             onClick={handleScan}
             disabled={loading}
-            className="p-2 bg-primary/10 border border-primary/30 text-primary rounded-full hover:bg-primary/20 transition-colors disabled:opacity-50"
-            title="Actualizar Escaneo"
+            className="mt-2 p-1 px-3 bg-primary/10 border border-primary/30 text-primary rounded-full hover:bg-primary/20 transition-colors disabled:opacity-50 text-[10px] uppercase font-bold"
           >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? 'Escaneando...' : 'Escanear Ahora'}
           </button>
         </div>
       </header>
 
-      <main className="w-[90%] max-w-[800px] mx-auto py-5 space-y-6">
+      <main className="w-[95%] max-w-[800px] mt-[30px] space-y-6">
         <AnimatePresence mode="wait">
           {loading ? (
             <motion.div 
@@ -81,7 +94,7 @@ export default function App() {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="relative h-64 flex flex-col items-center justify-center space-y-4 border border-white/5 bg-card-bg rounded-xl overflow-hidden"
+              className="relative h-64 flex flex-col items-center justify-center space-y-4 border border-[#222] bg-card-bg rounded-xl overflow-hidden"
             >
               <div className="scan-line" />
               <RefreshCw className="w-12 h-12 text-primary animate-spin" />
@@ -143,14 +156,16 @@ function AlertCard({ alert }: { alert: MarketAlert }) {
   const isNegative = alert.verdict === 'SALIR';
 
   return (
-    <div className="card bg-card-bg rounded-[15px] p-[25px] border-l-[5px] border-primary shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
-      <div className="verdict-badge inline-block bg-primary text-black px-[15px] py-[5px] rounded-[5px] font-bold mb-[15px] uppercase text-sm">
+    <div className="alerta-card bg-card-bg border border-[#222] rounded-[12px] p-[25px] relative overflow-hidden">
+      <div className="absolute top-0 left-0 w-1 h-full bg-primary" />
+      
+      <div className="inline-block bg-primary text-black px-[15px] py-[5px] rounded-[5px] font-bold mb-[15px] uppercase text-xs">
         VEREDICTO: {alert.verdict}
       </div>
       
       <h2 className="m-0 mb-[10px] text-[1.5rem] font-bold">🚨 ALERTA: {alert.assetName}</h2>
       
-      <div className="audit-info bg-[#222] p-[10px] rounded-[8px] text-[0.9rem] text-primary mb-[15px]">
+      <div className="bg-[#222] p-[10px] rounded-[8px] text-[0.9rem] text-primary mb-[15px]">
         <strong>AUDITORÍA:</strong> Se analizaron {alert.sourcesAnalyzedCount} sitios web y fuentes financieras en tiempo real.
       </div>
 
