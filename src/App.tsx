@@ -65,7 +65,7 @@ export default function App() {
           <div className="logo-container">
             <a href="https://www.instagram.com/3d_mc_3d/" target="_blank" rel="noopener noreferrer">
               <img 
-                src="https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/MC%2048%20N.png" 
+                src="https://avatars.githubusercontent.com/u/70527971?s=48&v=4" 
                 alt="MC Logo" 
                 className="h-[45px] max-[480px]:h-[38px] w-auto block transition-all duration-300 hover:scale-105 hover:drop-shadow-[0_0_8px_var(--color-primary)]"
               />
@@ -175,8 +175,8 @@ export default function App() {
         </AnimatePresence>
       </main>
 
-      <footer className="text-[0.7rem] text-[#444] mt-auto pb-8 text-center uppercase tracking-[2px]">
-        &copy; 2026 Centinela Financiero - Grado Institucional - v2.0
+      <footer className="text-[0.65rem] text-[#444] mt-auto pb-8 text-center uppercase tracking-[2px]">
+        &copy; 2026 Centinela Financiero v4.5 - Grado Institucional
       </footer>
     </div>
   );
