@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centinela Financiero - IA Proactiva</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Lucide Icons CDN -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&family=JetBrains+Mono:wght@400;500&display=swap');
+
+        :root {
+            --color-primary: #00ff88;
+            --color-bg: #050505;
+            --color-card-bg: #111111;
+            --color-text-dim: #888888;
+        }
+
+        body {
+            background-color: var(--color-bg);
+            color: white;
+            font-family: 'Inter', sans-serif;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .font-mono {
+            font-family: 'JetBrains Mono', monospace;
+        }
+
+        .scan-line {
+            height: 2px;
+            background: linear-gradient(to right, transparent, var(--color-primary), transparent);
+            position: absolute;
+            width: 100%;
+            top: 0;
+            animation: scan 3s linear infinite;
+        }
+
+        @keyframes scan {
+            0% { top: 0; }
+            100% { top: 100%; }
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .animate-pulse-custom {
+            animation: pulse 1.5s infinite;
+        }
+
+        .bg-bg { background-color: var(--color-bg); }
+        .bg-card-bg { background-color: var(--color-card-bg); }
+        .text-primary { color: var(--color-primary); }
+        .border-primary { border-color: var(--color-primary); }
+        .text-text-dim { color: var(--color-text-dim); }
+
+        .alert-card {
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .alert-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 30px rgba(0, 255, 136, 0.1);
+        }
+
+        .hidden { display: none; }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #0a0a0a;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #222;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="selection:bg-emerald-500/30">
+
+    <!-- HEADER -->
+    <header class="w-full max-w-[1000px] p-[15px_20px] flex justify-between items-center border-b border-[#222] sticky top-0 bg-bg z-[100]">
+        <div class="flex items-center gap-3">
+            <div class="logo-container">
+                <a href="https://www.instagram.com/3d_mc_3d/" target="_blank" rel="noopener noreferrer">
+                    <img 
+                        src="https://avatars.githubusercontent.com/u/70527971?s=48&v=4" 
+                        alt="MC Logo" 
+                        class="h-[45px] sm:h-[38px] w-auto block transition-all duration-300 hover:scale-105"
+                    />
+                </a>
+            </div>
+            <div class="flex flex-col">
+                <div class="flex items-center gap-1.5">
+                    <span class="text-[1rem] sm:text-[0.85rem] font-black uppercase tracking-[0.5px]">Centinela Financiero</span>
+                    <span class="bg-[#ff3333] text-white text-[8px] px-[5px] py-[2px] rounded-[3px] font-bold animate-pulse-custom">LIVE</span>
+                </div>
+                <span class="text-[0.6rem] sm:text-[0.55rem] text-text-dim uppercase tracking-[1px] mt-[2px]">Protocolo de Inteligencia de Mercado</span>
+            </div>
+        </div>
+
+        <div class="text-right min-w-[80px]">
+            <div class="text-primary text-[0.7rem] font-bold flex items-center justify-end gap-[5px]">
+                <span class="h-[6px] w-[6px] bg-primary rounded-full inline-block shadow-[0_0_8px_#00ff88]"></span> 
+                ONLINE
+            </div>
+            <div id="current-time" class="text-[0.6rem] text-text-dim mt-[3px] font-mono">
+                --:--:--
+            </div>
+            <button 
+                id="scan-btn"
+                class="mt-2 p-1 px-3 bg-emerald-500/10 border border-emerald-500/30 text-primary rounded-full hover:bg-emerald-500/20 transition-colors text-[9px] uppercase font-bold tracking-wider"
+            >
+                Escanear
+            </button>
+        </div>
+    </header>
+
+    <main id="main-content" class="w-full max-w-[600px] p-5">
+        <!-- INITIAL STATE -->
+        <div id="empty-state" class="p-8 border-l-4 border-l-emerald-500 bg-card-bg rounded-xl text-left space-y-4 shadow-[0_10px_30px_rgba(0,0,0,0.5)]">
+            <h2 class="text-lg font-black tracking-tight uppercase text-primary">Sistema Operativo</h2>
+            <div class="bg-[#1a1a1a] p-2.5 rounded-md text-[0.75rem] text-primary border border-[#222]">
+                Estado: Escaneo Proactivo Activo
+            </div>
+            <p class="text-[#ccc] text-sm">
+                El radar de mercado está encendido. Analizando Merval, Wall Street y Crypto.
+            </p>
+            <p class="text-[#ccc] text-sm">
+                Haz clic en "Escanear" para iniciar la simulación del protocolo de investigación.
+            </p>
+        </div>
+
+        <!-- LOADING STATE -->
+        <div id="loading-state" class="hidden relative h-64 flex flex-col items-center justify-center space-y-4 border border-[#222] bg-card-bg rounded-xl overflow-hidden">
+            <div class="scan-line"></div>
+            <i data-lucide="refresh-cw" class="w-12 h-12 text-primary animate-spin"></i>
+            <div class="text-center px-4">
+                <p class="text-lg font-bold tracking-widest animate-pulse uppercase">Ejecutando Protocolo</p>
+                <p class="text-xs text-white/40 uppercase mt-2">Rastreando portales, blogs y boletines internacionales...</p>
+            </div>
+        </div>
+
+        <!-- ALERTS LIST -->
+        <div id="alerts-list" class="hidden space-y-5">
+            <!-- Alert cards will be injected here -->
+        </div>
+    </main>
+
+    <footer class="text-[0.65rem] text-[#444] mt-auto pb-8 text-center uppercase tracking-[2px]">
+        &copy; 2026 Centinela Financiero v5.5 - Grado Institucional
+    </footer>
+
+    <script>
+        // MOCK DATA (Simulación de IA)
+        const MOCK_ALERTS = [
+            {
+                assetName: "Bitcoin (BTC)",
+                verdict: "ENTRAR",
+                confidence: 9,
+                reliability: "ALTA",
+                sources: ["CoinDesk", "Bloomberg", "Glassnode"],
+                sourcesAnalyzedCount: 24,
+                dataCrossAnalysis: "Fuerte acumulación institucional detectada en niveles de soporte clave. El sentimiento social es extremadamente alcista tras la aprobación de nuevos ETFs.",
+                recommendedAction: "Compra promediada en zona de $62,000 - $64,000.",
+                stopLoss: "$58,500",
+                timeframe: "Medio"
+            },
+            {
+                assetName: "Merval (Argentina)",
+                verdict: "MANTENER",
+                confidence: 7,
+                reliability: "MEDIA",
+                sources: ["Ámbito", "Cronista", "Rava"],
+                sourcesAnalyzedCount: 18,
+                dataCrossAnalysis: "El mercado local muestra señales mixtas. La volatilidad política está compensada por el ingreso de capitales extranjeros en el sector energético.",
+                recommendedAction: "No aumentar exposición hasta confirmación de tendencia en el sector bancario.",
+                stopLoss: "N/A",
+                timeframe: "Corto"
+            },
+            {
+                assetName: "NVIDIA (NVDA)",
+                verdict: "SALIR",
+                confidence: 8,
+                reliability: "ALTA",
+                sources: ["CNBC", "Reuters", "MarketWatch"],
+                sourcesAnalyzedCount: 32,
+                dataCrossAnalysis: "Indicadores de sobrecompra extrema en el RSI. Toma de ganancias masiva por parte de insiders detectada en los últimos 3 días.",
+                recommendedAction: "Venta total o parcial para asegurar beneficios antes de la corrección técnica.",
+                stopLoss: "$850",
+                timeframe: "Corto"
+            }
+        ];
+
+        // UI ELEMENTS
+        const scanBtn = document.getElementById('scan-btn');
+        const currentTimeEl = document.getElementById('current-time');
+        const emptyState = document.getElementById('empty-state');
+        const loadingState = document.getElementById('loading-state');
+        const alertsList = document.getElementById('alerts-list');
+
+        // INITIALIZE ICONS
+        lucide.createIcons();
+
+        // CLOCK
+        function updateClock() {
+            const now = new Date();
+            currentTimeEl.textContent = now.toLocaleTimeString();
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // SCAN LOGIC (Simulado)
+        function performScan() {
+            showState('loading');
+
+            // Simulamos un retraso de procesamiento de "IA"
+            setTimeout(() => {
+                renderResults(MOCK_ALERTS);
+            }, 2500);
+        }
+
+        function showState(state) {
+            emptyState.classList.add('hidden');
+            loadingState.classList.add('hidden');
+            alertsList.classList.add('hidden');
+
+            if (state === 'loading') loadingState.classList.remove('hidden');
+            else if (state === 'results') alertsList.classList.remove('hidden');
+            else emptyState.classList.remove('hidden');
+        }
+
+        function renderResults(alerts) {
+            alertsList.innerHTML = '';
+            alerts.forEach(alert => {
+                const card = createAlertCard(alert);
+                alertsList.appendChild(card);
+            });
+
+            showState('results');
+            lucide.createIcons();
+        }
+
+        function createAlertCard(alert) {
+            const isPositive = alert.verdict === 'ENTRAR';
+            const isNegative = alert.verdict === 'SALIR';
+            
+            const div = document.createElement('div');
+            div.className = `alert-card bg-card-bg border border-[#222] rounded-[12px] p-[20px] relative overflow-hidden border-l-4 ${
+                isPositive ? 'border-l-emerald-500' : isNegative ? 'border-l-red-500' : 'border-l-yellow-500'
+            } shadow-[0_10px_30px_rgba(0,0,0,0.5)]`;
+
+            div.innerHTML = `
+                <div class="flex flex-wrap items-center gap-3 mb-3">
+                    <div class="px-[12px] py-[4px] rounded-[4px] font-black uppercase text-[9px] tracking-widest ${
+                        isPositive ? 'bg-emerald-500 text-black' : isNegative ? 'bg-red-500 text-white' : 'bg-yellow-500 text-black'
+                    }">
+                        VEREDICTO: ${alert.verdict}
+                    </div>
+                    <div class="text-[10px] text-text-dim font-bold uppercase tracking-wider flex items-center gap-1">
+                        <i data-lucide="clock" class="w-3 h-3"></i> ${alert.timeframe}
+                    </div>
+                </div>
+
+                <h3 class="text-xl font-black tracking-tight mb-1 uppercase">${alert.assetName}</h3>
+                
+                <div class="flex items-center gap-4 mb-4">
+                    <div class="flex flex-col">
+                        <span class="text-[0.6rem] text-text-dim uppercase font-bold">Confianza</span>
+                        <span class="text-sm font-mono text-primary">${alert.confidence}/10</span>
+                    </div>
+                    <div class="h-8 w-[1px] bg-[#222]"></div>
+                    <div class="flex flex-col">
+                        <span class="text-[0.6rem] text-text-dim uppercase font-bold">Fiabilidad</span>
+                        <span class="text-sm font-bold ${
+                            alert.reliability === 'ALTA' ? 'text-emerald-400' : alert.reliability === 'MEDIA' ? 'text-yellow-400' : 'text-red-400'
+                        }">${alert.reliability}</span>
+                    </div>
+                </div>
+
+                <div class="space-y-3">
+                    <div class="bg-black/40 p-3 rounded-lg border border-[#222]">
+                        <p class="text-[0.7rem] leading-relaxed text-[#aaa]">
+                            <strong class="text-white uppercase text-[0.6rem] block mb-1">Análisis de Datos:</strong>
+                            ${alert.dataCrossAnalysis}
+                        </p>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-emerald-500/5 border border-emerald-500/20 p-2 rounded">
+                            <span class="text-[0.55rem] text-emerald-400 uppercase font-black block">Acción Recomendada</span>
+                            <span class="text-[0.75rem] font-bold">${alert.recommendedAction}</span>
+                        </div>
+                        <div class="bg-red-500/5 border border-red-500/20 p-2 rounded">
+                            <span class="text-[0.55rem] text-red-400 uppercase font-black block">Stop Loss Sugerido</span>
+                            <span class="text-[0.75rem] font-bold">${alert.stopLoss}</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-[#222] flex justify-between items-center">
+                    <span class="text-[0.6rem] text-text-dim uppercase">Fuentes Auditadas: ${alert.sourcesAnalyzedCount}</span>
+                    <div class="flex gap-1">
+                        ${alert.sources.slice(0, 3).map(s => `<span class="text-[8px] bg-[#1a1a1a] px-1.5 py-0.5 rounded text-text-dim border border-[#222]">${s}</span>`).join('')}
+                    </div>
+                </div>
+            `;
+
+            return div;
+        }
+
+        // EVENT LISTENERS
+        scanBtn.addEventListener('click', performScan);
+
+    </script>
+</body>
+</html>
