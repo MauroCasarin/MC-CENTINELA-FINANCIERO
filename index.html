@@ -378,9 +378,8 @@
             today: new Date('2026-02-25T00:00:00'),
             proxy: 'https://api.allorigins.win/raw?url=',
             tickers: [
-                { symbol: 'S31M6.BA', name: 'LECAP S31M6', maturity: '2026-03-31' },
-                { symbol: 'S30J6.BA', name: 'LECAP S30J6', maturity: '2026-06-30' },
-                { symbol: 'S30Y5.BA', name: 'LECAP S30Y5', maturity: '2025-05-30' }
+                { symbol: 'S31M6.BA', name: 'LECAP S31M6', maturity: '2026-03-31', targetValue: 100 },
+                { symbol: 'S30J6.BA', name: 'LECAP S30J6', maturity: '2026-06-30', targetValue: 100 }
             ],
             feeds: [
                 { id: 'AMB', name: 'Ámbito', url: 'https://www.ambito.com/rss/finanzas.xml', tagClass: 'tag-amb' },
@@ -545,7 +544,10 @@
                     const data = await res.json();
                     const sorted = data.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
                     if (sorted.length > 0) {
-                        this.state.pf_tna = sorted[0].valor * 100; // Convert to %
+                        let val = parseFloat(sorted[0].valor);
+                        // Corrección: Si viene en decimal (ej: 0.37), pasar a % (37). Si es > 1, asumir %.
+                        if (val < 1) val = val * 100;
+                        this.state.pf_tna = val;
                     } else {
                         this.state.pf_tna = DEFAULT_TNA;
                     }
@@ -652,8 +654,12 @@
                 let tem = 0;
                 
                 if (inst.price > 0 && days > 0) {
-                    // Sin VT, no inventamos.
-                    tem = null; 
+                    // Cálculo de TEM estimado (Asumiendo Valor Final = targetValue o 100)
+                    // Fórmula: (VF / Precio) ^ (30 / Días) - 1
+                    const vf = inst.targetValue || 100; // Valor técnico estimado a finish
+                    const ratio = vf / inst.price;
+                    const exponent = 30 / days;
+                    tem = (Math.pow(ratio, exponent) - 1) * 100;
                 }
 
                 opportunities.push({
