@@ -6,23 +6,23 @@
     <title>CENTINELA INTEL - TERMINAL FINANCIERA</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#05070a;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--green:#10b981}
+        :root{--bg:#05070a;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--green:#10b981;--red:#ef4444}
         body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;margin:0;padding:10px}
         
-        /* Panel de Indicadores (Inflación/Dólar) */
-        .market-bar{display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;margin-bottom:15px}
-        .stat-card{background:var(--card);padding:12px;border-radius:10px;border:1px solid var(--border);border-bottom:3px solid var(--blue);text-align:center}
+        /* Panel Superior de Datos Reales */
+        .market-bar{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:15px}
+        .stat-card{background:var(--card);padding:12px;border-radius:10px;border:1px solid var(--border);text-align:center;border-bottom:3px solid var(--blue)}
         .stat-label{font-size:0.65rem;color:#64748b;text-transform:uppercase;display:block;margin-bottom:5px}
         .stat-value{font-size:1.1rem;font-weight:bold;color:var(--blue)}
 
-        .header{background:var(--card);padding:15px;border-radius:12px;border:1px solid var(--border);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;border-left:5px solid var(--blue)}
-        .header h1{font-size:0.9rem;margin:0;letter-spacing:1px;text-transform:uppercase}
+        /* Cabecera de la Terminal */
+        .header-main{background:var(--blue);color:#000;padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
+        .header-main h1{font-size:0.85rem;margin:0;font-weight:900;text-transform:uppercase}
         
         /* Grilla de Noticias */
         .news-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:15px}
         .news-card{background:var(--card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;height:450px;overflow:hidden}
-        .card-header{padding:12px;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-        .source-badge{font-size:0.65rem;font-weight:bold;padding:4px 8px;border-radius:4px;text-transform:uppercase;background:var(--blue);color:#000}
+        .card-header{padding:12px;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);font-size:0.7rem;font-weight:bold;color:var(--blue);text-transform:uppercase}
         
         .news-body{padding:10px;overflow-y:auto;flex-grow:1}
         .news-item{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
@@ -30,8 +30,6 @@
         .news-link:hover{color:var(--blue)}
         .news-time{font-size:0.6rem;color:var(--blue);display:block;margin-bottom:4px;font-weight:bold}
 
-        .btn-refresh{background:var(--blue);border:none;padding:10px;border-radius:8px;cursor:pointer;color:#000}
-        
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
         @media (max-width: 600px) { .news-grid{grid-template-columns: 1fr} }
@@ -41,53 +39,55 @@
 
 <div class="market-bar">
     <div class="stat-card">
-        <span class="stat-label">IPC Est. (Indec)</span>
+        <span class="stat-label">IPC EST. (INDEC)</span>
         <span class="stat-value" id="inf-dato">-- %</span>
     </div>
     <div class="stat-card">
-        <span class="stat-label">TNA Plazo Fijo</span>
+        <span class="stat-label">TNA PLAZO FIJO</span>
         <span class="stat-value" id="pf-dato">-- %</span>
     </div>
     <div class="stat-card">
-        <span class="stat-label">Dólar Blue</span>
+        <span class="stat-label">DÓLAR BLUE</span>
         <span class="stat-value" id="blue-dato">$ --</span>
     </div>
     <div class="stat-card" style="border-bottom-color:var(--green)">
-        <span class="stat-label">Estado Red</span>
-        <span class="stat-value" id="status-dato" style="color:var(--green); font-size:0.8rem">Sincronizando</span>
+        <span class="stat-label">ESTADO RED</span>
+        <span class="stat-value" id="status-red" style="font-size:0.8rem; color:var(--red)">OFFLINE</span>
     </div>
 </div>
 
-<div class="header">
+<div class="header-main">
     <h1><i class="fas fa-microchip"></i> Centinela Intelligence v3.0</h1>
-    <button class="btn-refresh" onclick="fetchData()"><i class="fas fa-sync-alt"></i></button>
+    <i class="fas fa-sync-alt" onclick="fetchData()" style="cursor:pointer"></i>
 </div>
 
 <div id="main-grid" class="news-grid">
-    <div style="grid-column:1/-1; text-align:center; padding:100px; opacity:0.5">
-        <i class="fas fa-circle-notch fa-spin fa-2x"></i><br><br>Consolidando economía y actualidad...
+    <div style="grid-column:1/-1; text-align:center; padding-top:50px; opacity:0.5">
+        <i class="fas fa-circle-notch fa-spin fa-2x"></i><br><br>Consolidando datos financieros reales...
     </div>
 </div>
 
 <script>
-    // URL DE TU SCRIPT DE GOOGLE CONFIRMADA POR CAPTURA image_07e931.png
+    // URL DE TU SCRIPT (Confirmada en image_07e931.png)
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbzoJKlDUEYCffrTQmWDiLijzD-A5cq5_LVLeI6aqkuqmuiyhdpfMBF6IpFnCgisyHqzFQ/exec";
 
     async function fetchData() {
         const grid = document.getElementById('main-grid');
-        const status = document.getElementById('status-dato');
+        const statusRed = document.getElementById('status-red');
         
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
             
-            // 1. Actualizar Indicadores
+            // 1. Inyectar Indicadores Reales
             document.getElementById('inf-dato').innerText = data.indicadores.inflacion;
             document.getElementById('pf-dato').innerText = data.indicadores.tna_pf;
             document.getElementById('blue-dato').innerText = data.indicadores.dolar_blue;
-            status.innerText = "ONLINE";
+            
+            statusRed.innerText = "ONLINE";
+            statusRed.style.color = "var(--green)";
 
-            // 2. Agrupar Noticias por Fuente
+            // 2. Agrupar Noticias por Diario
             const grouped = data.noticias.reduce((acc, item) => {
                 if (!acc[item.fuente]) acc[item.fuente] = [];
                 acc[item.fuente].push(item);
@@ -96,10 +96,10 @@
 
             grid.innerHTML = '';
             
-            // 3. Crear Tarjetas
+            // 3. Crear Tarjetas de Diarios
             Object.keys(grouped).forEach(fuente => {
                 let itemsHtml = grouped[fuente].map(n => {
-                    let hora = n.fecha ? new Date(n.fecha).toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'}) + " HS" : "RECIENTE";
+                    let hora = n.fecha ? new Date(n.fecha).toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'}) + " HS" : "AHORA";
                     return `
                         <div class="news-item">
                             <span class="news-time">${hora}</span>
@@ -110,23 +110,23 @@
 
                 grid.innerHTML += `
                     <div class="news-card">
-                        <div class="card-header">
-                            <span class="source-badge">${fuente}</span>
-                            <i class="fas fa-chart-bar" style="opacity:0.2"></i>
-                        </div>
+                        <div class="card-header">${fuente}</div>
                         <div class="news-body">${itemsHtml}</div>
                     </div>
                 `;
             });
 
         } catch (e) {
-            status.innerText = "OFFLINE";
-            status.style.color = "#ef4444";
+            statusRed.innerText = "ERROR";
+            statusRed.style.color = "var(--red)";
+            console.error("Fallo en la sincronización de datos.");
         }
     }
 
+    // Iniciar carga
     fetchData();
-    setInterval(fetchData, 300000); // Actualiza cada 5 minutos
+    // Auto-actualización cada 5 minutos
+    setInterval(fetchData, 300000); 
 </script>
 
 </body>
