@@ -3,530 +3,173 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Terminal Renta Fija Argentina - Multi-Fuente</title>
+    <title>Centinela Financiero - Pro</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root{--bg:#0a0e17;--bg2:#111827;--bg3:#1f2937;--txt:#e5e7eb;--txt2:#9ca3af;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;--border:#374151}
-        body{background:var(--bg);color:var(--txt);font-family:'Courier New',monospace;min-height:100vh;padding:20px}
-        .container{max-width:1400px;margin:0 auto}
-        .header{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:12px;padding:25px;margin-bottom:25px;border-left:4px solid var(--blue)}
-        .header h1{color:var(--blue);font-size:1.8rem;margin-bottom:10px;text-transform:uppercase}
-        .fecha{color:var(--green);display:flex;align-items:center;gap:15px}
-        .status{display:inline-block;width:12px;height:12px;border-radius:50%;background:var(--green);animation:pulse 2s infinite}
-        @keyframes pulse{0%,100%{opacity:1}50%{opacity:.5}}
-        .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px;margin-bottom:25px}
-        .card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;border-left:3px solid var(--blue)}
-        .card h3{color:var(--txt2);font-size:.9rem;margin-bottom:15px;text-transform:uppercase}
-        .value{font-size:2rem;font-weight:bold;margin-bottom:8px}
-        .value.pos{color:var(--green)}.value.neg{color:var(--red)}.value.neu{color:var(--yellow)}.value.load{color:var(--txt2);animation:blink 1s infinite}
-        @keyframes blink{0%,100%{opacity:1}50%{opacity:.4}}
-        .sub{color:var(--txt2);font-size:.82rem;line-height:1.4}
-        .error{background:rgba(239,68,68,.1);border:1px solid var(--red);border-radius:8px;padding:15px;margin-bottom:20px;display:none}
-        .error.show{display:block}
-        .ia{background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(139,92,246,.1));border:1px solid var(--blue);border-radius:12px;padding:25px;margin-bottom:25px}
-        .ia h2{color:var(--blue);font-size:1.3rem;margin-bottom:15px}
-        .ia-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:20px}
-        .ia-box{background:var(--bg2);border-radius:8px;padding:18px}
-        .ia-box h4{color:#8b5cf6;margin-bottom:12px;font-size:.95rem}
-        .rec{font-size:1.15rem;font-weight:bold;padding:12px;border-radius:8px;text-align:center;margin-top:10px}
-        .rec.comprar{background:rgba(16,185,129,.2);color:var(--green)}.rec.prec{background:rgba(239,68,68,.2);color:var(--red)}.rec.neu{background:rgba(245,158,11,.2);color:var(--yellow)}
-        .news{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:25px}
-        .news-source{display:inline-block;padding:2px 8px;border-radius:4px;font-size:.75rem;margin-right:5px;background:var(--bg3);color:var(--blue)}
-        .news-list{list-style:none;padding:0;margin:0}
-        .news-item{padding:12px;border-bottom:1px solid var(--border)}
-        .news-item:last-child{border-bottom:none}
-        .news-item a{color:var(--txt);text-decoration:none;font-size:.95rem}
-        .news-item a:hover{color:var(--blue)}
-        .news-date{color:var(--txt2);font-size:.8rem;margin-top:5px}
-        .table{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:20px;overflow-x:auto}
-        table{width:100%;border-collapse:collapse;font-size:.9rem}
-        th,td{padding:12px 15px;text-align:left;border-bottom:1px solid var(--border)}
-        th{background:var(--bg3);color:var(--txt2);text-transform:uppercase;font-size:.8rem}
-        .code{font-family:'Courier New',monospace;background:var(--bg3);padding:3px 8px;border-radius:4px;color:var(--blue);font-weight:bold}
-        .badge{padding:5px 12px;border-radius:20px;font-size:.8rem;font-weight:bold}
-        .badge.comprar{background:rgba(16,185,129,.2);color:var(--green)}.badge.esperar{background:rgba(245,158,11,.2);color:var(--yellow)}.badge.evitar{background:rgba(239,68,68,.2);color:var(--red)}
-        .btn{background:var(--blue);color:#fff;border:none;padding:9px 18px;border-radius:7px;cursor:pointer;font-size:.9rem}
-        .btn:hover{background:#2563eb}.btn:disabled{background:var(--border);cursor:not-allowed}
-        .update{text-align:right;color:var(--txt2);margin-top:15px;font-size:.9rem}
-        .source-tag{font-size:.75rem;color:var(--yellow);margin-top:5px}
-        @media(max-width:768px){.ia-grid{grid-template-columns:1fr}.value{font-size:1.6rem}}
+        body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:15px}
+        .container{max-width:1200px;margin:0 auto}
+        .header{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;border-left:5px solid var(--blue)}
+        .header h1{font-size:1.5rem;font-weight:800;letter-spacing:-0.5px;color:var(--blue);margin:0}
+        .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px;margin-bottom:20px}
+        .card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
+        .card::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--blue)}
+        .label{color:var(--txt2);font-size:0.75rem;text-transform:uppercase;font-weight:bold;margin-bottom:8px;display:block}
+        .value{font-size:1.8rem;font-weight:bold;display:block}
+        .sub{font-size:0.8rem;color:var(--txt2);margin-top:5px}
+        .ia-box{background:linear-gradient(135deg, rgba(59,130,246,0.1), rgba(16,185,129,0.05));border:1px solid var(--blue);border-radius:12px;padding:20px;margin-bottom:20px}
+        .status-dot{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-right:5px;animation:pulse 2s infinite}
+        @keyframes pulse{0%{opacity:1}50%{opacity:0.4}100%{opacity:1}}
+        .table-res{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
+        table{width:100%;margin:0;font-size:0.9rem}
+        th{background:var(--bg3);color:var(--txt2);font-size:0.7rem;text-transform:uppercase;padding:12px}
+        td{padding:12px;border-top:1px solid var(--border)}
+        @media(max-width:768px){.value{font-size:1.5rem}.cards{grid-template-columns:1fr 1fr}}
     </style>
 </head>
 <body>
+
 <div class="container">
-    <div class="header">
-        <h1><i class="fas fa-chart-line"></i> TERMINAL RENTA FIJA - MULTI-FUENTE</h1>
-        <div class="fecha">
-            <span class="status"></span>
-            <span id="fecha">Cargando fecha real...</span>
-            <button class="btn" onclick="refresh()" id="btn"><i class="fas fa-sync-alt"></i> Actualizar</button>
+    <div class="header d-flex justify-content-between align-items-center">
+        <h1><i class="fas fa-microchip"></i> CENTINELA <span style="color:white">PRO</span></h1>
+        <div class="text-end">
+            <div style="font-size:0.7rem; color:var(--green)"><span class="status-dot"></span> API BCRA LINKED</div>
+            <button class="btn btn-sm btn-outline-primary mt-1" onclick="refresh()"><i class="fas fa-sync"></i></button>
         </div>
     </div>
-    <div class="error" id="err"><i class="fas fa-exclamation-triangle"></i> <span id="errmsg"></span></div>
-    
+
     <div class="cards">
         <div class="card">
-            <h3><i class="fas fa-percentage"></i> Inflación Base (IPC)</h3>
-            <div class="value load" id="ipc"><i class="fas fa-spinner fa-spin"></i></div>
-            <div class="sub" id="ipc-sub">Consultando BCRA + INDEC...</div>
-            <div class="source-tag" id="ipc-source"></div>
+            <span class="label">Inflación Real (BCRA)</span>
+            <span class="value" id="ipc">--%</span>
+            <span class="sub" id="ipc-date">Cargando último dato...</span>
+        </div>
+        <div class="card" style="border-left-color:var(--green)">
+            <span class="label">Tasa Plazo Fijo</span>
+            <span class="value" id="tna">--%</span>
+            <span class="sub" id="tem">TEM: --%</span>
         </div>
         <div class="card">
-            <h3><i class="fas fa-piggy-bank"></i> Tasa Plazo Fijo (TNA)</h3>
-            <div class="value load" id="tna"><i class="fas fa-spinner fa-spin"></i></div>
-            <div class="sub" id="tna-sub">TEM: --% | BCRA Oficial</div>
-            <div class="source-tag" id="tna-source"></div>
+            <span class="label">Dólar Blue</span>
+            <span class="value" id="dolar">$--</span>
+            <span class="sub">Venta Mercado</span>
         </div>
         <div class="card">
-            <h3><i class="fas fa-calculator"></i> Spread Real</h3>
-            <div class="value load" id="spread"><i class="fas fa-spinner fa-spin"></i></div>
-            <div class="sub">TEM - IPC Mensual</div>
-        </div>
-        <div class="card">
-            <h3><i class="fas fa-dollar-sign"></i> Dólar Blue</h3>
-            <div class="value load" id="dolar"><i class="fas fa-spinner fa-spin"></i></div>
-            <div class="sub" id="dolar-sub">Actualizando...</div>
-        </div>
-        <div class="card">
-            <h3><i class="fas fa-file-invoice-dollar"></i> Mejor LETRA</h3>
-            <div class="value neu" id="letra">--</div>
-            <div class="sub">Código real del mercado</div>
-        </div>
-        <div class="card">
-            <h3><i class="fas fa-bullseye"></i> Mejor Oportunidad</h3>
-            <div class="value neu" id="opp">--</div>
-            <div class="sub">Análisis multi-fuente</div>
+            <span class="label">Spread Real</span>
+            <span class="value" id="spread">--%</span>
+            <span class="sub">Tasa vs Inflación</span>
         </div>
     </div>
 
-    <div class="ia">
-        <h2><i class="fas fa-robot"></i> IA ADVISOR: CONSENSO DE MERCADO</h2>
-        <div class="ia-grid">
-            <div class="ia-box">
-                <h4><i class="fas fa-lightbulb"></i> Recomendación</h4>
-                <div class="rec neu" id="rec">Analizando datos de múltiples fuentes...</div>
+    <div class="ia-box">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 style="color:var(--blue); font-size:0.9rem"><i class="fas fa-robot"></i> ESTRATEGIA RECOMENDADA</h5>
+                <p id="ia-desc" class="m-0" style="font-size:0.95rem">Calculando arbitraje óptimo con datos del BCRA...</p>
             </div>
-            <div class="ia-box">
-                <h4><i class="fas fa-newspaper"></i> Sentimiento Noticias</h4>
-                <div class="rec neu" id="sent">Procesando feeds...</div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div id="badge-ia" class="btn btn-sm" style="font-weight:bold; pointer-events:none">ANALIZANDO...</div>
             </div>
         </div>
-        <div class="ia-box mt-3">
-            <h4><i class="fas fa-comment-dots"></i> Análisis Detallado</h4>
-            <p id="analisis" style="color:var(--txt2);line-height:1.6;margin:0">Cargando análisis completo...</p>
-        </div>
     </div>
 
-    <div class="news">
-        <h2><i class="fas fa-rss"></i> Últimos Titulares - Múltiples Fuentes</h2>
-        <ul class="news-list" id="news-list"><li class="news-item"><i class="fas fa-spinner fa-spin"></i> Cargando noticias de Ámbito, Cronista, Infobae y El Economista...</li></ul>
-    </div>
-
-    <div class="table">
-        <h2><i class="fas fa-trophy"></i> LETRAS del Tesoro - Códigos Reales</h2>
-        <table>
-            <thead><tr><th>Código</th><th>Nombre</th><th>Vencimiento</th><th>Precio</th><th>TEM</th><th>Spread</th><th>Veredicto</th></tr></thead>
-            <tbody id="tbody"><tr><td colspan="7" style="text-align:center"><i class="fas fa-spinner fa-spin"></i> Cargando LETRAS...</td></tr></tbody>
+    <div class="table-res">
+        <table class="table table-dark table-hover mb-0">
+            <thead>
+                <tr>
+                    <th>Instrumento</th>
+                    <th>Vencimiento</th>
+                    <th>Tasa Est.</th>
+                    <th>Veredicto</th>
+                </tr>
+            </thead>
+            <tbody id="tbody">
+                <tr><td colspan="4" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Sincronizando con mercado...</td></tr>
+            </tbody>
         </table>
-        <div class="update">Actualizado: <span id="last">--:--:--</span> | Auto-refresh: 60s | <small style="color:var(--blue)">Fuentes: BCRA + DolarAPI + Medios</small></div>
     </div>
 </div>
 
 <script>
-// ============================================
-// CONFIGURACIÓN - MÚLTIPLES FUENTES
-// ============================================
-const CFG = {
-    // BCRA scraping vía AllOrigins proxy
-    bcraScrape: 'https://api.allorigins.win/get?url=' + encodeURIComponent('https://www.bcra.gob.ar/PublicacionesEstadisticas/Principales_variables.asp'),
-    // APIs alternativas
-    dolarApi: 'https://dolarapi.com/v1/dolares/blue',
-    tasasApi: 'https://dolarapi.com/v1/cotizaciones/tasas',
-    // Múltiples fuentes de noticias
-    noticias: [
-        'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.ambito.com/rss.xml'),
-        'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.cronista.com/rss/finanzas.xml'),
-        'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.infobae.com/arc/outboundfeeds/rss/?outputType=xml'),
-        'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent('https://www.eleconomistaamerica.com.ar/rss/noticias-economia-finanzas.xml')
-    ]
-};
+// CONFIGURACIÓN DE APIS
+const BCRA_TOKEN = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDM1NzQ3NjMsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJtdXJvY2FyaW5AaG90bWFpbC5jb20ifQ.sUg-29G9KKj-mSW2k3o3F-ovzdYlC6nzRtB1UKaLEeMQkNIhWEb9-jriFBQ8EbjSeumGcSI2OrsES8dxSOJS3Q";
+const PROXY = "https://api.allorigins.win/get?url=";
 
-// LETRAS REALES
-const LETRAS = [
-    {c:'S27F6',n:'LECAP 27Feb2026',t:'LECAP',v:'27/02/2026',d:30},
-    {c:'S16M6',n:'LECAP 16Mar2026',t:'LECAP',v:'16/03/2026',d:60},
-    {c:'S17A6',n:'LECAP 17Abr2026',t:'LECAP',v:'17/04/2026',d:90},
-    {c:'S15M6B',n:'LECAP 15May2026',t:'LECAP',v:'15/05/2026',d:120},
-    {c:'S30J6',n:'LECER 30Jun2026',t:'LECER',v:'30/06/2026',d:150},
-    {c:'S31L6',n:'LECER 31Jul2026',t:'LECER',v:'31/07/2026',d:180},
-    {c:'S28F7',n:'LETES 28Feb2027',t:'LETES',v:'28/02/2027',d:365},
-    {c:'TX26',n:'TX 2026',t:'TX',v:'2026',d:365},
-    {c:'AL30',n:'AL30 2030',t:'BONO',v:'2030',d:1460},
-    {c:'GD30',n:'GD30 2030',t:'BONO',v:'2030',d:1460},
-    {c:'PF30',n:'Plazo Fijo 30d',t:'PF',v:'30 días',d:30},
-    {c:'PFUVA',n:'Plazo Fijo UVA',t:'PFUVA',v:'180 días',d:180}
-];
-
-// ============================================
-// FECHA REAL DEL SISTEMA - CORRECCIÓN
-// ============================================
-const fReal = () => {
-    const now = new Date();
-    // Verificar que la fecha sea razonable (2024-2027)
-    const year = now.getFullYear();
-    if(year < 2024 || year > 2027) {
-        console.warn('⚠️ Fecha del sistema incorrecta:', now);
-    }
-    return now.toLocaleDateString('es-AR',{weekday:'long',year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-};
-const hReal = () => new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-const pct = v => {const n=parseFloat(v);return isNaN(n)?'--%':n.toFixed(2)+'%'};
-const mon = v => {const n=parseFloat(v);return isNaN(n)?'$--':'$'+n.toFixed(0).replace(/\B(?=(\d{3})+(?!\d))/g,",")};
-
-// ============================================
-// CAPTURA DE DATOS - MÚLTIPLES FUENTES
-// ============================================
-
-// IPC: BCRA scraping + fallback INDEC estimado
-async function getIPC() {
-    try {
-        // Intentar BCRA vía proxy
-        const response = await fetch(CFG.bcraScrape);
-        if(!response.ok) throw new Error('Proxy BCRA no disponible');
-        const data = await response.json();
-        const html = data.contents;
-        
-        // Buscar inflación en el HTML del BCRA
-        // El BCRA publica inflación mensual en sus tablas
-        const ipcMatch = html.match(/Inflación[^0-9]*([0-9]+\.?[0-9]*)%/i);
-        if(ipcMatch && ipcMatch[1]) {
-            const mensual = parseFloat(ipcMatch[1]);
-            return {
-                mensual: mensual,
-                interanual: null,
-                acumulado: null,
-                fecha: new Date().toLocaleDateString('es-AR',{month:'long',year:'numeric'}),
-                fuente: 'BCRA.gob.ar (Scraping)',
-                exito: true
-            };
-        }
-        throw new Error('No se encontró IPC en BCRA');
-    } catch(e) {
-        console.warn('BCRA scraping falló:', e);
-        
-        // Fallback: Estimación basada en últimos datos conocidos + consenso
-        // Datos reales: Ene 2.2%, Feb 2.4%, Mar 2.1% (2025)
-        const estimaciones = {
-            '2025-01': 2.2, '2025-02': 2.4, '2025-03': 2.1,
-            '2025-04': 2.8, '2025-05': 3.1, '2025-06': 2.9,
-            '2025-07': 3.3, '2025-08': 3.0, '2025-09': 2.7,
-            '2025-10': 3.4, '2025-11': 3.1, '2025-12': 2.9
-        };
-        
-        const now = new Date();
-        const key = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-        const ipcEst = estimaciones[key] || 3.0;
-        
-        return {
-            mensual: ipcEst,
-            interanual: 66.9,
-            acumulado: Object.values(estimaciones).slice(0, now.getMonth()+1).reduce((a,b)=>a+b,0),
-            fecha: now.toLocaleDateString('es-AR',{month:'long',year:'numeric'}),
-            fuente: 'Consenso Privado (Estimado)',
-            exito: false
-        };
-    }
-}
-
-// Tasas: BCRA scraping + fallback DolarAPI
-async function getTasas() {
-    try {
-        // Intentar BCRA primero
-        const response = await fetch(CFG.bcraScrape);
-        if(!response.ok) throw new Error('Proxy BCRA no disponible');
-        const data = await response.json();
-        const html = data.contents;
-        
-        // Buscar tasa de plazo fijo en el HTML
-        const tasaMatch = html.match(/Plazo fijo[^0-9]*([0-9]+\.?[0-9]*)%/i);
-        if(tasaMatch && tasaMatch[1]) {
-            const tna = parseFloat(tasaMatch[1]);
-            const tem = (Math.pow(1+tna/100/365,30)-1)*100;
-            return {
-                tna: tna,
-                tem: tem,
-                fecha: new Date().toISOString(),
-                fuente: 'BCRA.gob.ar (Scraping)',
-                exito: true
-            };
-        }
-        throw new Error('No se encontró tasa en BCRA');
-    } catch(e) {
-        console.warn('BCRA tasas falló:', e);
-        
-        // Fallback: DolarAPI
-        try {
-            const r = await fetch(CFG.tasasApi);
-            if(!r.ok) throw new Error();
-            const d = await r.json();
-            const pf = d.find(t => t.casa === 'plazo_fijo') || {};
-            const tna = pf.venta || 40;
-            const tem = (Math.pow(1+tna/100/365,30)-1)*100;
-            return {
-                tna: tna,
-                tem: tem,
-                fecha: new Date().toISOString(),
-                fuente: 'DolarAPI (Fallback)',
-                exito: false
-            };
-        } catch(e2) {
-            return {
-                tna: null,
-                tem: null,
-                fecha: '--',
-                fuente: 'Sin dato disponible',
-                exito: false
-            };
-        }
-    }
-}
-
-// Dólar: DolarAPI (funciona bien)
-async function getDolar() {
-    try {
-        const r = await fetch(CFG.dolarApi);
-        if(!r.ok) throw new Error();
-        const d = await r.json();
-        return {compra:d.compra,venta:d.venta,fecha:d.fecha,fuente:'DolarAPI'};
-    } catch {
-        return {compra:1150,venta:1170,fecha:new Date().toISOString(),fuente:'Fallback'};
-    }
-}
-
-// Noticias: Múltiples fuentes en paralelo
-async function getNoticias() {
-    const todas = [];
-    
-    // Intentar todas las fuentes en paralelo
-    const promesas = CFG.noticias.map(async (url, idx) => {
-        try {
-            const r = await fetch(url);
-            if(!r.ok) throw new Error();
-            const d = await r.json();
-            if(d.status === 'ok' && d.items) {
-                // Agregar fuente a cada noticia
-                const fuentes = ['Ámbito', 'Cronista', 'Infobae', 'El Economista'];
-                d.items.slice(0, 3).forEach(n => {
-                    n.fuente = fuentes[idx] || 'Desconocida';
-                    todas.push(n);
-                });
-            }
-        } catch(e) {
-            console.warn(`Fuente ${idx} falló:`, e);
-        }
-    });
-    
-    await Promise.all(promesas);
-    
-    // Ordenar por fecha y tomar las 8 más recientes
-    todas.sort((a,b) => new Date(b.pubDate) - new Date(a.pubDate));
-    
-    if(todas.length === 0) {
-        // Fallback
-        return [
-            {title:'Mercado en tiempo real',pubDate:new Date().toISOString(),link:'#',fuente:'Fallback'}
-        ];
-    }
-    
-    return todas.slice(0, 8);
-}
-
-// ============================================
-// CÁLCULOS Y ANÁLISIS
-// ============================================
-const calcTEM = tna => tna ? (Math.pow(1+tna/100/365,30)-1)*100 : null;
-const calcSpread = (tem,ipc) => (tem && ipc) ? tem - ipc : null;
-
-function analizar(d) {
-    const spPF = calcSpread(d.tem, d.ipc.mensual);
-    const temL = d.tem ? d.tem + 1.3 : null;
-    const spL = temL && d.ipc.mensual ? temL - d.ipc.mensual : null;
-    const mejor = LETRAS.find(l=>l.t==='LECAP') || LETRAS[0];
-    
-    let rec, cls, det;
-    if(spL && spL > 1.5) {rec='COMPRAR LETRAS';cls='comprar';det=`${mejor.c} da ${pct(temL)} TEM. Spread: ${pct(spL)}.`;}
-    else if(spPF && spPF > 1) {rec='PLAZO FIJO';cls='comprar';det=`PF protege vs inflación. Spread: ${pct(spPF)}.`;}
-    else {rec='PRECAUCIÓN';cls='prec';det='Evaluar LECER/Bonos CER. Rendimientos reales bajos.';}
-    
-    return {rec,cls,det,mejor:{c:mejor.c,n:mejor.n,tem:temL,sp:spL,v:mejor.v},spPF,spL};
-}
-
-// ============================================
-// ACTUALIZAR UI
-// ============================================
-function updFecha() {
-    document.getElementById('fecha').textContent = fReal();
-    document.getElementById('last').textContent = hReal();
-}
-
-function updIPC(d) {
-    const el = document.getElementById('ipc'), sub = document.getElementById('ipc-sub'), src = document.getElementById('ipc-source');
-    if(d.mensual !== null) {
-        el.textContent = pct(d.mensual);
-        el.className = 'value ' + (d.exito ? 'neu' : 'load');
-        sub.innerHTML = `${d.fecha}<br><small>${d.fuente}${d.acumulado?' | Acum: '+pct(d.acumulado):''}${d.interanual?' | Interanual: '+pct(d.interanual):''}</small>`;
-        src.textContent = d.exito ? '✓ Fuente oficial' : '⚠ Estimación';
-        src.style.color = d.exito ? 'var(--green)' : 'var(--yellow)';
-    } else {
-        el.textContent = '--%'; el.className = 'value load';
-        sub.innerHTML = '<small>Error de conexión</small>';
-        src.textContent = '';
-    }
-}
-
-function updTasas(d) {
-    const el = document.getElementById('tna'), sub = document.getElementById('tna-sub'), src = document.getElementById('tna-source');
-    if(d.tna !== null) {
-        el.textContent = pct(d.tna);
-        el.className = 'value ' + (d.exito ? 'pos' : 'neu');
-        sub.innerHTML = `TEM: ${pct(d.tem)}<br><small>${d.fuente}</small>`;
-        src.textContent = d.exito ? '✓ BCRA Oficial' : '⚠ Fallback';
-        src.style.color = d.exito ? 'var(--green)' : 'var(--yellow)';
-    } else {
-        el.textContent = '--%'; el.className = 'value load';
-        sub.innerHTML = '<small>Sin dato disponible</small>';
-        src.textContent = '';
-    }
-}
-
-function updSpread(v) {
-    const el = document.getElementById('spread');
-    if(v !== null) {
-        el.textContent = pct(v);
-        el.className = `value ${v>=0?'pos':'neg'}`;
-    } else {
-        el.textContent = '--%'; el.className = 'value load';
-    }
-}
-
-function updDolar(d) {
-    document.getElementById('dolar').textContent = mon(d.venta);
-    document.getElementById('dolar').className = 'value pos';
-    document.getElementById('dolar-sub').textContent = `${d.fuente} | Actualizado`;
-}
-
-function updIA(d) {
-    const a = d.analisis;
-    document.getElementById('rec').textContent = a.rec;
-    document.getElementById('rec').className = `rec ${a.cls}`;
-    document.getElementById('sent').textContent = 'NEUTRO';
-    document.getElementById('sent').className = 'rec neu';
-    document.getElementById('analisis').innerHTML = `
-        <strong>${a.det}</strong><br><br>
-        IPC: ${d.ipc.mensual!==null?pct(d.ipc.mensual):'--'} (${d.ipc.fuente}) | TEM PF: ${d.tem!==null?pct(d.tem):'--'}<br>
-        Mejor LETRA: ${a.mejor.c} (${a.mejor.n}) - Venc: ${a.mejor.v}<br>
-        Spread PF: ${a.spPF!==null?pct(a.spPF):'--'} | Spread LETRAS: ${a.spL!==null?pct(a.spL):'--'}
-    `;
-}
-
-function updNews(news) {
-    const list = document.getElementById('news-list'); list.innerHTML = '';
-    news.forEach(n => {
-        const f = new Date(n.pubDate).toLocaleDateString('es-AR',{day:'2-digit',month:'2-digit',hour:'2-digit',minute:'2-digit'});
-        const li = document.createElement('li'); li.className = 'news-item';
-        li.innerHTML = `
-            <span class="news-source">${n.fuente||'Desconocida'}</span>
-            <a href="${n.link||'#'}" target="_blank">${n.title}</a>
-            <div class="news-date">${f}</div>
-        `;
-        list.appendChild(li);
-    });
-}
-
-function updRanking(d) {
-    const tbody = document.getElementById('tbody'); tbody.innerHTML = '';
-    LETRAS.forEach(l => {
-        let tem, sp, px;
-        if(l.t==='PF') {tem=d.tem;sp=d.analisis.spPF;px='100.00';}
-        else if(l.t==='PFUVA') {tem=d.ipc.mensual+1.5;sp=1.5;px='CER+1.5%';}
-        else if(l.t==='LECAP') {tem=d.tem+1.3;sp=tem-d.ipc.mensual;px=(98+Math.random()*2).toFixed(2);}
-        else if(l.t==='LECER') {tem=d.ipc.mensual+1;sp=1;px='CER+1%';}
-        else if(l.t==='LETES') {tem=d.tem+1;sp=tem-d.ipc.mensual;px=(96+Math.random()*4).toFixed(2);}
-        else if(l.c==='TX26') {tem=4;sp=tem-d.ipc.mensual;px=(95+Math.random()*5).toFixed(2);}
-        else if(['AL30','GD30'].includes(l.c)) {tem=3.5;sp=tem-d.ipc.mensual;px='USD '+(80+Math.random()*20).toFixed(2);}
-        else {tem=d.tem+0.5;sp=tem-d.ipc.mensual;px='100.00';}
-        
-        const ver = sp>1.5?{t:'COMPRAR',c:'comprar'}:sp>0?{t:'ESPERAR',c:'esperar'}:{t:'EVITAR',c:'evitar'};
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><span class="code">${l.c}</span></td>
-            <td><strong>${l.n}</strong><br><small style="color:var(--txt2)">${l.t}</small></td>
-            <td>${l.v}</td>
-            <td>${px}</td>
-            <td style="color:${tem>=d.tem?'var(--green)':'var(--txt2)'}">${pct(tem)}</td>
-            <td style="color:${sp>=0?'var(--green)':'var(--red)'}">${pct(sp)}</td>
-            <td><span class="badge ${ver.c}">${ver.t}</span></td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
-
-function updMejores(d) {
-    document.getElementById('letra').textContent = d.analisis.mejor.c;
-    document.getElementById('letra').className = 'value pos';
-    document.getElementById('opp').textContent = d.analisis.rec.includes('LETRA')?d.analisis.mejor.c:'Plazo Fijo';
-    document.getElementById('opp').className = 'value pos';
-}
-
-function err(msg) {
-    document.getElementById('errmsg').textContent = msg;
-    document.getElementById('err').classList.add('show');
-    setTimeout(()=>document.getElementById('err').classList.remove('show'),6000);
-}
-
-// ============================================
-// FUNCIÓN PRINCIPAL
-// ============================================
 async function refresh() {
-    const btn = document.getElementById('btn');
-    btn.disabled = true; btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Actualizando...';
-    
     try {
-        const [dolar, tasas, ipc, news] = await Promise.all([getDolar(), getTasas(), getIPC(), getNoticias()]);
-        const tem = tasas.tna ? calcTEM(tasas.tna) : null;
-        const datos = {dolar, tasas, ipc, tem};
-        datos.analisis = analizar(datos);
+        // 1. Obtener Inflación desde tu API BCRA (usamos proxy para evitar CORS)
+        const bcraUrl = encodeURIComponent("https://estadisticasbcra.com/api/inflacion_mensual_oficial");
+        const respIpc = await fetch(`${PROXY}${bcraUrl}&token=${BCRA_TOKEN}`).then(r => r.json());
+        const dataIpc = JSON.parse(respIpc.contents);
+        const ultimoIpc = dataIpc[dataIpc.length - 1];
+
+        // 2. Obtener Dólar y Tasas desde DolarAPI
+        const [dolar, tasas] = await Promise.all([
+            fetch('https://dolarapi.com/v1/dolares/blue').then(r => r.json()),
+            fetch('https://dolarapi.com/v1/cotizaciones/tasas').then(r => r.json())
+        ]);
+
+        const pf = tasas.find(t => t.casa === 'plazo_fijo');
+        const tna = pf ? pf.venta : 38;
+        const tem = (Math.pow(1 + (tna/100/365), 30) - 1) * 100;
+        const ipcVal = ultimoIpc.v;
+
+        // Actualizar UI
+        document.getElementById('ipc').textContent = ipcVal + '%';
+        document.getElementById('ipc-date').textContent = "Mes: " + ultimoIpc.d;
+        document.getElementById('tna').textContent = tna + '%';
+        document.getElementById('tem').textContent = "TEM: " + tem.toFixed(2) + '%';
+        document.getElementById('dolar').textContent = '$' + dolar.venta;
         
-        updFecha();
-        updIPC(datos.ipc);
-        updTasas(datos.tasas);
-        updSpread(datos.analisis.spPF);
-        updDolar(datos.dolar);
-        updMejores(datos);
-        updIA(datos);
-        updNews(news);
-        updRanking(datos);
+        const spread = (tem - ipcVal).toFixed(2);
+        const spEl = document.getElementById('spread');
+        spEl.textContent = spread + '%';
+        spEl.style.color = spread >= 0 ? 'var(--green)' : 'var(--red)';
+
+        // IA Logic
+        const iaBadge = document.getElementById('badge-ia');
+        const iaDesc = document.getElementById('ia-desc');
         
-        console.log('✅ Actualizado:', hReal(), '| IPC:', datos.ipc.mensual, '| TNA:', datos.tasas.tna);
-    } catch(e) {
-        console.error('❌ Error:', e);
-        err('Error actualizando datos. Verificando fuentes alternativas...');
-    } finally {
-        btn.disabled = false; btn.innerHTML = '<i class="fas fa-sync-alt"></i> Actualizar';
+        if(spread > 0) {
+            iaBadge.textContent = "CARRY TRADE OK";
+            iaBadge.className = "btn btn-sm btn-success";
+            iaDesc.textContent = "La tasa le gana a la inflación. Sugerido: LECAPS o Plazo Fijo para capitalizar interés compuesto.";
+        } else {
+            iaBadge.textContent = "COBERTURA REQUERIDA";
+            iaBadge.className = "btn btn-sm btn-danger";
+            iaDesc.textContent = "Tasa real negativa. Priorizar activos CER (TX26, Bonos UVA) para no perder poder adquisitivo.";
+        }
+
+        renderTable(tem, ipcVal);
+
+    } catch (e) {
+        console.error("Error cargando datos:", e);
     }
 }
 
-// ============================================
-// INICIALIZACIÓN
-// ============================================
-document.addEventListener('DOMContentLoaded', () => {
-    console.log('🚀 Terminal Multi-Fuente iniciada - Fecha:', fReal());
-    console.log('📰 Fuentes de noticias:', CFG.noticias.length);
-    refresh();
-    setInterval(refresh, 60000);
-    setInterval(updFecha, 1000);
-});
+function renderTable(tem, ipc) {
+    const assets = [
+        {n: 'LECAP S14A5', v: '14/04/25', t: tem + 0.4},
+        {n: 'Bono CER TX26', v: '09/11/26', t: ipc + 1.2},
+        {n: 'Plazo Fijo', v: '30 días', t: tem}
+    ];
+    
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = assets.map(a => `
+        <tr>
+            <td><b style="color:var(--blue)">${a.n}</b></td>
+            <td>${a.v}</td>
+            <td style="color:var(--green)">${a.t.toFixed(2)}%</td>
+            <td><span class="badge ${a.t > ipc ? 'bg-success' : 'bg-warning'} text-dark" style="font-size:0.6rem">
+                ${a.t > ipc ? 'OPTIMO' : 'NEUTRO'}</span></td>
+        </tr>
+    `).join('');
+}
+
+// Inicio automático
+refresh();
 </script>
+
 </body>
 </html>
