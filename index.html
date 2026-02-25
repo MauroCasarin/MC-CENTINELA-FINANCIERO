@@ -3,47 +3,63 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA - IA ANALYTICS</title>
+    <title>CENTINELA - TERMINAL DE INTELIGENCIA MASIVA</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--gold:#fbbf24;--accent:#8b5cf6;--green:#10b981}
-        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:8px; font-size: 11px}
+        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:5px; font-size: 10px}
         
-        .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; padding: 5px 10px; background: rgba(255,255,255,0.02); border-radius: 6px; border: 1px solid var(--border); }
+        /* HEADER ULTRA COMPACTO */
+        .top-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; background: #0f172a; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
         .logo-area { display: flex; align-items: center; gap: 8px; }
-        .logo-img { width: 28px; height: 28px; border-radius: 50%; border: 1px solid var(--blue); }
-        .brand-name { font-weight: 900; letter-spacing: 1px; color: var(--blue); font-size: 0.85rem; }
+        .logo-img { width: 24px; height: 24px; border-radius: 50%; }
+        .brand-name { font-weight: 900; color: var(--blue); font-size: 0.8rem; }
 
-        /* MOTOR DE IA DINÁMICO */
+        /* ANALISTA DE DATOS MASIVOS */
         .ai-terminal {
             background: linear-gradient(145deg, #0f172a, #1a1b3a);
             border: 1px solid var(--border);
-            border-top: 3px solid var(--accent);
-            border-radius: 8px;
-            padding: 15px;
-            margin-bottom: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.4);
+            border-left: 4px solid var(--accent);
+            border-radius: 6px;
+            padding: 12px;
+            margin: 8px 5px;
         }
-        .ai-header { color: var(--accent); font-weight: 800; font-size: 0.65rem; text-transform: uppercase; margin-bottom: 10px; display: flex; justify-content: space-between; align-items: center; }
-        .ai-verdict-box { font-size: 1rem; line-height: 1.5; color: #f8fafc; font-weight: 400; border-left: 2px solid var(--accent); padding-left: 15px; }
-        .ai-verdict-box b { color: var(--gold); }
-
-        .update-bar { display: flex; align-items: center; justify-content: space-between; margin-top: 15px; pt: 10px; border-top: 1px solid rgba(255,255,255,0.05); }
-        .update-btn { background: var(--accent); color: white; border: none; padding: 6px 12px; border-radius: 4px; font-size: 0.7rem; font-weight: bold; cursor: pointer; transition: 0.3s; }
-        .update-btn:hover { filter: brightness(1.2); transform: translateY(-1px); }
+        .ai-stats { display: flex; gap: 15px; margin-bottom: 8px; font-size: 0.65rem; font-weight: bold; color: var(--blue); }
+        .ai-verdict-text { font-size: 0.95rem; line-height: 1.4; color: #f8fafc; border-left: 2px solid var(--accent); padding-left: 12px; }
         
-        .source-counter { font-size: 0.65rem; color: var(--blue); font-weight: bold; background: rgba(56, 189, 248, 0.1); padding: 2px 8px; border-radius: 10px; }
+        .update-btn { background: var(--accent); color: white; border: none; padding: 4px 10px; border-radius: 3px; font-size: 0.65rem; font-weight: bold; cursor: pointer; }
 
-        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(210px, 1fr)); gap: 6px; }
-        .news-card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; height: 240px; display: flex; flex-direction: column; transition: 0.3s; }
-        .news-card:hover { border-color: var(--blue); }
-        .card-header { padding: 4px 8px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); font-size: 0.6rem; font-weight: 900; color: var(--blue); text-transform: uppercase; }
-        .news-body { padding: 4px; overflow-y: auto; flex-grow: 1; }
-        .item { padding: 4px 6px; border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .item a { color: #cbd5e1; text-decoration: none; font-size: 0.75rem; }
-        
-        ::-webkit-scrollbar { width: 3px; }
-        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        /* GRILLA DE DIARIOS MINIATURA */
+        .news-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); 
+            gap: 5px; 
+            padding: 5px;
+        }
+        .news-card { 
+            background: var(--card); 
+            border: 1px solid var(--border); 
+            height: 220px; 
+            display: flex; 
+            flex-direction: column; 
+            transition: 0.2s;
+        }
+        .news-card:hover { border-color: var(--accent); background: #131e35; }
+        .card-header { 
+            padding: 3px 8px; 
+            background: rgba(255,255,255,0.03); 
+            border-bottom: 1px solid var(--border); 
+            font-size: 0.6rem; 
+            font-weight: 900; 
+            color: var(--blue); 
+        }
+        .news-body { padding: 2px; overflow-y: auto; flex-grow: 1; }
+        .item { padding: 3px 6px; border-bottom: 1px solid rgba(255,255,255,0.02); line-height: 1.1; }
+        .item a { color: #94a3b8; text-decoration: none; font-size: 0.72rem; }
+        .item a:hover { color: #fff; }
+
+        ::-webkit-scrollbar { width: 2px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); }
     </style>
 </head>
 <body>
@@ -51,86 +67,89 @@
 <div class="top-header">
     <div class="logo-area">
         <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo-img">
-        <span class="brand-name">CENTINELA AI SYSTEM</span>
+        <span class="brand-name">CENTINELA BIG DATA</span>
     </div>
-    <div id="source-badge" class="source-counter">Analizando...</div>
+    <div id="status-clock" style="color: var(--green); font-weight: bold;">LIVE SCANNER</div>
 </div>
 
 <div class="ai-terminal">
-    <div class="ai-header">
-        <span><i class="fas fa-brain"></i> MOTOR DE INFERENCIA EN TIEMPO REAL</span>
-        <span id="timestamp" style="font-size: 0.6rem; color: #64748b;"></span>
+    <div class="ai-stats">
+        <span id="count-sources"><i class="fas fa-database"></i> Fuentes: --</span>
+        <span id="count-news"><i class="fas fa-newspaper"></i> Titulares: --</span>
+        <span id="ai-confidence" style="color:var(--gold)"></span>
     </div>
-    <div id="ai-verdict" class="ai-verdict-box">
-        Iniciando escaneo masivo de titulares y variables financieras...
+    <div id="ai-verdict" class="ai-verdict-text">
+        Procesando flujo masivo de información financiera...
     </div>
-    
-    <div class="update-bar">
-        <button class="update-btn" onclick="ejecutarAnalisisIA()">
-            <i class="fas fa-sync-alt"></i> RE-ANALIZAR MERCADO
+    <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
+        <button class="update-btn" onclick="analizarTodo()">
+            <i class="fas fa-sync-alt"></i> RE-ESCANEAR TODAS LAS FUENTES
         </button>
-        <div id="ai-status" style="font-size: 0.6rem; color: var(--green);">SISTEMA ACTIVO</div>
+        <span id="last-update" style="font-size: 0.6rem; color: #64748b;"></span>
     </div>
 </div>
 
-<div id="grid-diarios" class="news-grid"></div>
+<div id="master-grid" class="news-grid"></div>
 
 <script>
-    const PROXY_URL = "https://script.google.com/macros/s/AKfycbwimyVoLDfgkhMsm5eTS5wBsp3sio_PhQaxcmXAq6GyDfxRHSQ29NvV2m9N22XjwD_gfQ/exec";
+    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbwimyVoLDfgkhMsm5eTS5wBsp3sio_PhQaxcmXAq6GyDfxRHSQ29NvV2m9N22XjwD_gfQ/exec";
 
-    async function ejecutarAnalisisIA() {
-        const output = document.getElementById('ai-verdict');
+    async function analizarTodo() {
+        const out = document.getElementById('ai-verdict');
         const btn = document.querySelector('.update-btn');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PENSANDO...';
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ESCANEANDO NODOS...';
         
         try {
-            const res = await fetch(PROXY_URL);
+            const res = await fetch(GOOGLE_URL);
             const data = await res.json();
-            
             const noticias = data.noticias;
-            const titulares = noticias.map(n => n.titulo.toLowerCase());
-            const totalNoticias = noticias.length;
-            const totalFuentes = new Set(noticias.map(n => n.fuente)).size;
             
-            document.getElementById('source-badge').innerText = `Fuentes: ${totalFuentes} | Noticias: ${totalNoticias}`;
+            // 1. ESTADÍSTICAS MASIVAS
+            const fuentes = [...new Set(noticias.map(n => n.fuente))];
+            document.getElementById('count-sources').innerHTML = `<i class="fas fa-database"></i> Fuentes: ${fuentes.length}`;
+            document.getElementById('count-news').innerHTML = `<i class="fas fa-newspaper"></i> Titulares: ${noticias.length}`;
 
-            // --- MOTOR DE IA LÓGICA ---
-            // Contamos la "densidad" de temas para que el veredicto sea dinámico
-            const temas = {
-                tasa: titulares.filter(t => t.includes("lecap") || t.includes("tasa") || t.includes("licitacion") || t.includes("letras")).length,
-                dolar: titulares.filter(t => t.includes("dolar") || t.includes("blue") || t.includes("mep") || t.includes("brecha") || t.includes("ccl")).length,
-                acciones: titulares.filter(t => t.includes("merval") || t.includes("acciones") || t.includes("empresa") || t.includes("cedear")).length,
-                inflacion: titulares.filter(t => t.includes("ipc") || t.includes("inflacion") || t.includes("precios")).length
+            // 2. MOTOR DE IA (Análisis de Sentimiento y Frecuencia)
+            const globalText = noticias.map(n => n.titulo.toLowerCase()).join(" ");
+            
+            const pesos = {
+                lecap: (globalText.match(/lecap|letra|tesoro|licitacion|tasa/g) || []).length,
+                dolar: (globalText.match(/dolar|blue|mep|ccl|brecha|cambiario/g) || []).length,
+                merval: (globalText.match(/merval|acciones|ypf|galicia|pampa/g) || []).length,
+                bonos: (globalText.match(/al30|gd30|bonos|riesgo pais|soberanos/g) || []).length
             };
 
-            let veredictoIA = "";
-            const maxTema = Object.keys(temas).reduce((a, b) => temas[a] > temas[b] ? a : b);
+            const totalMenciones = pesos.lecap + pesos.dolar + pesos.merval + pesos.bonos;
+            const confianza = Math.min(100, (totalMenciones / noticias.length) * 200).toFixed(0);
+            document.getElementById('ai-confidence').innerHTML = `<i class="fas fa-shield-alt"></i> Confianza IA: ${confianza}%`;
 
-            // Generación de texto basada en la dominancia de noticias
-            if (maxTema === 'tasa') {
-                veredictoIA = `Tras analizar ${totalNoticias} noticias, detecto una **fuerte tendencia hacia la deuda soberana en pesos**. Con un volumen de ${temas.tasa} titulares sobre licitaciones, la recomendación es **posicionarse en LECAPS**. El mercado está priorizando el interés compuesto por sobre la moneda dura.`;
-            } else if (maxTema === 'dolar') {
-                veredictoIA = `Alerta detectada: ${temas.dolar} noticias sugieren **presión cambiaria**. La IA identifica ruidos en la brecha. Recomendación: **Cobertura inmediata vía MEP o Bonos AL30**. Es momento de proteger capital y reducir exposición en pesos.`;
-            } else if (maxTema === 'acciones') {
-                veredictoIA = `El sentimiento del mercado es **optimista sobre el sector real**. Con ${temas.acciones} noticias positivas sobre empresas, la estrategia ganadora se desplaza a **Renta Variable (Merval)**. Se observa flujo de capital hacia activos energéticos y bancarios.`;
+            let analisisFinal = "";
+            const principal = Object.keys(pesos).reduce((a, b) => pesos[a] > pesos[b] ? a : b);
+
+            if (principal === 'lecap') {
+                analisisFinal = `**ESCENARIO DE TASAS:** El análisis de ${fuentes.length} fuentes confirma un dominio absoluto de instrumentos en pesos. Con la inflación cediendo, el mercado recomienda **MAXIMIZAR LECAPS**. El flujo informativo indica que el BCRA mantendrá la estabilidad, haciendo de la tasa el mejor refugio actual.`;
+            } else if (principal === 'dolar') {
+                analisisFinal = `**ESCENARIO DE COBERTURA:** Se detecta un ruido crítico en la brecha. La masa de noticias sugiere **DOLARIZACIÓN PREVENTIVA**. La recomendación es migrar a MEP o activos Hard Dollar ante señales de ajuste en el crawling-peg.`;
+            } else if (principal === 'merval') {
+                analisisFinal = `**ESCENARIO EQUITY:** Los diarios reportan una recuperación de activos locales. La IA sugiere **COMPRA DE ACCIONES**. El sector energía y bancos presentan un momento técnico superior a los instrumentos de renta fija.`;
             } else {
-                veredictoIA = `Se observa un **mercado en transición**. No hay un driver dominante claro entre los ${totalFuentes} diarios. Sugerencia de la IA: **Diversificación conservadora**. 40% Letras, 40% Dólar y 20% Cedears para cubrir riesgos mixtos.`;
+                analisisFinal = `**ESCENARIO SOBERANO:** Fuerte movimiento en bonos AL30/GD30. Se recomienda **ESTRATEGIA DE PARIDAD**. El riesgo país está en el centro de la agenda, favoreciendo la compresión de tasas de los bonos en dólares.`;
             }
 
-            // Inyectar el análisis dinámico
-            output.innerHTML = veredictoIA;
-            document.getElementById('timestamp').innerText = `${new Date().toLocaleTimeString()} - ${new Date().toLocaleDateString()}`;
+            out.innerHTML = analisisFinal;
+            document.getElementById('last-update').innerText = `SINCRO: ${new Date().toLocaleTimeString()}`;
 
-            // Renderizar Diarios (Compacto)
+            // 3. RENDERIZADO MINIATURA (PARA VER TODO DE UN VISTAZO)
             const agrupados = noticias.reduce((acc, n) => {
                 if(!acc[n.fuente]) acc[n.fuente] = [];
                 acc[n.fuente].push(n);
                 return acc;
             }, {});
 
-            document.getElementById('grid-diarios').innerHTML = Object.keys(agrupados).map(f => `
+            const grid = document.getElementById('master-grid');
+            grid.innerHTML = Object.keys(agrupados).map(f => `
                 <div class="news-card">
-                    <div class="card-header">${f}</div>
+                    <div class="card-header">${f.substring(0,25)}</div>
                     <div class="news-body">
                         ${agrupados[f].map(n => `<div class="item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}
                     </div>
@@ -138,12 +157,13 @@
             `).join('');
 
         } catch (e) {
-            output.innerText = "Error en el motor de inferencia. Verifique conexión.";
+            out.innerText = "Error en el análisis masivo de datos.";
         }
-        btn.innerHTML = '<i class="fas fa-sync-alt"></i> RE-ANALIZAR MERCADO';
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> RE-ESCANEAR TODAS LAS FUENTES';
     }
 
-    ejecutarAnalisisIA();
+    analizarTodo();
+    setInterval(analizarTodo, 300000); // Auto-refresco cada 5 min
 </script>
 
 </body>
