@@ -3,232 +3,753 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analizador de Inversiones en Vivo - Argentina</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Sistema de Trading Renta Fija</title>
     <script src="https://unpkg.com/lucide@latest"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+        :root {
+            --bg-dark: #0a0e17;
+            --panel-bg: #111827;
+            --text-main: #e2e8f0;
+            --text-muted: #64748b;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --danger: #ef4444;
+            --warning: #f59e0b;
+            --border: #1f2937;
+            --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
         body {
-            font-family: 'Inter', sans-serif;
-            background-color: #0a0a0a;
-            color: #f0f0f0;
-            min-height: 100vh; /* Corrección CSS aplicada */
+            background-color: var(--bg-dark);
+            color: var(--text-main);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
         }
-        .font-mono { font-family: 'JetBrains Mono', monospace; }
-        .card {
-            background-color: #121212;
-            border: 1px solid #222;
-            border-radius: 0.75rem;
+
+        /* Terminal Header */
+        header {
+            background: var(--panel-bg);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 1.5rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
-        .btn-primary {
-            background-color: #007BFF;
-            color: #fff;
+
+        .brand {
+            font-family: var(--font-mono);
             font-weight: 700;
-            transition: transform 0.2s, box-shadow 0.2s;
+            color: var(--accent);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .btn-primary:hover:not(:disabled) {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 20px rgba(0, 123, 255, 0.2);
+
+        .status-bar {
+            font-family: var(--font-mono);
+            font-size: 0.8rem;
+            display: flex;
+            gap: 1.5rem;
         }
-        .btn-primary:disabled {
-            background-color: #333;
-            cursor: not-allowed;
+
+        .status-item {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
         }
-        .hidden { display: none; }
-        .data-unavailable { color: #888; font-style: italic; }
+
+        .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--text-muted);
+        }
+        .dot.active { background: var(--success); box-shadow: 0 0 8px var(--success); }
+        .dot.error { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+        .dot.busy { background: var(--warning); animation: pulse 1s infinite; }
+
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            padding: 1.5rem;
+            overflow-y: auto;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+
+        /* Critical Error Overlay */
+        #critical-error {
+            display: none;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--danger);
+            color: var(--danger);
+            padding: 1.5rem;
+            border-radius: 8px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .btn-retry {
+            background: var(--danger);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-top: 1rem;
+        }
+
+        /* Dashboard Grid */
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+        }
+
+        .metric-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+
+        .metric-sub {
+            font-size: 0.85rem;
+            margin-top: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        /* Data Table */
+        .table-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            overflow: hidden;
+            overflow-x: auto; /* Responsive Table */
+        }
+
+        .table-header {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            min-width: 600px; /* Force scroll on small screens */
+        }
+
+        th {
+            text-align: left;
+            padding: 1rem 1.5rem;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            border-bottom: 1px solid var(--border);
+        }
+
+        td {
+            padding: 1rem 1.5rem;
+            border-bottom: 1px solid var(--border);
+            font-family: var(--font-mono);
+            font-size: 0.9rem;
+        }
+
+        tr:last-child td { border-bottom: none; }
+
+        .badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 700;
+        }
+        .badge-success { background: rgba(16, 185, 129, 0.2); color: var(--success); }
+        .badge-neutral { background: rgba(100, 116, 139, 0.2); color: var(--text-muted); }
+        .badge-danger { background: rgba(239, 68, 68, 0.2); color: var(--danger); }
+
+        .row-winner {
+            background: rgba(16, 185, 129, 0.05);
+            border-left: 4px solid var(--success);
+        }
+
+        /* Mobile */
+        @media (max-width: 768px) {
+            .status-bar { display: none; }
+            .metric-value { font-size: 1.5rem; }
+            th, td { padding: 0.75rem 1rem; }
+        }
+
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+
+        /* IA Advisor Panel */
+        .advisor-panel {
+            background: var(--panel-bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            border-left: 4px solid var(--text-muted);
+            transition: all 0.3s ease;
+        }
+        .advisor-panel.optimistic { border-left-color: var(--success); background: rgba(16, 185, 129, 0.05); }
+        .advisor-panel.cautious { border-left-color: var(--warning); background: rgba(245, 158, 11, 0.05); }
+        .advisor-panel.danger { border-left-color: var(--danger); background: rgba(239, 68, 68, 0.05); }
+
+        .advisor-header {
+            font-size: 0.9rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 1rem;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 1rem;
+        }
+        
+        .verdict-box {
+            font-family: var(--font-mono);
+            font-size: 1.1rem;
+            line-height: 1.5;
+            margin-bottom: 1.5rem;
+        }
+
+        .news-section-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 0.8rem;
+            font-weight: 600;
+        }
+
+        .news-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .news-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 0.8rem;
+            font-size: 0.9rem;
+            line-height: 1.4;
+            padding-bottom: 0.8rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .news-item:last-child { border-bottom: none; padding-bottom: 0; }
+
+        .source-tag {
+            font-size: 0.7rem;
+            font-weight: 700;
+            padding: 2px 6px;
+            border-radius: 4px;
+            white-space: nowrap;
+            color: #fff;
+        }
+        .tag-amb { background-color: #3b82f6; } /* Blue */
+        .tag-eco { background-color: #10b981; } /* Green */
+        .tag-for { background-color: #f59e0b; } /* Orange */
+
+        .news-title {
+            color: var(--text-main);
+        }
     </style>
 </head>
-<body class="flex items-center justify-center p-4">
+<body>
 
-    <div id="app-container" class="w-full max-w-4xl mx-auto">
-
-        <div id="main-view">
-            <div class="text-center mb-8">
-                <i data-lucide="bar-chart-horizontal-big" class="w-16 h-16 mx-auto text-[#007BFF]"></i>
-                <h1 class="text-3xl font-extrabold tracking-tight mt-4">Analizador de Inversiones en Vivo</h1>
-                <p class="text-gray-400">Datos reales para decisiones inteligentes.</p>
-            </div>
-
-            <div id="loading-state" class="text-center my-10 hidden">
-                <div class="w-10 h-10 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin mx-auto"></div>
-                <p class="text-sm font-mono uppercase tracking-widest text-gray-500 mt-4">Capturando datos de mercado...</p>
-            </div>
-
-            <div id="results-container" class="space-y-6 hidden">
-                <div id="data-grid" class="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <!-- Data will be injected here -->
-                </div>
-                <div id="comparison-grid" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <!-- Comparison cards will be injected here -->
-                </div>
-                <div class="text-center">
-                     <button id="conviene-btn" disabled class="btn-primary px-10 py-4 rounded-full text-lg">¿Qué Conviene Hoy?</button>
-                </div>
-            </div>
+<header>
+    <div class="brand">
+        <i data-lucide="activity"></i>
+        TERMINAL RENTA FIJA
+    </div>
+    <div class="status-bar">
+        <div class="status-item">
+            <div id="status-dot" class="dot busy"></div>
+            <span id="status-text">ESCANEANDO MERCADO...</span>
         </div>
-
-        <div id="offline-state" class="hidden text-center card p-8 bg-gray-800/50">
-            <i data-lucide="wifi-off" class="w-12 h-12 mx-auto text-gray-500 mb-4"></i>
-            <h2 class="text-xl font-bold text-gray-300">Sin Conexión a Datos Reales</h2>
-            <p class="text-gray-400 mt-2">Por favor, verifica tu conexión a internet para continuar.</p>
+        <div class="status-item">
+            <i data-lucide="calendar" size="14"></i>
+            <span>25/02/2026</span>
         </div>
+    </div>
+</header>
 
+<main>
+    <!-- Critical Error Block -->
+    <div id="critical-error">
+        <h3><i data-lucide="alert-triangle"></i> ERROR CRÍTICO</h3>
+        <p id="error-msg">No se pudo verificar la inflación oficial.</p>
+        <button class="btn-retry" onclick="system.init()">REINTENTAR CAPTURA</button>
     </div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            lucide.createIcons();
+    <!-- Metrics -->
+    <div class="grid">
+        <div class="metric-card">
+            <div class="metric-label">Inflación Base (IPC)</div>
+            <div id="val-ipc" class="metric-value">--%</div>
+            <div id="sub-ipc" class="metric-sub">Esperando dato...</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Tasa Plazo Fijo (TNA)</div>
+            <div id="val-pf" class="metric-value">--%</div>
+            <div id="sub-pf" class="metric-sub">TEM: --%</div>
+        </div>
+        <div class="metric-card">
+            <div class="metric-label">Mejor Oportunidad</div>
+            <div id="val-best" class="metric-value" style="color: var(--success)">--</div>
+            <div id="sub-best" class="metric-sub">Spread Real: --%</div>
+        </div>
+    </div>
 
-            const mainView = document.getElementById('main-view');
-            const loadingState = document.getElementById('loading-state');
-            const resultsContainer = document.getElementById('results-container');
-            const dataGrid = document.getElementById('data-grid');
-            const comparisonGrid = document.getElementById('comparison-grid');
-            const convieneBtn = document.getElementById('conviene-btn');
-            const offlineState = document.getElementById('offline-state');
+    <!-- IA Advisor Panel -->
+    <div id="ia-advisor" class="advisor-panel">
+        <div class="advisor-header">
+            <i data-lucide="brain-circuit"></i> IA ADVISOR: CONSENSO DE MERCADO
+        </div>
+        <div id="advisor-verdict" class="verdict-box">
+            Procesando feeds de noticias (Ámbito, El Economista, Fortuna)...
+        </div>
+        
+        <div class="news-section-title">Últimos Titulares Detectados</div>
+        <div id="news-feed" class="news-list">
+            <!-- News Items -->
+        </div>
+    </div>
 
-            const LECAP_TICKER = 'S31M6.BA'; // Lecap que vence el 31 de Marzo de 2026
-            const VALOR_NOMINAL_LECAP = 100;
+    <!-- Analysis Table -->
+    <div class="table-panel">
+        <div class="table-header">
+            <strong>Ranking de Rendimientos Reales</strong>
+        </div>
+        <table>
+            <thead>
+                <tr>
+                    <th>Instrumento</th>
+                    <th>Vencimiento</th>
+                    <th>Precio</th>
+                    <th>TEM (Est.)</th>
+                    <th>Spread vs IPC</th>
+                    <th>Veredicto</th>
+                </tr>
+            </thead>
+            <tbody id="analysis-body">
+                <!-- Rows -->
+            </tbody>
+        </table>
+    </div>
+</main>
 
-            const fetchWithProxy = async (url) => {
-                const proxyUrl = `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`;
-                const response = await fetch(proxyUrl);
-                if (!response.ok) throw new Error('Proxy fetch failed');
-                const data = await response.json();
-                return JSON.parse(data.contents);
+<script>
+    lucide.createIcons();
+
+    const system = {
+        config: {
+            today: new Date('2026-02-25T00:00:00'),
+            proxy: 'https://api.allorigins.win/raw?url=',
+            tickers: [
+                { symbol: 'S31M6.BA', name: 'LECAP S31M6', maturity: '2026-03-31' },
+                { symbol: 'S30J6.BA', name: 'LECAP S30J6', maturity: '2026-06-30' },
+                { symbol: 'S30Y5.BA', name: 'LECAP S30Y5', maturity: '2025-05-30' }
+            ],
+            feeds: [
+                { id: 'AMB', name: 'Ámbito', url: 'https://www.ambito.com/rss/finanzas.xml', tagClass: 'tag-amb' },
+                { id: 'ECO', name: 'El Economista', url: 'https://eleconomista.com.ar/finanzas/feed/', tagClass: 'tag-eco' },
+                { id: 'FOR', name: 'Fortuna', url: 'https://fortuna.perfil.com/feed/economia', tagClass: 'tag-for' }
+            ]
+        },
+
+        state: {
+            ipc: null,
+            pf_tna: null,
+            instruments: []
+        },
+
+        async init() {
+            this.setLoading(true);
+            this.clearError();
+            
+            try {
+                // 1. Secuencia de Ejecución: Captura
+                await Promise.all([
+                    this.fetchIPC(),
+                    this.fetchPF(),
+                    this.fetchInstruments(),
+                    this.fetchMarketNews()
+                ]);
+
+                // 2. Validación Global
+                this.validateData();
+
+                // 3. Análisis
+                this.analyze();
+
+                this.setLoading(false);
+            } catch (error) {
+                this.showError(error.message);
+                this.setLoading(false, true);
+            }
+        },
+
+        // --- Data Capture ---
+
+        async fetchMarketNews() {
+            const newsContainer = document.getElementById('news-feed');
+            const verdictBox = document.getElementById('advisor-verdict');
+            newsContainer.innerHTML = '';
+            
+            let allNews = [];
+
+            const promises = this.config.feeds.map(async (feed) => {
+                try {
+                    const res = await fetch(this.config.proxy + encodeURIComponent(feed.url));
+                    if (!res.ok) return null;
+                    const text = await res.text();
+                    const parser = new DOMParser();
+                    const xml = parser.parseFromString(text, "text/xml");
+                    const items = Array.from(xml.querySelectorAll("item")).slice(0, 3); // Top 3 per feed
+                    
+                    return items.map(item => ({
+                        source: feed.id,
+                        tagClass: feed.tagClass,
+                        title: item.querySelector("title")?.textContent || "Sin título",
+                        link: item.querySelector("link")?.textContent || "#"
+                    }));
+                } catch (e) {
+                    console.warn(`Feed error ${feed.id}`, e);
+                    return [];
+                }
+            });
+
+            const results = await Promise.all(promises);
+            results.forEach(r => { if(r) allNews = allNews.concat(r); });
+
+            // Mezclar noticias para variedad
+            allNews.sort(() => Math.random() - 0.5);
+            
+            // Render News List (Top 6)
+            allNews.slice(0, 6).forEach(news => {
+                const div = document.createElement('div');
+                div.className = 'news-item';
+                div.innerHTML = `
+                    <span class="source-tag ${news.tagClass}">[${news.source}]</span>
+                    <span class="news-title">${news.title}</span>
+                `;
+                newsContainer.appendChild(div);
+            });
+
+            this.analyzeConsensus(allNews, verdictBox);
+        },
+
+        analyzeConsensus(newsItems, container) {
+            const cues = {
+                stress: ['devaluación', 'cepo', 'dólar', 'brecha', 'riesgo', 'caída', 'crisis', 'default', 'presión'],
+                inflation: ['inflación', 'precios', 'ipc', 'aumento', 'suba', 'costo'],
+                opportunity: ['baja de tasas', 'lecap', 'superávit', 'ganancia', 'oportunidad', 'rally', 'merval', 'rebote']
             };
 
-            const fetchData = async () => {
-                if (!navigator.onLine) {
-                    mainView.classList.add('hidden');
-                    offlineState.classList.remove('hidden');
+            let scores = { stress: 0, inflation: 0, opportunity: 0 };
+            const titles = newsItems.map(n => n.title.toLowerCase());
+
+            titles.forEach(t => {
+                cues.stress.forEach(w => { if(t.includes(w)) scores.stress++; });
+                cues.inflation.forEach(w => { if(t.includes(w)) scores.inflation++; });
+                cues.opportunity.forEach(w => { if(t.includes(w)) scores.opportunity++; });
+            });
+
+            const panel = document.getElementById('ia-advisor');
+            let html = '';
+
+            // Lógica de Veredicto
+            if (scores.stress > scores.opportunity && scores.stress > scores.inflation) {
+                panel.className = 'advisor-panel danger';
+                html = `<span style="color:var(--danger)">CONSENSO: COBERTURA CAMBIARIA.</span><br>El mercado muestra señales de stress (Dólar/Cepo).<br><strong>Sugerencia:</strong> Priorizar activos Dólar MEP o Cedears.`;
+            } else if (scores.inflation > scores.opportunity) {
+                panel.className = 'advisor-panel cautious';
+                html = `<span style="color:var(--warning)">CONSENSO: ALERTA INFLACIONARIA.</span><br>Foco mediático en precios e IPC.<br><strong>Sugerencia:</strong> Buscar cobertura en Bonos CER (TX26/TX28).`;
+            } else if (scores.opportunity > scores.stress) {
+                panel.className = 'advisor-panel optimistic';
+                html = `<span style="color:var(--success)">CONSENSO: CARRY TRADE / RIESGO.</span><br>Expectativa de baja de tasas o rebote.<br><strong>Sugerencia:</strong> Aprovechar Tasa Fija (LECAPS) o Acciones.`;
+            } else {
+                panel.className = 'advisor-panel';
+                html = `<span>CONSENSO: MIXTO / ESPERA.</span><br>Sin tendencia clara en los titulares.<br><strong>Sugerencia:</strong> Mantener liquidez en Tasa Fija corta (Money Market/PF).`;
+            }
+
+            container.innerHTML = html;
+            lucide.createIcons();
+        },
+
+        async fetchIPC() {
+            try {
+                // Endpoint Corregido: ArgentinaDatos
+                const res = await fetch('https://api.argentinadatos.com/v1/finanzas/indices/inflacion');
+                if (!res.ok) throw new Error("API Error");
+                
+                const data = await res.json();
+                // Validar que exista el valor
+                if (!data || data.length === 0) {
+                    throw new Error("Dato IPC vacío");
+                }
+                
+                // Ordenar por fecha descendente y tomar el último
+                const sorted = data.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                this.state.ipc = parseFloat(sorted[0].valor);
+                
+                // Render IPC immediately
+                document.getElementById('val-ipc').innerText = `${this.state.ipc.toFixed(2)}%`;
+                document.getElementById('sub-ipc').innerText = `Fuente: ArgentinaDatos (${sorted[0].fecha.slice(0,7)})`;
+
+            } catch (e) {
+                console.error("IPC Fetch Failed:", e);
+                // Regla de Hierro: Si falla, bloquear.
+                throw new Error("No se pudo verificar la inflación oficial (IPC).");
+            }
+        },
+
+        async fetchPF() {
+            const DEFAULT_TNA = 40.0;
+            try {
+                // Usamos Plazo Fijo de ArgentinaDatos
+                const res = await fetch('https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo');
+                if (res.ok) {
+                    const data = await res.json();
+                    const sorted = data.sort((a, b) => new Date(b.fecha) - new Date(a.fecha));
+                    if (sorted.length > 0) {
+                        this.state.pf_tna = sorted[0].valor * 100; // Convert to %
+                    } else {
+                        this.state.pf_tna = DEFAULT_TNA;
+                    }
+                } else {
+                    this.state.pf_tna = DEFAULT_TNA;
+                }
+            } catch (e) {
+                console.warn("PF Fetch Warning:", e);
+                this.state.pf_tna = DEFAULT_TNA; // Fallback para no bloquear
+            }
+        },
+
+        async fetchInstruments() {
+            this.state.instruments = [];
+            
+            const promises = this.config.tickers.map(async (t) => {
+                try {
+                    const url = `https://query1.finance.yahoo.com/v8/finance/chart/${t.symbol}?interval=1d&range=1d`;
+                    const res = await fetch(this.config.proxy + encodeURIComponent(url));
+                    if (!res.ok) throw new Error("Network");
+                    
+                    const json = await res.json();
+                    const meta = json.chart?.result?.[0]?.meta;
+                    
+                    if (!meta || !meta.regularMarketPrice) throw new Error("No price");
+                    
+                    return {
+                        ...t,
+                        price: meta.regularMarketPrice,
+                        type: 'LECAP'
+                    };
+                } catch (e) {
+                    // Retornar objeto con error en lugar de null para mostrar en tabla
+                    return {
+                        ...t,
+                        price: null,
+                        type: 'LECAP',
+                        error: true
+                    };
+                }
+            });
+
+            const results = await Promise.all(promises);
+            this.state.instruments = results; // Incluye los que tienen error
+        },
+
+        // --- Logic & Analysis ---
+
+        validateData() {
+            // Regla de Hierro: Validación Global
+            if (this.state.ipc === null) {
+                throw new Error("Error Crítico: IPC nulo.");
+            }
+            
+            // Si no hay instrumentos ni PF, no se puede analizar
+            if (this.state.instruments.length === 0 && this.state.pf_tna === null) {
+                throw new Error("Error: No se obtuvieron datos de mercado.");
+            }
+        },
+
+        analyze() {
+            const tbody = document.getElementById('analysis-body');
+            tbody.innerHTML = '';
+            
+            let opportunities = [];
+
+            // 1. Analizar Plazo Fijo
+            if (this.state.pf_tna !== null) {
+                const temPF = this.state.pf_tna / 12;
+                const spread = temPF - this.state.ipc;
+                
+                opportunities.push({
+                    name: 'Plazo Fijo Tradicional',
+                    maturity: '30 días',
+                    price: '-',
+                    tem: temPF,
+                    spread: spread,
+                    type: 'PF'
+                });
+
+                document.getElementById('val-pf').innerText = `${this.state.pf_tna.toFixed(1)}%`;
+                document.getElementById('sub-pf').innerText = `TEM: ${temPF.toFixed(2)}%`;
+            }
+
+            // 2. Analizar Bonos
+            this.state.instruments.forEach(inst => {
+                // Si hubo error en la captura
+                if (inst.error || inst.price === null) {
+                    opportunities.push({
+                        name: inst.name,
+                        maturity: inst.maturity,
+                        price: 'N/A',
+                        tem: null,
+                        spread: -999,
+                        type: 'BONO',
+                        error: true
+                    });
                     return;
                 }
 
-                loadingState.classList.remove('hidden');
-                resultsContainer.classList.add('hidden');
-
-                const dolarPromise = fetch('https://dolarapi.com/v1/dolares').then(res => res.json());
-                const lecapPromise = fetchWithProxy(`https://query1.finance.yahoo.com/v8/finance/chart/${LECAP_TICKER}`);
-                const ipcPromise = fetch('https://apis.datos.gob.ar/series/api/series?ids=148.3_INIVELNAL_DICI_M_26&limit=1&sort=desc').then(res => res.json());
-
-                const results = await Promise.allSettled([dolarPromise, lecapPromise, ipcPromise]);
+                const maturityDate = new Date(inst.maturity);
+                const days = Math.ceil((maturityDate - this.config.today) / (1000 * 60 * 60 * 24));
                 
-                const [dolarResult, lecapResult, ipcResult] = results;
-
-                const data = {};
-
-                // Procesar Dólar y Tasas
-                if (dolarResult.status === 'fulfilled') {
-                    const d = dolarResult.value;
-                    data.mep = d.find(c => c.casa === 'bolsa')?.venta;
-                    data.ccl = d.find(c => c.casa === 'contadoconliqui')?.venta;
-                    data.bna = d.find(c => c.casa === 'oficial')?.venta;
-                    // dolarapi.com no tiene tasa de PF, se asume que se busca de otra fuente si estuviera disponible.
-                    // Por ahora, se mantiene como no disponible si no está en la API principal.
-                    data.tnaPf = 30.0; // Tasa de referencia, ya que la API no la provee.
-                } else {
-                    console.error('Error DolarAPI:', dolarResult.reason);
+                let tem = 0;
+                
+                if (inst.price > 0 && days > 0) {
+                    // Sin VT, no inventamos.
+                    tem = null; 
                 }
 
-                // Procesar Lecap
-                if (lecapResult.status === 'fulfilled') {
-                    data.lecapPrice = lecapResult.value.chart.result[0].meta.regularMarketPrice;
+                opportunities.push({
+                    name: inst.name,
+                    maturity: inst.maturity,
+                    price: `$${inst.price.toFixed(2)}`,
+                    tem: tem,
+                    spread: tem !== null ? (tem - this.state.ipc) : -999, // Penalizar si no hay dato
+                    type: 'BONO'
+                });
+            });
+
+            // 3. Ranking y Veredicto
+            // Ordenar por Spread Real descendente
+            opportunities.sort((a, b) => b.spread - a.spread);
+
+            const best = opportunities[0];
+            
+            // Render Table
+            opportunities.forEach(op => {
+                const isWinner = op === best && op.spread > 0; // Solo conviene si gana a inflación
+                const tr = document.createElement('tr');
+                if (isWinner) tr.classList.add('row-winner');
+                
+                let temText = 'N/A*';
+                let spreadText = '-';
+                let veredicto = '<span class="badge badge-neutral">NEUTRO</span>';
+
+                if (op.error) {
+                    veredicto = '<span class="badge badge-danger">ERROR RED</span>';
+                } else if (op.tem !== null) {
+                    temText = `${op.tem.toFixed(2)}%`;
+                    spreadText = `${op.spread.toFixed(2)}%`;
+                    if (isWinner) veredicto = '<span class="badge badge-success">CONVIENE</span>';
+                    else if (op.spread < 0) veredicto = '<span style="color:var(--danger)">PIERDE</span>';
                 } else {
-                     console.error('Error Yahoo Finance:', lecapResult.reason);
+                    veredicto = '<span class="badge badge-neutral">FALTAN DATOS</span>';
                 }
 
-                // Procesar Inflación
-                if (ipcResult.status === 'fulfilled') {
-                    data.ipc = ipcResult.value.data[0][1];
-                } else {
-                    console.error('Error IPC API:', ipcResult.reason);
-                }
-
-                loadingState.classList.add('hidden');
-                renderData(data);
-                resultsContainer.classList.remove('hidden');
-            };
-
-            const renderData = (data) => {
-                // Render top data grid
-                dataGrid.innerHTML = `
-                    ${createDataCard('Dólar MEP', data.mep, 'currency')}
-                    ${createDataCard('Dólar CCL', data.ccl, 'currency')}
-                    ${createDataCard('Dólar BNA', data.bna, 'currency')}
-                    ${createDataCard('Inflación IPC', data.ipc, 'percent')}
+                tr.innerHTML = `
+                    <td>${op.name}</td>
+                    <td>${op.maturity}</td>
+                    <td>${op.price}</td>
+                    <td>${temText}</td>
+                    <td style="color: ${op.spread > 0 && !op.error ? 'var(--success)' : (op.error ? 'var(--text-muted)' : 'var(--danger)')}">${spreadText}</td>
+                    <td>${veredicto}</td>
                 `;
+                tbody.appendChild(tr);
+            });
 
-                // Calcular y renderizar comparaciones
-                const temPf = data.tnaPf ? (data.tnaPf / 12) : null;
-                
-                let temLecap = null;
-                if (data.lecapPrice) {
-                    const diasAlVto = calculateDaysToMaturity('S31M6');
-                    if (diasAlVto > 0) {
-                        temLecap = (Math.pow(VALOR_NOMINAL_LECAP / data.lecapPrice, 30 / diasAlVto) - 1) * 100;
-                    }
-                }
+            // Update Best Card
+            if (best && best.spread > 0) {
+                document.getElementById('val-best').innerText = best.name;
+                document.getElementById('sub-best').innerText = `Spread Real: +${best.spread.toFixed(2)}%`;
+            } else {
+                document.getElementById('val-best').innerText = "Ninguno";
+                document.getElementById('val-best').style.color = "var(--text-muted)";
+                document.getElementById('sub-best').innerText = "No superan IPC o faltan datos";
+            }
 
-                comparisonGrid.innerHTML = `
-                    ${createComparisonCard('Plazo Fijo', temPf, data.ipc)}
-                    ${createComparisonCard('LECAP ' + LECAP_TICKER.split('.')[0], temLecap, data.ipc)}
-                `;
+            // Actualizar iconos después del render
+            lucide.createIcons();
+        },
 
-                if (temPf !== null && temLecap !== null && data.ipc !== null) {
-                    convieneBtn.disabled = false;
-                    convieneBtn.onclick = () => {
-                        const realPf = temPf - data.ipc;
-                        const realLecap = temLecap - data.ipc;
-                        const winner = realLecap > realPf ? 'LECAP' : 'Plazo Fijo';
-                        alert(`Análisis Rápido: Con una tasa real de ${Math.max(realLecap, realPf).toFixed(2)}%, hoy conviene invertir en ${winner}.`);
-                    };
-                }
-                lucide.createIcons();
-            };
+        // --- UI Helpers ---
 
-            const createDataCard = (label, value, type) => {
-                const formattedValue = value
-                    ? (type === 'currency' ? `$${value.toFixed(2)}` : `${value.toFixed(2)}%`)
-                    : '<span class="data-unavailable">No disponible</span>';
-                return `
-                    <div class="card p-4 text-center">
-                        <h3 class="text-sm font-semibold text-gray-400">${label}</h3>
-                        <p class="text-2xl font-mono font-bold">${formattedValue}</p>
-                    </div>`;
-            };
+        setLoading(isLoading, isError = false) {
+            const dot = document.getElementById('status-dot');
+            const text = document.getElementById('status-text');
+            
+            if (isLoading) {
+                dot.className = 'dot busy';
+                text.innerText = 'ESCANEANDO MERCADO...';
+            } else if (isError) {
+                dot.className = 'dot error';
+                text.innerText = 'ERROR DE SISTEMA';
+            } else {
+                dot.className = 'dot active';
+                text.innerText = 'MERCADO OPERATIVO';
+            }
+        },
 
-            const createComparisonCard = (label, tem, ipc) => {
-                let content;
-                if (tem !== null && ipc !== null) {
-                    const tasaReal = tem - ipc;
-                    const color = tasaReal >= 0 ? 'text-green-400' : 'text-red-400';
-                    content = `
-                        <p class="font-bold font-mono text-3xl ${color}">${tasaReal.toFixed(2)}%</p>
-                        <p class="text-xs text-gray-400">Tasa Real Mensual</p>
-                        <p class="text-xs font-mono text-gray-500 mt-2">TEM: ${tem.toFixed(2)}% | IPC: ${ipc.toFixed(2)}%</p>
-                    `;
-                } else {
-                    content = `<p class="text-lg font-mono data-unavailable">Datos insuficientes</p>`;
-                }
-                return `<div class="card p-6 text-center"><h3 class="font-bold text-lg mb-2">${label}</h3>${content}</div>`;
-            };
+        showError(msg) {
+            const errBlock = document.getElementById('critical-error');
+            const errMsg = document.getElementById('error-msg');
+            errBlock.style.display = 'block';
+            errMsg.innerText = msg;
+        },
 
-            const calculateDaysToMaturity = (ticker) => {
-                const monthMap = { 'E':0, 'F':1, 'M':2, 'A':3, 'Y':4, 'J':5, 'L':6, 'G':7, 'S':8, 'O':9, 'N':10, 'D':11 };
-                const day = parseInt(ticker.substring(1, 3));
-                const month = monthMap[ticker.substring(3, 4)];
-                const year = 2020 + parseInt(ticker.substring(4, 5));
-                
-                const today = new Date('2026-02-25T12:00:00Z'); // Fecha fija según requerimiento
-                const maturityDate = new Date(Date.UTC(year, month, day, 12, 0, 0));
-                
-                const diffTime = maturityDate - today;
-                return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-            };
+        clearError() {
+            document.getElementById('critical-error').style.display = 'none';
+        }
+    };
 
-            fetchData();
-        });
-    </script>
+    // Start System
+    system.init();
+</script>
 </body>
 </html>

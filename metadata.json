@@ -1,5 +1,5 @@
 {
-  "name": "Analizador de Inversiones en Vivo (Argentina)",
-  "description": "Analizador de datos en vivo que captura cotizaciones reales de Dólar, Tasas, Lecaps e Inflación (IPC) para calcular y comparar tasas efectivas mensuales.",
+  "name": "Investigador Renta Fija Arg",
+  "description": "Monitor de tasas, inflación y bonos argentinos en tiempo real.",
   "requestFramePermissions": []
 }
