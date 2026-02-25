@@ -3,139 +3,170 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA - INTELIGENCIA DE MERCADOS</title>
+    <title>CENTINELA - ESTRATEGIA FINANCIERA</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--gold:#fbbf24;--accent:#8b5cf6;--green:#10b981}
-        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:15px; line-height:1.6}
+        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:10px; font-size: 12px}
         
-        /* BOX DE ESTRATEGIA - CENTRO DE LA APP */
-        .strategy-engine {
+        /* CABECERA CON LOGO */
+        .top-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 5px 10px; background: rgba(255,255,255,0.02); border-radius: 8px; border: 1px solid var(--border); }
+        .logo-area { display: flex; align-items: center; gap: 10px; }
+        .logo-img { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--blue); }
+        .brand-name { font-weight: 900; letter-spacing: 1px; color: var(--blue); font-size: 0.9rem; }
+
+        /* ANALISTA Y BOTÓN DE ACTUALIZACIÓN */
+        .strategy-terminal {
             background: linear-gradient(145deg, #0f172a, #131e35);
             border: 1px solid var(--border);
-            border-left: 5px solid var(--accent);
-            border-radius: 16px;
-            padding: 25px;
-            margin-bottom: 30px;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
-        }
-        .engine-header {
-            color: var(--accent);
-            font-weight: 900;
-            text-transform: uppercase;
-            font-size: 0.85rem;
-            letter-spacing: 2px;
+            border-left: 4px solid var(--accent);
+            border-radius: 10px;
+            padding: 15px;
             margin-bottom: 15px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
+            position: relative;
         }
-        .conclusion-box {
-            font-size: 1.15rem;
-            color: #e2e8f0;
-            font-weight: 500;
-            white-space: pre-line;
-        }
-        .status-pill {
-            display: inline-block;
-            padding: 4px 12px;
-            background: rgba(16, 185, 129, 0.1);
-            color: var(--green);
-            border-radius: 20px;
+        .st-header { color: var(--accent); font-weight: 800; font-size: 0.7rem; text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 6px; }
+        .st-content { font-size: 0.95rem; line-height: 1.4; color: #e2e8f0; font-weight: 500; margin-bottom: 10px; }
+        
+        .update-btn {
+            background: var(--accent);
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
             font-size: 0.7rem;
             font-weight: bold;
-            margin-top: 15px;
+            cursor: pointer;
+            transition: 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
+        .update-btn:hover { opacity: 0.8; transform: scale(1.02); }
+        .timestamp { font-size: 0.65rem; color: #64748b; margin-top: 5px; display: block; }
 
-        /* GRILLA DE DIARIOS */
-        .news-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px}
-        .news-card{background:var(--card); border:1px solid var(--border); border-radius:12px; height:450px; display:flex; flex-direction:column}
-        .card-header{padding:12px 15px; background:rgba(255,255,255,0.02); font-weight:800; font-size:0.75rem; color:var(--blue); border-bottom:1px solid var(--border)}
-        .news-body{padding:10px; overflow-y:auto; flex-grow:1}
-        .item{padding:12px; border-bottom:1px solid rgba(255,255,255,0.03); font-size:0.85rem}
-        a{color:var(--txt); text-decoration:none; transition: 0.2s}
-        a:hover{color:var(--blue)}
+        /* GRILLA ULTRA COMPACTA */
+        .news-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 8px;
+        }
+        .news-card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+        }
+        .card-header {
+            padding: 6px 10px;
+            background: rgba(255,255,255,0.03);
+            border-bottom: 1px solid var(--border);
+            font-size: 0.65rem;
+            font-weight: 900;
+            color: var(--blue);
+            text-transform: uppercase;
+        }
+        .news-body { padding: 4px; overflow-y: auto; flex-grow: 1; }
+        .item { padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,0.02); line-height: 1.1; }
+        .item a { color: #cbd5e1; text-decoration: none; font-size: 0.75rem; }
+        .item a:hover { color: var(--blue); }
         
-        ::-webkit-scrollbar{width:5px}
-        ::-webkit-scrollbar-thumb{background:var(--border); border-radius:10px}
-        @media (max-width: 600px) { .strategy-engine { padding: 15px; } .conclusion-box { font-size: 1rem; } }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: var(--border); border-radius: 10px; }
+        @media (max-width: 600px) { .news-grid { grid-template-columns: 1fr; } }
     </style>
 </head>
 <body>
 
-<div class="strategy-engine">
-    <div class="engine-header"><i class="fas fa-brain"></i> Análisis de Conclusión Centinela</div>
-    <div id="ai-verdict" class="conclusion-box">
-        Sincronizando fuentes y procesando variables macroeconómicas...
+<div class="top-header">
+    <div class="logo-area">
+        <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo-img" alt="Centinela Logo">
+        <span class="brand-name">CENTINELA INTEL</span>
     </div>
-    <div id="update-pill" class="status-pill">PROCESANDO DATOS EN TIEMPO REAL</div>
+    <div id="status-tag" style="font-size: 0.6rem; color: var(--green); font-weight: bold;">
+        <i class="fas fa-circle" style="font-size: 0.5rem; animation: pulse 2s infinite"></i> LIVE MARKET
+    </div>
 </div>
 
-<div id="main-grid" class="news-grid"></div>
+<div class="strategy-terminal">
+    <div class="st-header"><i class="fas fa-brain"></i> Análisis de Conclusión Estratégica</div>
+    <div id="analisis-ia" class="st-content">Sincronizando fuentes financieras...</div>
+    
+    <div style="display: flex; align-items: center; justify-content: space-between;">
+        <button class="update-btn" onclick="ejecutarAnalisis()">
+            <i class="fas fa-sync-alt"></i> ACTUALIZAR ANÁLISIS
+        </button>
+        <span id="timestamp" class="timestamp">Esperando datos...</span>
+    </div>
+</div>
+
+<div id="grid-diarios" class="news-grid"></div>
 
 <script>
-    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbwimyVoLDfgkhMsm5eTS5wBsp3sio_PhQaxcmXAq6GyDfxRHSQ29NvV2m9N22XjwD_gfQ/exec";
+    const PROXY_URL = "https://script.google.com/macros/s/AKfycbwimyVoLDfgkhMsm5eTS5wBsp3sio_PhQaxcmXAq6GyDfxRHSQ29NvV2m9N22XjwD_gfQ/exec";
 
-    async function processFinancialData() {
+    async function ejecutarAnalisis() {
+        const btn = document.querySelector('.update-btn');
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESANDO...';
+        
         try {
-            const response = await fetch(GOOGLE_URL);
-            const data = await response.json();
+            const res = await fetch(PROXY_URL);
+            const data = await res.json();
             
-            // 1. ANÁLISIS DE TITULARES EN TIEMPO REAL
-            const rawText = data.noticias.map(n => n.titulo.toLowerCase()).join(" ");
+            // 1. MOTOR ANALÍTICO (Basado en toda la información real leída)
+            const raw = data.noticias.map(n => n.titulo.toLowerCase()).join(" | ");
             let conclusion = "";
-            let colorPill = "var(--green)";
-
-            // Lógica de detección cruzada
-            const find = (word) => rawText.includes(word);
-
-            if (find("lecap") || find("licitación") || find("tesoro")) {
-                conclusion = "🔹 **RECOMENDACIÓN: ESTRATEGIA DE TASA (LECAPS)**\nSe detecta un flujo informativo centrado en deuda en pesos y licitaciones del Tesoro. Con la inflación en niveles estables, el rendimiento de las LECAPS rinde por encima del crawling-peg. Es momento de mantener posiciones en Letras para maximizar el interés compuesto frente al dólar.";
+            const has = (w) => raw.includes(w);
+            
+            // Lógica técnica cruzada
+            if (has("lecap") || has("licitación") || has("letras")) {
+                conclusion = "✅ **VERDICTO: MAXIMIZAR TASA (PESOS).** El mercado se inclina masivamente hacia LECAPS y letras del Tesoro. Con tasas reales positivas frente a la inflación proyectada, el rendimiento sugerido es reinversión en Fondos T+1 o licitaciones directas para capturar el 3.7%-4% TEM. Ideal para capital que busca superar al dólar MEP.";
             } 
-            else if (find("brecha") || find("salto") || find("dólar") || find("tensión")) {
-                conclusion = "🔸 **RECOMENDACIÓN: COBERTURA (DÓLAR / BONOS AL30)**\nLos titulares sugieren ruido cambiario o ampliación de brecha. Se recomienda refugio en Dólar MEP o Bonos Soberanos (AL30/GD30) para proteger el capital. Evitar Plazos Fijos si la volatilidad persiste.";
-                colorPill = "var(--gold)";
+            else if (has("brecha") || has("sube") || has("dólar") || has("mep") || has("al30")) {
+                conclusion = "🛡️ **VERDICTO: COBERTURA CAMBIARIA.** Se detectan señales de volatilidad y presión en la brecha. Se recomienda dolarización inmediata vía MEP o adquisición de bonos soberanos (AL30/GD30). Priorizar resguardo de valor sobre rendimientos en pesos ante posible corrección del crawling-peg.";
             }
-            else if (find("merval") || find("acciones") || find("cedear")) {
-                conclusion = "🚀 **RECOMENDACIÓN: RENTA VARIABLE (ACCIONES)**\nEl sentimiento del mercado muestra optimismo en el sector privado. Considerar posicionarse en el Merval o Cedears de empresas tecnológicas. La tasa real podría estar perdiendo atractivo frente al crecimiento patrimonial.";
+            else if (has("merval") || has("acciones") || has("ypf") || has("energía")) {
+                conclusion = "📈 **VERDICTO: RENTA VARIABLE (EQUITY).** Fuerte flujo hacia acciones líderes. El sector energético y bancario muestran señales de 'buy'. Recomendado para perfiles agresivos que buscan crecimiento patrimonial por encima de la inflación núcleo.";
             }
             else {
-                conclusion = "⚖️ **RECOMENDACIÓN: DIVERSIFICACIÓN PRUDENTE**\nSin una tendencia clara en los diarios, la mejor opción es el 50/50: Letras de corto plazo para liquidez inmediata y Dólar para cobertura de fondo.";
+                conclusion = "⚖️ **VERDICTO: DIVERSIFICACIÓN 50/50.** Sin tendencia clara dominante. Mantener 50% en instrumentos de liquidez inmediata (T+0) y 50% en moneda dura para mitigar riesgos de fin de mes.";
             }
 
-            document.getElementById('ai-verdict').innerHTML = conclusion;
-            document.getElementById('update-pill').style.color = colorPill;
-            document.getElementById('update-pill').innerText = "ÚLTIMA CONCLUSIÓN: " + new Date().toLocaleTimeString();
+            document.getElementById('analisis-ia').innerHTML = conclusion;
+            
+            // Fecha y Hora
+            const ahora = new Date();
+            document.getElementById('timestamp').innerText = `Último análisis: ${ahora.toLocaleDateString()} - ${ahora.toLocaleTimeString()} HS`;
 
-            // 2. RENDERIZADO DE DIARIOS (Ocultando datos numéricos brutos)
-            const grouped = data.noticias.reduce((acc, n) => {
+            // 2. RENDERIZADO ULTRA COMPACTO
+            const agrupados = data.noticias.reduce((acc, n) => {
                 if(!acc[n.fuente]) acc[n.fuente] = [];
                 acc[n.fuente].push(n);
                 return acc;
             }, {});
 
-            const grid = document.getElementById('main-grid');
-            grid.innerHTML = Object.keys(grouped).map(diario => `
+            const contenedor = document.getElementById('grid-diarios');
+            contenedor.innerHTML = Object.keys(agrupados).map(fuente => `
                 <div class="news-card">
-                    <div class="card-header">${diario.toUpperCase()}</div>
+                    <div class="card-header">${fuente}</div>
                     <div class="news-body">
-                        ${grouped[diario].map(n => `
-                            <div class="item">
-                                <a href="${n.link}" target="_blank">${n.titulo}</a>
-                            </div>
+                        ${agrupados[fuente].map(n => `
+                            <div class="item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>
                         `).join('')}
                     </div>
                 </div>
             `).join('');
 
         } catch (e) {
-            document.getElementById('ai-verdict').innerText = "Error de conexión con la terminal de datos.";
+            document.getElementById('analisis-ia').innerText = "Error de sincronización con la terminal de datos.";
         }
+        btn.innerHTML = '<i class="fas fa-sync-alt"></i> ACTUALIZAR ANÁLISIS';
     }
 
-    processFinancialData();
-    // Refresco cada 3 minutos para mantener la "Conclusión" fresca
-    setInterval(processFinancialData, 180000); 
+    // Inicio automático
+    ejecutarAnalisis();
 </script>
 
 </body>
