@@ -1,170 +1,158 @@
 <!DOCTYPE html>
-<html lang="es-AR">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA - TERMINAL DE INTELIGENCIA MASIVA</title>
+    <title>CENTINELA AI - TERMINAL DE INTELIGENCIA</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--gold:#fbbf24;--accent:#8b5cf6;--green:#10b981}
-        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:5px; font-size: 10px}
+        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--green:#10b981;--gold:#fbbf24}
+        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:8px; font-size: 11px; overflow-x:hidden}
         
-        /* HEADER ULTRA COMPACTO */
-        .top-header { display: flex; align-items: center; justify-content: space-between; padding: 4px 10px; background: #0f172a; border-bottom: 1px solid var(--border); position: sticky; top: 0; z-index: 100; }
-        .logo-area { display: flex; align-items: center; gap: 8px; }
-        .logo-img { width: 24px; height: 24px; border-radius: 50%; }
-        .brand-name { font-weight: 900; color: var(--blue); font-size: 0.8rem; }
+        /* CABECERA CON LOGO */
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 8px; }
+        .logo-box { display: flex; align-items: center; gap: 10px; }
+        .logo { width: 32px; height: 32px; border-radius: 50%; border: 1px solid var(--blue); }
+        .brand { font-weight: 900; color: var(--blue); font-size: 0.9rem; letter-spacing: 1px; }
 
-        /* ANALISTA DE DATOS MASIVOS */
+        /* MOTOR DE IA ANALÍTICO */
         .ai-terminal {
             background: linear-gradient(145deg, #0f172a, #1a1b3a);
             border: 1px solid var(--border);
-            border-left: 4px solid var(--accent);
-            border-radius: 6px;
-            padding: 12px;
-            margin: 8px 5px;
+            border-left: 5px solid var(--accent);
+            border-radius: 8px;
+            padding: 18px;
+            margin-bottom: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
         }
-        .ai-stats { display: flex; gap: 15px; margin-bottom: 8px; font-size: 0.65rem; font-weight: bold; color: var(--blue); }
-        .ai-verdict-text { font-size: 0.95rem; line-height: 1.4; color: #f8fafc; border-left: 2px solid var(--accent); padding-left: 12px; }
+        .ai-stats { display: flex; flex-wrap: wrap; gap: 15px; font-size: 0.65rem; color: var(--blue); font-weight: bold; margin-bottom: 12px; text-transform: uppercase; }
+        .verdict-box { font-size: 1.1rem; line-height: 1.6; color: #f8fafc; border-left: 3px solid var(--accent); padding-left: 18px; margin-bottom: 20px; font-weight: 400; }
+        .verdict-box b { color: var(--gold); }
         
-        .update-btn { background: var(--accent); color: white; border: none; padding: 4px 10px; border-radius: 3px; font-size: 0.65rem; font-weight: bold; cursor: pointer; }
+        .update-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-size: 0.75rem; font-weight: bold; cursor: pointer; transition: 0.3s; display: flex; align-items: center; gap: 10px; }
+        .update-btn:hover { filter: brightness(1.2); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(139, 92, 246, 0.4); }
 
-        /* GRILLA DE DIARIOS MINIATURA */
-        .news-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); 
-            gap: 5px; 
-            padding: 5px;
-        }
-        .news-card { 
-            background: var(--card); 
-            border: 1px solid var(--border); 
-            height: 220px; 
-            display: flex; 
-            flex-direction: column; 
-            transition: 0.2s;
-        }
-        .news-card:hover { border-color: var(--accent); background: #131e35; }
-        .card-header { 
-            padding: 3px 8px; 
-            background: rgba(255,255,255,0.03); 
-            border-bottom: 1px solid var(--border); 
-            font-size: 0.6rem; 
-            font-weight: 900; 
-            color: var(--blue); 
-        }
-        .news-body { padding: 2px; overflow-y: auto; flex-grow: 1; }
-        .item { padding: 3px 6px; border-bottom: 1px solid rgba(255,255,255,0.02); line-height: 1.1; }
-        .item a { color: #94a3b8; text-decoration: none; font-size: 0.72rem; }
-        .item a:hover { color: #fff; }
+        /* GRILLA DE DIARIOS ULTRA COMPACTA */
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 8px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 6px; height: 260px; display: flex; flex-direction: column; transition: 0.2s; }
+        .card:hover { border-color: var(--blue); transform: translateY(-2px); }
+        .card-h { padding: 6px 10px; background: rgba(255,255,255,0.03); border-bottom: 1px solid var(--border); font-size: 0.65rem; font-weight: 900; color: var(--blue); text-transform: uppercase; }
+        .card-b { padding: 4px; overflow-y: auto; flex-grow: 1; }
+        .news-item { padding: 5px 8px; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .news-item a { color: #94a3b8; text-decoration: none; font-size: 0.78rem; line-height: 1.3; transition: 0.2s; }
+        .news-item a:hover { color: #fff; }
 
-        ::-webkit-scrollbar { width: 2px; }
-        ::-webkit-scrollbar-thumb { background: var(--accent); }
+        ::-webkit-scrollbar { width: 3px; }
+        ::-webkit-scrollbar-thumb { background: var(--accent); border-radius: 10px; }
+        
+        @media (max-width: 600px) {
+            .grid { grid-template-columns: 1fr; }
+            .verdict-box { font-size: 1rem; }
+        }
     </style>
 </head>
 <body>
 
-<div class="top-header">
-    <div class="logo-area">
-        <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo-img">
-        <span class="brand-name">CENTINELA BIG DATA</span>
+<div class="header">
+    <div class="logo-box">
+        <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo">
+        <span class="brand">CENTINELA BIG DATA IA</span>
     </div>
-    <div id="status-clock" style="color: var(--green); font-weight: bold;">LIVE SCANNER</div>
+    <div id="status" style="color:var(--green); font-weight:bold; font-size:0.6rem">
+        <i class="fas fa-circle" style="font-size: 0.5rem; animation: pulse 2s infinite"></i> SISTEMA ACTIVO
+    </div>
 </div>
 
 <div class="ai-terminal">
     <div class="ai-stats">
-        <span id="count-sources"><i class="fas fa-database"></i> Fuentes: --</span>
-        <span id="count-news"><i class="fas fa-newspaper"></i> Titulares: --</span>
-        <span id="ai-confidence" style="color:var(--gold)"></span>
+        <span id="f-count"><i class="fas fa-database"></i> Fuentes: --</span>
+        <span id="n-count"><i class="fas fa-newspaper"></i> Noticias: --</span>
+        <span id="t-stamp" style="color:#64748b"><i class="far fa-clock"></i> Esperando datos...</span>
     </div>
-    <div id="ai-verdict" class="ai-verdict-text">
-        Procesando flujo masivo de información financiera...
+    <div id="verdicto" class="verdict-box">
+        Analizando el flujo de noticias de los 10 diarios financieros...
     </div>
-    <div style="margin-top: 10px; display: flex; justify-content: space-between; align-items: center;">
-        <button class="update-btn" onclick="analizarTodo()">
-            <i class="fas fa-sync-alt"></i> RE-ESCANEAR TODAS LAS FUENTES
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 10px;">
+        <button class="update-btn" onclick="correrIA()">
+            <i class="fas fa-microchip"></i> ACTUALIZAR ANÁLISIS ESTRATÉGICO
         </button>
-        <span id="last-update" style="font-size: 0.6rem; color: #64748b;"></span>
+        <span style="font-size: 0.6rem; color: var(--blue); font-weight: 800; border: 1px solid var(--blue); padding: 2px 6px; border-radius: 4px;">PC/MOBILE LOGIC v12.0</span>
     </div>
 </div>
 
-<div id="master-grid" class="news-grid"></div>
+<div id="contenedor-diarios" class="grid"></div>
 
 <script>
-    const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbwimyVoLDfgkhMsm5eTS5wBsp3sio_PhQaxcmXAq6GyDfxRHSQ29NvV2m9N22XjwD_gfQ/exec";
+    // TU URL ACTUALIZADA
+    const API_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
 
-    async function analizarTodo() {
-        const out = document.getElementById('ai-verdict');
+    async function correrIA() {
+        const out = document.getElementById('verdicto');
         const btn = document.querySelector('.update-btn');
-        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> ESCANEANDO NODOS...';
-        
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> PROCESANDO BIG DATA...';
+
         try {
-            const res = await fetch(GOOGLE_URL);
+            const res = await fetch(API_URL);
             const data = await res.json();
             const noticias = data.noticias;
+            const totalF = new Set(noticias.map(n => n.fuente)).size;
             
-            // 1. ESTADÍSTICAS MASIVAS
-            const fuentes = [...new Set(noticias.map(n => n.fuente))];
-            document.getElementById('count-sources').innerHTML = `<i class="fas fa-database"></i> Fuentes: ${fuentes.length}`;
-            document.getElementById('count-news').innerHTML = `<i class="fas fa-newspaper"></i> Titulares: ${noticias.length}`;
+            document.getElementById('f-count').innerHTML = `<i class="fas fa-database"></i> Fuentes: ${totalF}`;
+            document.getElementById('n-count').innerHTML = `<i class="fas fa-newspaper"></i> Titulares: ${noticias.length}`;
+            document.getElementById('t-stamp').innerHTML = `<i class="far fa-clock"></i> ${new Date().toLocaleDateString()} - ${new Date().toLocaleTimeString()} HS`;
 
-            // 2. MOTOR DE IA (Análisis de Sentimiento y Frecuencia)
-            const globalText = noticias.map(n => n.titulo.toLowerCase()).join(" ");
+            // MOTOR DE IA: Lógica de Inferencia Financiera
+            const textoLargo = noticias.map(n => n.titulo.toLowerCase()).join(" ");
             
-            const pesos = {
-                lecap: (globalText.match(/lecap|letra|tesoro|licitacion|tasa/g) || []).length,
-                dolar: (globalText.match(/dolar|blue|mep|ccl|brecha|cambiario/g) || []).length,
-                merval: (globalText.match(/merval|acciones|ypf|galicia|pampa/g) || []).length,
-                bonos: (globalText.match(/al30|gd30|bonos|riesgo pais|soberanos/g) || []).length
+            // Mapeo de densidad de temas
+            const clusters = {
+                tasa: (textoLargo.match(/lecap|tasa|letras|licitacion|tesoro|plazo fijo|uva/g) || []).length,
+                dolar: (textoLargo.match(/dolar|blue|mep|ccl|brecha|devaluacion|al30|gd30/g) || []).length,
+                acciones: (textoLargo.match(/merval|acciones|ypf|galicia|pampa|cedear|wall street/g) || []).length,
+                riesgo: (textoLargo.match(/inflacion|ipc|precios|ajuste|caida|riesgo pais/g) || []).length
             };
 
-            const totalMenciones = pesos.lecap + pesos.dolar + pesos.merval + pesos.bonos;
-            const confianza = Math.min(100, (totalMenciones / noticias.length) * 200).toFixed(0);
-            document.getElementById('ai-confidence').innerHTML = `<i class="fas fa-shield-alt"></i> Confianza IA: ${confianza}%`;
+            const principal = Object.keys(clusters).reduce((a, b) => clusters[a] > clusters[b] ? a : b);
+            let veredictoTexto = "";
 
-            let analisisFinal = "";
-            const principal = Object.keys(pesos).reduce((a, b) => pesos[a] > pesos[b] ? a : b);
-
-            if (principal === 'lecap') {
-                analisisFinal = `**ESCENARIO DE TASAS:** El análisis de ${fuentes.length} fuentes confirma un dominio absoluto de instrumentos en pesos. Con la inflación cediendo, el mercado recomienda **MAXIMIZAR LECAPS**. El flujo informativo indica que el BCRA mantendrá la estabilidad, haciendo de la tasa el mejor refugio actual.`;
+            // Generación de conclusión profesional dinámica
+            if (principal === 'tasa') {
+                veredictoTexto = `💰 **CONCLUSIÓN IA:** Se detecta un dominio de noticias sobre **RENTABILIDAD EN PESOS**. Con la inflación en fase de estabilización, la masa crítica de titulares sugiere que las **LECAPS o Plazos Fijos UVA** son el refugio con mayor rendimiento real. El mercado premia la tasa por sobre el dólar en el corto plazo.`;
             } else if (principal === 'dolar') {
-                analisisFinal = `**ESCENARIO DE COBERTURA:** Se detecta un ruido crítico en la brecha. La masa de noticias sugiere **DOLARIZACIÓN PREVENTIVA**. La recomendación es migrar a MEP o activos Hard Dollar ante señales de ajuste en el crawling-peg.`;
-            } else if (principal === 'merval') {
-                analisisFinal = `**ESCENARIO EQUITY:** Los diarios reportan una recuperación de activos locales. La IA sugiere **COMPRA DE ACCIONES**. El sector energía y bancos presentan un momento técnico superior a los instrumentos de renta fija.`;
+                veredictoTexto = `🛡️ **CONCLUSIÓN IA:** Alerta de volatilidad detectada. Múltiples fuentes reportan movimientos en la brecha. La recomendación técnica es **DOLARIZACIÓN PREVENTIVA (MEP/CEDEARS)**. La IA identifica que el costo de oportunidad de quedarse en pesos está aumentando frente a posibles ajustes cambiarios.`;
+            } else if (principal === 'acciones') {
+                veredictoTexto = `📈 **CONCLUSIÓN IA:** Sentimiento de mercado **BULLISH (ALCISTA)**. El flujo informativo se centra en el crecimiento de empresas locales. Es momento de **RENTA VARIABLE (MERVAL)**. Se observa una rotación de carteras desde bonos hacia acciones energéticas y bancarias.`;
             } else {
-                analisisFinal = `**ESCENARIO SOBERANO:** Fuerte movimiento en bonos AL30/GD30. Se recomienda **ESTRATEGIA DE PARIDAD**. El riesgo país está en el centro de la agenda, favoreciendo la compresión de tasas de los bonos en dólares.`;
+                veredictoTexto = `⚖️ **CONCLUSIÓN IA:** Escenario de **ALTA INCERTIDUMBRE**. Los diarios muestran paridad entre inflación y rendimiento. Se sugiere **DIVERSIFICACIÓN TOTAL**: 30% Letras, 40% Dólar MEP y 30% Cedears para cubrir todos los frentes de riesgo reportados.`;
             }
 
-            out.innerHTML = analisisFinal;
-            document.getElementById('last-update').innerText = `SINCRO: ${new Date().toLocaleTimeString()}`;
+            out.innerHTML = veredictoTexto;
 
-            // 3. RENDERIZADO MINIATURA (PARA VER TODO DE UN VISTAZO)
+            // Renderizado de Grilla de Diarios
             const agrupados = noticias.reduce((acc, n) => {
                 if(!acc[n.fuente]) acc[n.fuente] = [];
                 acc[n.fuente].push(n);
                 return acc;
             }, {});
 
-            const grid = document.getElementById('master-grid');
-            grid.innerHTML = Object.keys(agrupados).map(f => `
-                <div class="news-card">
-                    <div class="card-header">${f.substring(0,25)}</div>
-                    <div class="news-body">
-                        ${agrupados[f].map(n => `<div class="item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}
+            document.getElementById('contenedor-diarios').innerHTML = Object.keys(agrupados).map(f => `
+                <div class="card">
+                    <div class="card-h">${f}</div>
+                    <div class="card-b">
+                        ${agrupados[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}
                     </div>
                 </div>
             `).join('');
 
         } catch (e) {
-            out.innerText = "Error en el análisis masivo de datos.";
+            out.innerHTML = "⚠️ Error de enlace: Verifique que el Script de Google esté publicado como 'Público/Cualquiera'.";
+            console.error(e);
         }
-        btn.innerHTML = '<i class="fas fa-sync-alt"></i> RE-ESCANEAR TODAS LAS FUENTES';
+        btn.innerHTML = '<i class="fas fa-microchip"></i> ACTUALIZAR ANÁLISIS ESTRATÉGICO';
     }
 
-    analizarTodo();
-    setInterval(analizarTodo, 300000); // Auto-refresco cada 5 min
+    // Inicio automático
+    correrIA();
 </script>
-
 </body>
 </html>
