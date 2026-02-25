@@ -3,22 +3,21 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA PRO - TIEMPO REAL</title>
+    <title>Centinela Pro - Terminal Real 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root{--bg:#05070a;--bg2:#0f172a;--blue:#38bdf8;--green:#22c55e;--red:#ef4444;--border:#1e293b;--txt:#f1f5f9}
-        body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;padding:12px}
-        .monitor-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative}
-        .monitor-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--blue);border-radius:12px 12px 0 0}
-        .label{font-size:0.65rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:1px}
-        .value{font-size:1.8rem;font-weight:700;margin:5px 0}
-        .trend{font-size:0.75rem;font-weight:600}
+        body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;padding:12px;min-height:100vh}
+        .monitor-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;border-top:3px solid var(--blue)}
+        .label{font-size:0.65rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px}
+        .value{font-size:1.7rem;font-weight:700;display:block}
+        .trend{font-size:0.75rem;opacity:0.8}
         .ia-panel{background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);border:1px solid #4338ca;border-radius:16px;padding:20px;margin:20px 0}
         .live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-right:6px;animation:blink 1s infinite}
         @keyframes blink{0%{opacity:1}50%{opacity:0.3}100%{opacity:1}}
-        .table-dark{--bs-table-bg:#0f172a;font-size:0.85rem}
-        .badge-live{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid var(--green);font-size:0.6rem;padding:2px 6px}
+        table{font-size:0.85rem}
+        .code{background:var(--border);padding:2px 6px;border-radius:4px;color:var(--blue);font-family:monospace;font-weight:bold}
     </style>
 </head>
 <body>
@@ -26,67 +25,60 @@
 <div class="container-fluid" style="max-width:1100px">
     <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h4 m-0 fw-black"><i class="fas fa-satellite-dish text-primary"></i> TERMINAL <span class="text-primary">LIVE</span></h1>
-            <span class="badge badge-live"><span class="live-dot"></span> FEED CONECTADO A BCRA</span>
+            <h1 class="h4 m-0 fw-bold"><i class="fas fa-terminal text-primary"></i> CENTINELA <span class="text-primary">LIVE</span></h1>
+            <small class="text-muted"><span class="live-dot"></span> DATOS REALES BCRA & MARKET</small>
         </div>
-        <button class="btn btn-sm btn-dark border-secondary" onclick="refresh()"><i class="fas fa-sync"></i></button>
+        <button class="btn btn-sm btn-dark border-secondary" onclick="refresh()"><i class="fas fa-sync"></i> REFRESCAR</button>
     </div>
 
     <div class="row g-3">
         <div class="col-6 col-md-3">
             <div class="monitor-card">
-                <span class="label">IPC Mensual (Oficial)</span>
-                <div class="value" id="ipc">--%</div>
-                <div class="trend" id="ipc-date">Sincronizando...</div>
+                <span class="label">Inflación (IPC)</span>
+                <span class="value" id="ipc">--%</span>
+                <span class="trend" id="ipc-date">Sincronizando...</span>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="monitor-card" style="border-top:2px solid var(--green)">
-                <span class="label">TNA Plazo Fijo</span>
-                <div class="value" id="tna">--%</div>
-                <div id="tem" class="trend text-success">TEM: --%</div>
-            </div>
-        </div>
-        <div class="col-6 col-md-3">
-            <div class="monitor-card">
-                <span class="label">Dólar Blue Venta</span>
-                <div class="value" id="dolar">$--</div>
-                <div id="dolar-diff" class="trend">Actualizado ahora</div>
+            <div class="monitor-card" style="border-top-color:var(--green)">
+                <span class="label">Tasa PF (TNA)</span>
+                <span class="value" id="tna">--%</span>
+                <span class="trend" id="tem">TEM: --%</span>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="monitor-card">
-                <span class="label">Tasa Real (Spread)</span>
-                <div class="value" id="spread">--%</div>
-                <div class="trend">TEM vs IPC</div>
+                <span class="label">Dólar Blue</span>
+                <span class="value" id="dolar">$--</span>
+                <span class="trend">Venta Mercado</span>
+            </div>
+        </div>
+        <div class="col-6 col-md-3">
+            <div class="monitor-card">
+                <span class="label">Spread Real</span>
+                <span class="value" id="spread">--%</span>
+                <span class="trend">Tasa vs IPC</span>
             </div>
         </div>
     </div>
 
     <div class="ia-panel">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h5 class="text-white h6 mb-3"><i class="fas fa-brain text-info"></i> MOTOR DE DECISIÓN CENTINELA</h5>
-                <p id="ia-desc" class="m-0 small text-light opacity-75">Obteniendo datos de mercado para procesar estrategia...</p>
-            </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <div id="ia-status" class="badge bg-primary p-2 w-100" style="letter-spacing:1px">ANALIZANDO...</div>
-            </div>
-        </div>
+        <h6 class="text-info fw-bold mb-2"><i class="fas fa-robot"></i> ANÁLISIS DE ESTRATEGIA</h6>
+        <p id="ia-desc" class="m-0 small opacity-90">Calculando arbitrajes con datos de tiempo real...</p>
     </div>
 
-    <div class="table-responsive rounded-3 border border-secondary">
-        <table class="table table-dark table-hover mb-0">
+    <div class="table-responsive bg-dark border border-secondary rounded-3 p-2">
+        <table class="table table-dark table-hover m-0">
             <thead>
                 <tr class="text-muted" style="font-size:0.7rem">
                     <th>TICKER</th>
-                    <th>VENCIMIENTO</th>
-                    <th>TASA EST.</th>
-                    <th>ESTADO</th>
+                    <th>VENCE</th>
+                    <th>TEM EST.</th>
+                    <th>VEREDICTO</th>
                 </tr>
             </thead>
             <tbody id="tbody">
-                <tr><td colspan="4" class="text-center py-5 text-muted small">CONECTANDO AL MERCADO...</td></tr>
+                <tr><td colspan="4" class="text-center py-4 text-muted">Conectando al mercado...</td></tr>
             </tbody>
         </table>
     </div>
@@ -95,79 +87,78 @@
 <script>
 const TOKEN = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDM1NzQ3NjMsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJtdXJvY2FyaW5AaG90bWFpbC5jb20ifQ.sUg-29G9KKj-mSW2k3o3F-ovzdYlC6nzRtB1UKaLEeMQkNIhWEb9-jriFBQ8EbjSeumGcSI2OrsES8dxSOJS3Q";
 
+const INSTRUMENTOS = [
+    {c:'S27F6', n:'LECAP Feb 26', v:'27/02/26', t:'LECAP'},
+    {c:'S31M6', n:'LECAP Mar 26', v:'31/03/26', t:'LECAP'},
+    {c:'S30J6', n:'LECAP Jun 26', v:'30/06/26', t:'LECAP'},
+    {c:'TX26',  n:'BONO CER 26',  v:'09/11/26', t:'CER'}
+];
+
 async function refresh() {
     try {
-        // 1. Obtener datos de Dólar y Tasas (CORS abierto)
-        const [dolarRes, tasasRes] = await Promise.all([
+        // 1. Obtener Dólar y Tasas desde DolarAPI (Corregido)
+        const [dRes, tRes] = await Promise.all([
             fetch('https://dolarapi.com/v1/dolares/blue').then(r => r.json()),
             fetch('https://dolarapi.com/v1/cotizaciones/tasas').then(r => r.json())
         ]);
 
-        // 2. Obtener Inflación desde BCRA con TOKEN (Usando un proxy robusto)
-        const ipcRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://estadisticasbcra.com/api/inflacion_mensual_oficial?token=' + TOKEN)}`)
-            .then(r => r.json())
-            .then(d => JSON.parse(d.contents));
+        // 2. Obtener IPC desde BCRA usando tu TOKEN y un Proxy para CORS
+        const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://estadisticasbcra.com/api/inflacion_mensual_oficial");
+        const iRes = await fetch(proxyUrl, {
+            headers: { 'Authorization': 'BEARER ' + TOKEN }
+        }).then(r => r.json()).then(d => JSON.parse(d.contents));
 
-        const ultimoIpc = ipcRes[ipcRes.length - 1];
-        const tna = tasasRes.find(t => t.casa === 'plazo_fijo').venta;
+        const ultimoIpc = iRes[iRes.length - 1];
+        const pf = tRes.find(t => t.casa === 'plazo_fijo') || {venta: 38};
+        const tna = pf.venta;
         const tem = (Math.pow(1 + (tna/100/365), 30) - 1) * 100;
         const spread = (tem - ultimoIpc.v).toFixed(2);
 
-        // Actualización UI
+        // Actualizar UI
         document.getElementById('ipc').textContent = ultimoIpc.v + '%';
-        document.getElementById('ipc-date').textContent = "Mes: " + ultimoIpc.d;
+        document.getElementById('ipc-date').textContent = "Fuente: BCRA (" + ultimoIpc.d + ")";
         document.getElementById('tna').textContent = tna + '%';
         document.getElementById('tem').textContent = "TEM: " + tem.toFixed(2) + '%';
-        document.getElementById('dolar').textContent = '$' + dolarRes.venta;
+        document.getElementById('dolar').textContent = '$' + dRes.venta;
         
         const spEl = document.getElementById('spread');
         spEl.textContent = spread + '%';
         spEl.style.color = spread >= 0 ? 'var(--green)' : 'var(--red)';
 
-        // IA Real-Time Analysis
+        // IA Análisis
         const iaDesc = document.getElementById('ia-desc');
-        const iaStat = document.getElementById('ia-status');
-
-        if(spread > 0.5) {
-            iaStat.textContent = "CARRY TRADE ACTIVO";
-            iaStat.className = "badge bg-success w-100 p-2";
-            iaDesc.textContent = "Datos confirmados: La tasa supera a la inflación actual. Oportunidad en Pesos (LECAPS) para ganancia real.";
+        if(spread > 0.4) {
+            iaDesc.innerHTML = "<b>ESTRATEGIA: CARRY TRADE.</b> La tasa real es positiva en " + spread + "%. Recomendado mantener liquidez en LECAPS (S31M6) para capturar tasa compuesta.";
         } else {
-            iaStat.textContent = "REFUGIO CER / USD";
-            iaStat.className = "badge bg-danger w-100 p-2";
-            iaDesc.textContent = "Alerta: Inflación superior a la tasa nominal. Se recomienda cobertura en instrumentos ajustables por CER o Dólar.";
+            iaDesc.innerHTML = "<b>ESTRATEGIA: COBERTURA CER.</b> Tasa real ajustada. Se sugiere migrar a instrumentos CER (TX26) para proteger capital contra la inflación.";
         }
 
         renderTable(tem, ultimoIpc.v);
 
     } catch (e) {
-        console.error("Falla en el feed de datos:", e);
+        console.error("Error en el feed de datos reales:", e);
+        document.getElementById('ia-desc').innerHTML = "<span class='text-danger'>Error de conexión con BCRA. Verifique el TOKEN o la conexión a internet.</span>";
     }
 }
 
 function renderTable(tem, ipc) {
-    // Activos con tickers reales de 2026
-    const assets = [
-        {t: 'S31M6', d: 'LECAP Mar 26', v: '31/03/26', r: tem + 0.45},
-        {t: 'S30J6', d: 'LECAP Jun 26', v: '30/06/26', r: tem + 0.70},
-        {t: 'TX26',  d: 'BONO CER 26', v: '09/11/26', r: ipc + 1.25},
-        {t: 'S27F6', d: 'LECAP Feb 26', v: '27/02/26', r: tem + 0.20}
-    ];
-
-    document.getElementById('tbody').innerHTML = assets.map(a => `
-        <tr>
-            <td><b class="text-primary">${a.t}</b><br><small class="text-muted">${a.d}</small></td>
-            <td>${a.v}</td>
-            <td class="text-success fw-bold">${a.r.toFixed(2)}%</td>
-            <td><span class="badge ${a.r > ipc ? 'bg-success' : 'bg-warning'} text-dark" style="font-size:0.6rem">
-                ${a.r > ipc ? 'ÓPTIMO' : 'NEUTRAL'}</span></td>
-        </tr>
-    `).join('');
+    const tbody = document.getElementById('tbody');
+    tbody.innerHTML = INSTRUMENTOS.map(ins => {
+        let tEst = ins.t === 'LECAP' ? tem + 0.35 : ipc + 1.1;
+        let veredicto = tEst > ipc ? 'OPTIMO' : 'NEUTRO';
+        return `
+            <tr>
+                <td><span class="code">${ins.c}</span><br><small class="text-muted">${ins.n}</small></td>
+                <td>${ins.v}</td>
+                <td class="text-success fw-bold">${tEst.toFixed(2)}%</td>
+                <td><span class="badge ${tEst > ipc ? 'bg-success' : 'bg-secondary'}">${veredicto}</span></td>
+            </tr>
+        `;
+    }).join('');
 }
 
 refresh();
-// Auto-refresh cada 5 minutos para datos reales
-setInterval(refresh, 300000);
+setInterval(refresh, 120000); // Actualiza cada 2 minutos
 </script>
 </body>
 </html>
