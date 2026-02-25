@@ -3,82 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centinela Pro - Terminal Real 2026</title>
+    <title>Centinela Pro - Terminal 2026</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root{--bg:#05070a;--bg2:#0f172a;--blue:#38bdf8;--green:#22c55e;--red:#ef4444;--border:#1e293b;--txt:#f1f5f9}
-        body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;padding:12px;min-height:100vh}
+        body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;padding:12px}
         .monitor-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;border-top:3px solid var(--blue)}
-        .label{font-size:0.65rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:1px;display:block;margin-bottom:5px}
+        .label{font-size:0.65rem;font-weight:800;color:var(--blue);text-transform:uppercase;display:block;margin-bottom:5px}
         .value{font-size:1.7rem;font-weight:700;display:block}
-        .trend{font-size:0.75rem;opacity:0.8}
-        .ia-panel{background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);border:1px solid #4338ca;border-radius:16px;padding:20px;margin:20px 0}
-        .live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-right:6px;animation:blink 1s infinite}
-        @keyframes blink{0%{opacity:1}50%{opacity:0.3}100%{opacity:1}}
-        table{font-size:0.85rem}
-        .code{background:var(--border);padding:2px 6px;border-radius:4px;color:var(--blue);font-family:monospace;font-weight:bold}
+        .ia-panel{background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);border:1px solid #4338ca;border-radius:16px;padding:18px;margin:15px 0}
+        .badge-live{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid var(--green);font-size:0.6rem;padding:2px 6px;border-radius:4px}
+        table{font-size:0.85rem}.code{color:var(--blue);font-family:monospace;font-weight:bold}
     </style>
 </head>
 <body>
 
 <div class="container-fluid" style="max-width:1100px">
-    <div class="d-flex justify-content-between align-items-center mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h1 class="h4 m-0 fw-bold"><i class="fas fa-terminal text-primary"></i> CENTINELA <span class="text-primary">LIVE</span></h1>
-            <small class="text-muted"><span class="live-dot"></span> DATOS REALES BCRA & MARKET</small>
+            <h1 class="h5 m-0 fw-bold"><i class="fas fa-microchip text-primary"></i> CENTINELA <span class="text-primary">PRO</span></h1>
+            <span class="badge-live"><i class="fas fa-circle fa-xs"></i> DATOS REALES 2026</span>
         </div>
-        <button class="btn btn-sm btn-dark border-secondary" onclick="refresh()"><i class="fas fa-sync"></i> REFRESCAR</button>
+        <button class="btn btn-sm btn-dark border-secondary" onclick="refresh()"><i class="fas fa-sync"></i></button>
     </div>
 
-    <div class="row g-3">
+    <div class="row g-2">
         <div class="col-6 col-md-3">
             <div class="monitor-card">
                 <span class="label">Inflación (IPC)</span>
                 <span class="value" id="ipc">--%</span>
-                <span class="trend" id="ipc-date">Sincronizando...</span>
+                <small class="text-muted" id="ipc-date">Cargando...</small>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="monitor-card" style="border-top-color:var(--green)">
                 <span class="label">Tasa PF (TNA)</span>
                 <span class="value" id="tna">--%</span>
-                <span class="trend" id="tem">TEM: --%</span>
+                <small class="text-muted" id="tem">TEM: --%</small>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="monitor-card">
                 <span class="label">Dólar Blue</span>
                 <span class="value" id="dolar">$--</span>
-                <span class="trend">Venta Mercado</span>
+                <small class="text-muted">Venta Mercado</small>
             </div>
         </div>
         <div class="col-6 col-md-3">
             <div class="monitor-card">
                 <span class="label">Spread Real</span>
                 <span class="value" id="spread">--%</span>
-                <span class="trend">Tasa vs IPC</span>
+                <small class="text-muted">Tasa vs IPC</small>
             </div>
         </div>
     </div>
 
     <div class="ia-panel">
-        <h6 class="text-info fw-bold mb-2"><i class="fas fa-robot"></i> ANÁLISIS DE ESTRATEGIA</h6>
-        <p id="ia-desc" class="m-0 small opacity-90">Calculando arbitrajes con datos de tiempo real...</p>
+        <h6 class="text-info fw-bold mb-2 small"><i class="fas fa-robot"></i> ESTRATEGIA RECOMENDADA</h6>
+        <p id="ia-desc" class="m-0 small opacity-90">Sincronizando feed de datos para análisis...</p>
     </div>
 
-    <div class="table-responsive bg-dark border border-secondary rounded-3 p-2">
-        <table class="table table-dark table-hover m-0">
+    <div class="table-responsive bg-dark border border-secondary rounded-3">
+        <table class="table table-dark table-hover mb-0">
             <thead>
                 <tr class="text-muted" style="font-size:0.7rem">
-                    <th>TICKER</th>
-                    <th>VENCE</th>
-                    <th>TEM EST.</th>
-                    <th>VEREDICTO</th>
+                    <th>TICKER</th><th>VENCE</th><th>TEM EST.</th><th>VEREDICTO</th>
                 </tr>
             </thead>
             <tbody id="tbody">
-                <tr><td colspan="4" class="text-center py-4 text-muted">Conectando al mercado...</td></tr>
+                <tr><td colspan="4" class="text-center py-4 text-muted small">CONECTANDO AL MERCADO...</td></tr>
             </tbody>
         </table>
     </div>
@@ -87,36 +81,34 @@
 <script>
 const TOKEN = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDM1NzQ3NjMsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJtdXJvY2FyaW5AaG90bWFpbC5jb20ifQ.sUg-29G9KKj-mSW2k3o3F-ovzdYlC6nzRtB1UKaLEeMQkNIhWEb9-jriFBQ8EbjSeumGcSI2OrsES8dxSOJS3Q";
 
-const INSTRUMENTOS = [
-    {c:'S27F6', n:'LECAP Feb 26', v:'27/02/26', t:'LECAP'},
-    {c:'S31M6', n:'LECAP Mar 26', v:'31/03/26', t:'LECAP'},
-    {c:'S30J6', n:'LECAP Jun 26', v:'30/06/26', t:'LECAP'},
-    {c:'TX26',  n:'BONO CER 26',  v:'09/11/26', t:'CER'}
-];
-
 async function refresh() {
     try {
-        // 1. Obtener Dólar y Tasas desde DolarAPI (Corregido)
+        // 1. Dólar y Tasas (Ruta corregida /cotizaciones para evitar 404)
         const [dRes, tRes] = await Promise.all([
             fetch('https://dolarapi.com/v1/dolares/blue').then(r => r.json()),
-            fetch('https://dolarapi.com/v1/cotizaciones/tasas').then(r => r.json())
+            fetch('https://dolarapi.com/v1/cotizaciones').then(r => r.json())
         ]);
 
-        // 2. Obtener IPC desde BCRA usando tu TOKEN y un Proxy para CORS
-        const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://estadisticasbcra.com/api/inflacion_mensual_oficial");
-        const iRes = await fetch(proxyUrl, {
-            headers: { 'Authorization': 'BEARER ' + TOKEN }
-        }).then(r => r.json()).then(d => JSON.parse(d.contents));
+        // 2. BCRA Inflación con manejo de error SyntaxError
+        const bcraUrl = "https://estadisticasbcra.com/api/inflacion_mensual_oficial";
+        const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent(bcraUrl);
+        
+        const iRaw = await fetch(proxy, { headers: { 'Authorization': 'BEARER ' + TOKEN } });
+        const iJson = await iRaw.json();
+        
+        if(!iJson.contents) throw new Error("Respuesta vacía del proxy");
+        const iData = JSON.parse(iJson.contents);
+        const ultimoIpc = iData[iData.length - 1];
 
-        const ultimoIpc = iRes[iRes.length - 1];
-        const pf = tRes.find(t => t.casa === 'plazo_fijo') || {venta: 38};
+        // Procesamiento
+        const pf = tRes.find(t => t.nombre.toLowerCase().includes('plazo fijo')) || {venta: 38};
         const tna = pf.venta;
         const tem = (Math.pow(1 + (tna/100/365), 30) - 1) * 100;
         const spread = (tem - ultimoIpc.v).toFixed(2);
 
-        // Actualizar UI
+        // UI Updates
         document.getElementById('ipc').textContent = ultimoIpc.v + '%';
-        document.getElementById('ipc-date').textContent = "Fuente: BCRA (" + ultimoIpc.d + ")";
+        document.getElementById('ipc-date').textContent = "Dato: " + ultimoIpc.d;
         document.getElementById('tna').textContent = tna + '%';
         document.getElementById('tem').textContent = "TEM: " + tem.toFixed(2) + '%';
         document.getElementById('dolar').textContent = '$' + dRes.venta;
@@ -125,31 +117,37 @@ async function refresh() {
         spEl.textContent = spread + '%';
         spEl.style.color = spread >= 0 ? 'var(--green)' : 'var(--red)';
 
-        // IA Análisis
+        // IA Decision
         const iaDesc = document.getElementById('ia-desc');
         if(spread > 0.4) {
-            iaDesc.innerHTML = "<b>ESTRATEGIA: CARRY TRADE.</b> La tasa real es positiva en " + spread + "%. Recomendado mantener liquidez en LECAPS (S31M6) para capturar tasa compuesta.";
+            iaDesc.innerHTML = "<b>CARRY TRADE ACTIVO:</b> La tasa real es positiva (" + spread + "%). Oportunidad en LECAPS 2026 para maximizar el interés compuesto frente al peso.";
         } else {
-            iaDesc.innerHTML = "<b>ESTRATEGIA: COBERTURA CER.</b> Tasa real ajustada. Se sugiere migrar a instrumentos CER (TX26) para proteger capital contra la inflación.";
+            iaDesc.innerHTML = "<b>COBERTURA CER:</b> La inflación presiona la tasa nominal. Se recomienda diversificar en bonos ajustables (TX26) para proteger el capital.";
         }
 
         renderTable(tem, ultimoIpc.v);
 
     } catch (e) {
-        console.error("Error en el feed de datos reales:", e);
-        document.getElementById('ia-desc').innerHTML = "<span class='text-danger'>Error de conexión con BCRA. Verifique el TOKEN o la conexión a internet.</span>";
+        console.error("Falla detectada:", e);
+        document.getElementById('ia-desc').innerHTML = "<span class='text-danger'>Error de feed. Verifique conexión o vigencia del TOKEN.</span>";
     }
 }
 
 function renderTable(tem, ipc) {
-    const tbody = document.getElementById('tbody');
-    tbody.innerHTML = INSTRUMENTOS.map(ins => {
-        let tEst = ins.t === 'LECAP' ? tem + 0.35 : ipc + 1.1;
-        let veredicto = tEst > ipc ? 'OPTIMO' : 'NEUTRO';
+    const activos = [
+        {c:'S27F6', n:'LECAP Feb 26', v:'27/02/26', t:'LECAP'},
+        {c:'S16M6', n:'LECAP Mar 26', v:'16/03/26', t:'LECAP'},
+        {c:'S17A6', n:'LECAP Abr 26', v:'17/04/26', t:'LECAP'},
+        {c:'TX26',  n:'BONO CER 26',  v:'09/11/26', t:'CER'}
+    ];
+
+    document.getElementById('tbody').innerHTML = activos.map(a => {
+        const tEst = a.t === 'LECAP' ? tem + 0.4 : ipc + 1.25;
+        const veredicto = tEst > ipc ? 'ÓPTIMO' : 'NEUTRO';
         return `
             <tr>
-                <td><span class="code">${ins.c}</span><br><small class="text-muted">${ins.n}</small></td>
-                <td>${ins.v}</td>
+                <td><span class="code">${a.c}</span><br><small class="text-muted">${a.n}</small></td>
+                <td>${a.v}</td>
                 <td class="text-success fw-bold">${tEst.toFixed(2)}%</td>
                 <td><span class="badge ${tEst > ipc ? 'bg-success' : 'bg-secondary'}">${veredicto}</span></td>
             </tr>
@@ -158,7 +156,7 @@ function renderTable(tem, ipc) {
 }
 
 refresh();
-setInterval(refresh, 120000); // Actualiza cada 2 minutos
+setInterval(refresh, 300000);
 </script>
 </body>
 </html>
