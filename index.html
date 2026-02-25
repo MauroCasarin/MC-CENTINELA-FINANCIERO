@@ -3,186 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centinela Financiero V2 - 2026</title>
+    <title>CENTINELA PRO - TIEMPO REAL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#0a0e17;--bg2:#111827;--bg3:#1f2937;--txt:#e5e7eb;--txt2:#9ca3af;--green:#10b981;--red:#ef4444;--blue:#3b82f6;--border:#374151}
-        body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;padding:10px;min-height:100vh}
-        .header{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:15px;border-left:5px solid var(--blue)}
-        .card-stat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:12px;height:100%;border-bottom:3px solid var(--border)}
-        .value{font-size:1.4rem;font-weight:bold;display:block;margin:4px 0}
-        .ia-box{background:linear-gradient(135deg,rgba(59,130,246,0.15),rgba(16,185,129,0.1));border:1px solid var(--blue);border-radius:12px;padding:15px;margin:15px 0}
-        .badge-rec{font-size:0.75rem;padding:5px 10px;border-radius:6px;font-weight:bold;text-transform:uppercase}
-        table{font-size:0.85rem;margin-top:10px}
-        .code{background:var(--bg3);padding:2px 6px;border-radius:4px;color:var(--blue);font-weight:bold;font-family:monospace}
-        @media(max-width:768px){.value{font-size:1.2rem}}
+        :root{--bg:#05070a;--bg2:#0f172a;--blue:#38bdf8;--green:#22c55e;--red:#ef4444;--border:#1e293b;--txt:#f1f5f9}
+        body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;padding:12px}
+        .monitor-card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:16px;position:relative}
+        .monitor-card::before{content:'';position:absolute;top:0;left:0;width:100%;height:2px;background:var(--blue);border-radius:12px 12px 0 0}
+        .label{font-size:0.65rem;font-weight:800;color:var(--blue);text-transform:uppercase;letter-spacing:1px}
+        .value{font-size:1.8rem;font-weight:700;margin:5px 0}
+        .trend{font-size:0.75rem;font-weight:600}
+        .ia-panel{background:linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);border:1px solid #4338ca;border-radius:16px;padding:20px;margin:20px 0}
+        .live-dot{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-right:6px;animation:blink 1s infinite}
+        @keyframes blink{0%{opacity:1}50%{opacity:0.3}100%{opacity:1}}
+        .table-dark{--bs-table-bg:#0f172a;font-size:0.85rem}
+        .badge-live{background:rgba(34,197,94,0.1);color:var(--green);border:1px solid var(--green);font-size:0.6rem;padding:2px 6px}
     </style>
 </head>
 <body>
 
-<div class="container-fluid" style="max-width:1200px">
-    <div class="header d-flex justify-content-between align-items-center">
+<div class="container-fluid" style="max-width:1100px">
+    <div class="d-flex justify-content-between align-items-center mb-4">
         <div>
-            <h1 class="h5 m-0 fw-bold text-primary"><i class="fas fa-microchip"></i> CENTINELA PRO <span class="text-white">2026</span></h1>
-            <small id="status" class="text-muted" style="font-size:0.65rem">Sincronizando fuentes...</small>
+            <h1 class="h4 m-0 fw-black"><i class="fas fa-satellite-dish text-primary"></i> TERMINAL <span class="text-primary">LIVE</span></h1>
+            <span class="badge badge-live"><span class="live-dot"></span> FEED CONECTADO A BCRA</span>
         </div>
-        <button class="btn btn-sm btn-outline-primary" onclick="refresh()"><i class="fas fa-sync-alt"></i></button>
+        <button class="btn btn-sm btn-dark border-secondary" onclick="refresh()"><i class="fas fa-sync"></i></button>
     </div>
 
-    <div class="row g-2 mb-3">
+    <div class="row g-3">
         <div class="col-6 col-md-3">
-            <div class="card-stat">
-                <span class="text-muted small fw-bold">INFLACIÓN (IPC)</span>
-                <span class="value" id="ipc">--%</span>
-                <span id="ipc-sub" class="text-info" style="font-size:0.7rem">Cargando...</span>
+            <div class="monitor-card">
+                <span class="label">IPC Mensual (Oficial)</span>
+                <div class="value" id="ipc">--%</div>
+                <div class="trend" id="ipc-date">Sincronizando...</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card-stat" style="border-bottom-color:var(--green)">
-                <span class="text-muted small fw-bold">TASA PF (TEM)</span>
-                <span class="value" id="tem">--%</span>
-                <span id="tna" class="text-muted" style="font-size:0.7rem">TNA: --%</span>
+            <div class="monitor-card" style="border-top:2px solid var(--green)">
+                <span class="label">TNA Plazo Fijo</span>
+                <div class="value" id="tna">--%</div>
+                <div id="tem" class="trend text-success">TEM: --%</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card-stat">
-                <span class="text-muted small fw-bold">DÓLAR BLUE</span>
-                <span class="value" id="dolar">$--</span>
-                <span class="text-muted" style="font-size:0.7rem">Brecha: --%</span>
+            <div class="monitor-card">
+                <span class="label">Dólar Blue Venta</span>
+                <div class="value" id="dolar">$--</div>
+                <div id="dolar-diff" class="trend">Actualizado ahora</div>
             </div>
         </div>
         <div class="col-6 col-md-3">
-            <div class="card-stat">
-                <span class="text-muted small fw-bold">SPREAD REAL</span>
-                <span class="value" id="spread">--%</span>
-                <span class="text-muted" style="font-size:0.7rem">Rendimiento Real</span>
+            <div class="monitor-card">
+                <span class="label">Tasa Real (Spread)</span>
+                <div class="value" id="spread">--%</div>
+                <div class="trend">TEM vs IPC</div>
             </div>
         </div>
     </div>
 
-    <div class="ia-box">
-        <div class="d-flex justify-content-between align-items-start mb-2">
-            <h6 class="text-primary fw-bold m-0"><i class="fas fa-robot"></i> ANÁLISIS DEL CENTINELA</h6>
-            <span id="ia-badge" class="badge-rec bg-secondary text-white">PROCESANDO</span>
+    <div class="ia-panel">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h5 class="text-white h6 mb-3"><i class="fas fa-brain text-info"></i> MOTOR DE DECISIÓN CENTINELA</h5>
+                <p id="ia-desc" class="m-0 small text-light opacity-75">Obteniendo datos de mercado para procesar estrategia...</p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <div id="ia-status" class="badge bg-primary p-2 w-100" style="letter-spacing:1px">ANALIZANDO...</div>
+            </div>
         </div>
-        <p id="ia-desc" class="small m-0 text-light" style="line-height:1.4">Analizando datos de BCRA, mercado secundario y brecha cambiaria...</p>
     </div>
 
-    <div class="table-responsive bg-dark border border-secondary rounded-3 p-2">
-        <table class="table table-dark table-hover m-0">
+    <div class="table-responsive rounded-3 border border-secondary">
+        <table class="table table-dark table-hover mb-0">
             <thead>
-                <tr><th>Instrumento</th><th>Vence</th><th>TEM Est.</th><th>Spread</th><th>Veredicto</th></tr>
+                <tr class="text-muted" style="font-size:0.7rem">
+                    <th>TICKER</th>
+                    <th>VENCIMIENTO</th>
+                    <th>TASA EST.</th>
+                    <th>ESTADO</th>
+                </tr>
             </thead>
             <tbody id="tbody">
-                <tr><td colspan="5" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Calculando arbitrajes...</td></tr>
+                <tr><td colspan="4" class="text-center py-5 text-muted small">CONECTANDO AL MERCADO...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-const BCRA_TOKEN = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDM1NzQ3NjMsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJtdXJvY2FyaW5AaG90bWFpbC5jb20ifQ.sUg-29G9KKj-mSW2k3o3F-ovzdYlC6nzRtB1UKaLEeMQkNIhWEb9-jriFBQ8EbjSeumGcSI2OrsES8dxSOJS3Q";
-
-// Vencimientos Reales 2026/27
-const ACTIVOS = [
-    {c:'S27F6', n:'LECAP Feb 26', t:'LECAP', v:'27/02/26'},
-    {c:'S16M6', n:'LECAP Mar 26', t:'LECAP', v:'16/03/26'},
-    {c:'S17A6', n:'LECAP Abr 26', t:'LECAP', v:'17/04/26'},
-    {c:'S30J6', n:'LECER Jun 26', t:'CER', v:'30/06/26'},
-    {c:'TX26', n:'Bono CER 26', t:'CER', v:'09/11/26'},
-    {c:'S28F7', n:'LETES Feb 27', t:'LETES', v:'28/02/27'}
-];
+const TOKEN = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDM1NzQ3NjMsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJtdXJvY2FyaW5AaG90bWFpbC5jb20ifQ.sUg-29G9KKj-mSW2k3o3F-ovzdYlC6nzRtB1UKaLEeMQkNIhWEb9-jriFBQ8EbjSeumGcSI2OrsES8dxSOJS3Q";
 
 async function refresh() {
-    document.getElementById('status').textContent = "Sincronizando con mercado...";
-    
-    // Fallbacks si la API falla (como en tus capturas)
-    let ipcVal = 2.4; 
-    let tnaVal = 38;
-    let dolarVal = 1250;
-
     try {
-        // 1. Dólar y Tasas (DolarAPI suele ser la más estable para evitar CORS)
-        const [resD, resT] = await Promise.all([
+        // 1. Obtener datos de Dólar y Tasas (CORS abierto)
+        const [dolarRes, tasasRes] = await Promise.all([
             fetch('https://dolarapi.com/v1/dolares/blue').then(r => r.json()),
             fetch('https://dolarapi.com/v1/cotizaciones/tasas').then(r => r.json())
         ]);
-        dolarVal = resD.venta;
-        const pf = resT.find(t => t.casa === 'plazo_fijo');
-        if(pf) tnaVal = pf.venta;
 
-        // 2. Inflación (Con manejo de error CORS)
-        try {
-            const respI = await fetch(`https://estadisticasbcra.com/api/inflacion_mensual_oficial?token=${BCRA_TOKEN}`);
-            if(respI.ok) {
-                const dataI = await respI.json();
-                ipcVal = dataI[dataI.length - 1].v;
-            }
-        } catch(e) { console.warn("BCRA bloqueado. Usando consenso privado."); }
+        // 2. Obtener Inflación desde BCRA con TOKEN (Usando un proxy robusto)
+        const ipcRes = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent('https://estadisticasbcra.com/api/inflacion_mensual_oficial?token=' + TOKEN)}`)
+            .then(r => r.json())
+            .then(d => JSON.parse(d.contents));
 
-    } catch(e) { console.error("Error crítico de red. Usando modo offline."); }
+        const ultimoIpc = ipcRes[ipcRes.length - 1];
+        const tna = tasasRes.find(t => t.casa === 'plazo_fijo').venta;
+        const tem = (Math.pow(1 + (tna/100/365), 30) - 1) * 100;
+        const spread = (tem - ultimoIpc.v).toFixed(2);
 
-    const temVal = (Math.pow(1 + (tnaVal/100/365), 30) - 1) * 100;
-    const spread = (temVal - ipcVal).toFixed(2);
+        // Actualización UI
+        document.getElementById('ipc').textContent = ultimoIpc.v + '%';
+        document.getElementById('ipc-date').textContent = "Mes: " + ultimoIpc.d;
+        document.getElementById('tna').textContent = tna + '%';
+        document.getElementById('tem').textContent = "TEM: " + tem.toFixed(2) + '%';
+        document.getElementById('dolar').textContent = '$' + dolarRes.venta;
+        
+        const spEl = document.getElementById('spread');
+        spEl.textContent = spread + '%';
+        spEl.style.color = spread >= 0 ? 'var(--green)' : 'var(--red)';
 
-    updateUI(ipcVal, temVal, tnaVal, dolarVal, spread);
-}
+        // IA Real-Time Analysis
+        const iaDesc = document.getElementById('ia-desc');
+        const iaStat = document.getElementById('ia-status');
 
-function updateUI(ipc, tem, tna, dolar, spread) {
-    document.getElementById('ipc').textContent = ipc + '%';
-    document.getElementById('ipc-sub').textContent = "Base BCRA 2026";
-    document.getElementById('tem').textContent = tem.toFixed(2) + '%';
-    document.getElementById('tna').textContent = "TNA: " + tna + '%';
-    document.getElementById('dolar').textContent = '$' + dolar;
-    
-    const spEl = document.getElementById('spread');
-    spEl.textContent = spread + '%';
-    spEl.style.color = spread >= 0 ? 'var(--green)' : 'var(--red)';
+        if(spread > 0.5) {
+            iaStat.textContent = "CARRY TRADE ACTIVO";
+            iaStat.className = "badge bg-success w-100 p-2";
+            iaDesc.textContent = "Datos confirmados: La tasa supera a la inflación actual. Oportunidad en Pesos (LECAPS) para ganancia real.";
+        } else {
+            iaStat.textContent = "REFUGIO CER / USD";
+            iaStat.className = "badge bg-danger w-100 p-2";
+            iaDesc.textContent = "Alerta: Inflación superior a la tasa nominal. Se recomienda cobertura en instrumentos ajustables por CER o Dólar.";
+        }
 
-    // Lógica IA mejorada
-    const iaBadge = document.getElementById('ia-badge');
-    const iaDesc = document.getElementById('ia-desc');
-    
-    if(spread > 0.5) {
-        iaBadge.textContent = "CARRY TRADE ACTIVO";
-        iaBadge.className = "badge-rec bg-success text-white";
-        iaDesc.textContent = `La tasa real es positiva (${spread}%). El mercado convalida calma cambiaria. Sugerido: Maximizar LECAPS (S27F6/S16M6) para capturar el interés compuesto por encima del IPC.`;
-    } else if (spread < -0.2) {
-        iaBadge.textContent = "COBERTURA CER";
-        iaBadge.className = "badge-rec bg-danger text-white";
-        iaDesc.textContent = `Tasa real negativa. La inflación está erosionando el plazo fijo. Recomendación: Migrar a instrumentos CER (S30J6 o TX26) para proteger el capital contra la aceleración de precios.`;
-    } else {
-        iaBadge.textContent = "POSICIÓN NEUTRAL";
-        iaBadge.className = "badge-rec bg-warning text-dark";
-        iaDesc.textContent = `Equilibrio de tasas. Se recomienda diversificar 50% en LECAPS cortas y 50% en Bonos CER para mitigar volatilidad de los próximos datos del INDEC.`;
+        renderTable(tem, ultimoIpc.v);
+
+    } catch (e) {
+        console.error("Falla en el feed de datos:", e);
     }
-
-    renderTable(tem, ipc);
-    document.getElementById('status').textContent = "Última actualización: " + new Date().toLocaleTimeString();
 }
 
 function renderTable(tem, ipc) {
-    const tbody = document.getElementById('tbody');
-    tbody.innerHTML = ACTIVOS.map(a => {
-        let tEst = a.t === 'LECAP' ? tem + 0.4 : ipc + 1.2;
-        let sp = (tEst - ipc).toFixed(2);
-        let veredicto = sp > 1 ? 'COMPRAR' : 'MANTENER';
-        let vClass = sp > 1 ? 'bg-success' : 'bg-secondary';
+    // Activos con tickers reales de 2026
+    const assets = [
+        {t: 'S31M6', d: 'LECAP Mar 26', v: '31/03/26', r: tem + 0.45},
+        {t: 'S30J6', d: 'LECAP Jun 26', v: '30/06/26', r: tem + 0.70},
+        {t: 'TX26',  d: 'BONO CER 26', v: '09/11/26', r: ipc + 1.25},
+        {t: 'S27F6', d: 'LECAP Feb 26', v: '27/02/26', r: tem + 0.20}
+    ];
 
-        return `
-            <tr>
-                <td><span class="code">${a.c}</span><br><small class="text-muted">${a.n}</small></td>
-                <td>${a.v}</td>
-                <td class="text-success fw-bold">${tEst.toFixed(2)}%</td>
-                <td style="color:${sp >= 0 ? 'var(--green)' : 'var(--red)'}">${sp}%</td>
-                <td><span class="badge ${vClass}" style="font-size:0.6rem">${veredicto}</span></td>
-            </tr>
-        `;
-    }).join('');
+    document.getElementById('tbody').innerHTML = assets.map(a => `
+        <tr>
+            <td><b class="text-primary">${a.t}</b><br><small class="text-muted">${a.d}</small></td>
+            <td>${a.v}</td>
+            <td class="text-success fw-bold">${a.r.toFixed(2)}%</td>
+            <td><span class="badge ${a.r > ipc ? 'bg-success' : 'bg-warning'} text-dark" style="font-size:0.6rem">
+                ${a.r > ipc ? 'ÓPTIMO' : 'NEUTRAL'}</span></td>
+        </tr>
+    `).join('');
 }
 
 refresh();
+// Auto-refresh cada 5 minutos para datos reales
+setInterval(refresh, 300000);
 </script>
 </body>
 </html>
