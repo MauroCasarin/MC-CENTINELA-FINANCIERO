@@ -3,25 +3,35 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA - MONITOR DE MEDIOS</title>
+    <title>CENTINELA INTEL - TERMINAL FINANCIERA</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#05070a;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b}
+        :root{--bg:#05070a;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--green:#10b981}
         body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;margin:0;padding:10px}
-        .header{background:var(--card);padding:15px;border-radius:12px;border:1px solid var(--border);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;border-left:5px solid var(--blue);position:sticky;top:5px;z-index:100}
-        .header h1{font-size:1rem;margin:0;letter-spacing:1px;text-transform:uppercase}
-        .status{font-size:0.7rem;color:#64748b}
-        .news-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(340px, 1fr));gap:15px}
-        .news-card{background:var(--card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;height:480px;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)}
+        
+        /* Panel de Indicadores (Inflación/Dólar) */
+        .market-bar{display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;margin-bottom:15px}
+        .stat-card{background:var(--card);padding:12px;border-radius:10px;border:1px solid var(--border);border-bottom:3px solid var(--blue);text-align:center}
+        .stat-label{font-size:0.65rem;color:#64748b;text-transform:uppercase;display:block;margin-bottom:5px}
+        .stat-value{font-size:1.1rem;font-weight:bold;color:var(--blue)}
+
+        .header{background:var(--card);padding:15px;border-radius:12px;border:1px solid var(--border);margin-bottom:15px;display:flex;justify-content:space-between;align-items:center;border-left:5px solid var(--blue)}
+        .header h1{font-size:0.9rem;margin:0;letter-spacing:1px;text-transform:uppercase}
+        
+        /* Grilla de Noticias */
+        .news-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:15px}
+        .news-card{background:var(--card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;height:450px;overflow:hidden}
         .card-header{padding:12px;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);display:flex;justify-content:space-between;align-items:center}
-        .source-badge{font-size:0.7rem;font-weight:bold;padding:4px 8px;border-radius:4px;text-transform:uppercase}
+        .source-badge{font-size:0.65rem;font-weight:bold;padding:4px 8px;border-radius:4px;text-transform:uppercase;background:var(--blue);color:#000}
+        
         .news-body{padding:10px;overflow-y:auto;flex-grow:1}
         .news-item{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
-        .news-item:last-child{border-bottom:none}
-        .news-link{color:var(--txt);text-decoration:none;font-size:0.9rem;font-weight:500;line-height:1.4;display:block}
+        .news-link{color:var(--txt);text-decoration:none;font-size:0.85rem;line-height:1.4;display:block}
         .news-link:hover{color:var(--blue)}
-        .news-time{font-size:0.65rem;color:var(--blue);display:block;margin-bottom:4px;font-weight:bold}
-        .btn-refresh{background:var(--blue);border:none;padding:10px 15px;border-radius:8px;cursor:pointer;color:#000;font-weight:bold;transition:0.2s}
+        .news-time{font-size:0.6rem;color:var(--blue);display:block;margin-bottom:4px;font-weight:bold}
+
+        .btn-refresh{background:var(--blue);border:none;padding:10px;border-radius:8px;cursor:pointer;color:#000}
+        
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
         @media (max-width: 600px) { .news-grid{grid-template-columns: 1fr} }
@@ -29,40 +39,56 @@
 </head>
 <body>
 
-<div class="header">
-    <div>
-        <h1><i class="fas fa-broadcast-tower"></i> Centinela Intel</h1>
-        <div class="status" id="last-update">Sincronizando feeds...</div>
+<div class="market-bar">
+    <div class="stat-card">
+        <span class="stat-label">IPC Est. (Indec)</span>
+        <span class="stat-value" id="inf-dato">-- %</span>
     </div>
+    <div class="stat-card">
+        <span class="stat-label">TNA Plazo Fijo</span>
+        <span class="stat-value" id="pf-dato">-- %</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label">Dólar Blue</span>
+        <span class="stat-value" id="blue-dato">$ --</span>
+    </div>
+    <div class="stat-card" style="border-bottom-color:var(--green)">
+        <span class="stat-label">Estado Red</span>
+        <span class="stat-value" id="status-dato" style="color:var(--green); font-size:0.8rem">Sincronizando</span>
+    </div>
+</div>
+
+<div class="header">
+    <h1><i class="fas fa-microchip"></i> Centinela Intelligence v3.0</h1>
     <button class="btn-refresh" onclick="fetchData()"><i class="fas fa-sync-alt"></i></button>
 </div>
 
 <div id="main-grid" class="news-grid">
     <div style="grid-column:1/-1; text-align:center; padding:100px; opacity:0.5">
-        <i class="fas fa-circle-notch fa-spin fa-3x"></i><br><br>Cargando medios argentinos...
+        <i class="fas fa-circle-notch fa-spin fa-2x"></i><br><br>Consolidando economía y actualidad...
     </div>
 </div>
 
 <script>
-    // TU URL DE GOOGLE APPS SCRIPT
+    // URL DE TU SCRIPT DE GOOGLE CONFIRMADA POR CAPTURA image_07e931.png
     const PROXY_URL = "https://script.google.com/macros/s/AKfycbzoJKlDUEYCffrTQmWDiLijzD-A5cq5_LVLeI6aqkuqmuiyhdpfMBF6IpFnCgisyHqzFQ/exec";
-
-    const COLORS = {
-        "Ámbito": "#10b981", "Cronista": "#f59e0b", "Infobae": "#ef4444",
-        "La Nación": "#3b82f6", "Clarín": "#ffffff", "Página 12": "#a855f7",
-        "El Economista": "#06b6d4", "Perfil": "#ec4899"
-    };
 
     async function fetchData() {
         const grid = document.getElementById('main-grid');
-        const status = document.getElementById('last-update');
+        const status = document.getElementById('status-dato');
         
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
             
-            // Agrupar noticias por fuente
-            const grouped = data.reduce((acc, item) => {
+            // 1. Actualizar Indicadores
+            document.getElementById('inf-dato').innerText = data.indicadores.inflacion;
+            document.getElementById('pf-dato').innerText = data.indicadores.tna_pf;
+            document.getElementById('blue-dato').innerText = data.indicadores.dolar_blue;
+            status.innerText = "ONLINE";
+
+            // 2. Agrupar Noticias por Fuente
+            const grouped = data.noticias.reduce((acc, item) => {
                 if (!acc[item.fuente]) acc[item.fuente] = [];
                 acc[item.fuente].push(item);
                 return acc;
@@ -70,16 +96,10 @@
 
             grid.innerHTML = '';
             
+            // 3. Crear Tarjetas
             Object.keys(grouped).forEach(fuente => {
-                const color = COLORS[fuente] || "#6366f1";
-                const textColor = fuente === 'Clarín' ? '#000' : '#fff';
-                
                 let itemsHtml = grouped[fuente].map(n => {
-                    let hora = "Ahora";
-                    if(n.fecha) {
-                        const d = new Date(n.fecha);
-                        hora = d.toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'}) + " HS";
-                    }
+                    let hora = n.fecha ? new Date(n.fecha).toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'}) + " HS" : "RECIENTE";
                     return `
                         <div class="news-item">
                             <span class="news-time">${hora}</span>
@@ -91,24 +111,23 @@
                 grid.innerHTML += `
                     <div class="news-card">
                         <div class="card-header">
-                            <span class="source-badge" style="background:${color}; color:${textColor}">${fuente}</span>
-                            <i class="far fa-newspaper" style="opacity:0.2"></i>
+                            <span class="source-badge">${fuente}</span>
+                            <i class="fas fa-chart-bar" style="opacity:0.2"></i>
                         </div>
                         <div class="news-body">${itemsHtml}</div>
                     </div>
                 `;
             });
 
-            status.innerHTML = `<i class="fas fa-check-circle" style="color:#10b981"></i> Online: ${new Date().toLocaleTimeString()}`;
-
         } catch (e) {
-            status.innerHTML = `<i class="fas fa-exclamation-triangle" style="color:#ef4444"></i> Error de conexión`;
-            grid.innerHTML = `<div style="grid-column:1/-1; text-align:center; padding:50px; opacity:0.5">Fallo al conectar con Google Script.</div>`;
+            status.innerText = "OFFLINE";
+            status.style.color = "#ef4444";
         }
     }
 
     fetchData();
-    setInterval(fetchData, 600000); // Actualiza cada 10 min
+    setInterval(fetchData, 300000); // Actualiza cada 5 minutos
 </script>
+
 </body>
 </html>
