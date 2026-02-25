@@ -3,173 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Centinela Financiero - Pro</title>
+    <title>Centinela Pro - Fix</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root{--bg:#0a0e17;--bg2:#111827;--bg3:#1f2937;--txt:#e5e7eb;--txt2:#9ca3af;--green:#10b981;--red:#ef4444;--yellow:#f59e0b;--blue:#3b82f6;--border:#374151}
-        body{background:var(--bg);color:var(--txt);font-family:'Segoe UI',system-ui,sans-serif;min-height:100vh;padding:15px}
-        .container{max-width:1200px;margin:0 auto}
-        .header{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:20px;border-left:5px solid var(--blue)}
-        .header h1{font-size:1.5rem;font-weight:800;letter-spacing:-0.5px;color:var(--blue);margin:0}
-        .cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:15px;margin-bottom:20px}
-        .card{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:18px;position:relative;overflow:hidden}
-        .card::after{content:'';position:absolute;top:0;left:0;width:4px;height:100%;background:var(--blue)}
-        .label{color:var(--txt2);font-size:0.75rem;text-transform:uppercase;font-weight:bold;margin-bottom:8px;display:block}
-        .value{font-size:1.8rem;font-weight:bold;display:block}
-        .sub{font-size:0.8rem;color:var(--txt2);margin-top:5px}
-        .ia-box{background:linear-gradient(135deg, rgba(59,130,246,0.1), rgba(16,185,129,0.05));border:1px solid var(--blue);border-radius:12px;padding:20px;margin-bottom:20px}
-        .status-dot{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-right:5px;animation:pulse 2s infinite}
-        @keyframes pulse{0%{opacity:1}50%{opacity:0.4}100%{opacity:1}}
-        .table-res{background:var(--bg2);border:1px solid var(--border);border-radius:12px;overflow:hidden}
-        table{width:100%;margin:0;font-size:0.9rem}
-        th{background:var(--bg3);color:var(--txt2);font-size:0.7rem;text-transform:uppercase;padding:12px}
-        td{padding:12px;border-top:1px solid var(--border)}
-        @media(max-width:768px){.value{font-size:1.5rem}.cards{grid-template-columns:1fr 1fr}}
+        body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;padding:10px;min-height:100vh}
+        .container{max-width:1200px}
+        .header{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:15px;border-left:5px solid var(--blue)}
+        .card-stat{background:var(--bg2);border:1px solid var(--border);border-radius:12px;padding:15px;height:100%}
+        .label{color:var(--txt2);font-size:0.7rem;text-transform:uppercase;font-weight:bold;display:block;margin-bottom:5px}
+        .value{font-size:1.6rem;font-weight:bold;color:white}
+        .sub{font-size:0.75rem;color:var(--txt2)}
+        .ia-box{background:rgba(59,130,246,0.1);border:1px solid var(--blue);border-radius:12px;padding:15px;margin-bottom:15px}
+        .status-badge{font-size:0.65rem;padding:3px 8px;border-radius:10px}
+        @media(max-width:768px){.value{font-size:1.4rem}}
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header d-flex justify-content-between align-items-center">
-        <h1><i class="fas fa-microchip"></i> CENTINELA <span style="color:white">PRO</span></h1>
-        <div class="text-end">
-            <div style="font-size:0.7rem; color:var(--green)"><span class="status-dot"></span> API BCRA LINKED</div>
-            <button class="btn btn-sm btn-outline-primary mt-1" onclick="refresh()"><i class="fas fa-sync"></i></button>
+        <div>
+            <h1 class="h5 m-0" style="color:var(--blue);font-weight:800">CENTINELA PRO</h1>
+            <small id="status-api" style="color:var(--txt2);font-size:0.6rem">Sincronizando fuentes...</small>
         </div>
+        <button class="btn btn-sm btn-primary" onclick="refresh()"><i class="fas fa-sync-alt"></i></button>
     </div>
 
-    <div class="cards">
-        <div class="card">
-            <span class="label">Inflación Real (BCRA)</span>
-            <span class="value" id="ipc">--%</span>
-            <span class="sub" id="ipc-date">Cargando último dato...</span>
+    <div class="row g-3 mb-3">
+        <div class="col-6 col-md-3">
+            <div class="card-stat">
+                <span class="label">Inflación (BCRA)</span>
+                <span class="value" id="ipc">--%</span>
+                <span class="sub" id="ipc-date">Cargando...</span>
+            </div>
         </div>
-        <div class="card" style="border-left-color:var(--green)">
-            <span class="label">Tasa Plazo Fijo</span>
-            <span class="value" id="tna">--%</span>
-            <span class="sub" id="tem">TEM: --%</span>
+        <div class="col-6 col-md-3">
+            <div class="card-stat">
+                <span class="label">Tasa Plazo Fijo</span>
+                <span class="value" id="tna">--%</span>
+                <span class="sub" id="tem">TEM: --%</span>
+            </div>
         </div>
-        <div class="card">
-            <span class="label">Dólar Blue</span>
-            <span class="value" id="dolar">$--</span>
-            <span class="sub">Venta Mercado</span>
+        <div class="col-6 col-md-3">
+            <div class="card-stat">
+                <span class="label">Dólar Blue</span>
+                <span class="value" id="dolar">$--</span>
+                <span class="sub">Venta Mercado</span>
+            </div>
         </div>
-        <div class="card">
-            <span class="label">Spread Real</span>
-            <span class="value" id="spread">--%</span>
-            <span class="sub">Tasa vs Inflación</span>
+        <div class="col-6 col-md-3">
+            <div class="card-stat">
+                <span class="label">Spread Real</span>
+                <span class="value" id="spread">--%</span>
+                <span class="sub">Tasa vs IPC</span>
+            </div>
         </div>
     </div>
 
     <div class="ia-box">
-        <div class="row align-items-center">
-            <div class="col-md-8">
-                <h5 style="color:var(--blue); font-size:0.9rem"><i class="fas fa-robot"></i> ESTRATEGIA RECOMENDADA</h5>
-                <p id="ia-desc" class="m-0" style="font-size:0.95rem">Calculando arbitraje óptimo con datos del BCRA...</p>
+        <div class="d-flex justify-content-between align-items-start">
+            <div>
+                <h6 style="color:var(--blue);font-size:0.8rem"><i class="fas fa-robot"></i> ESTRATEGIA</h6>
+                <p id="ia-desc" class="small m-0">Iniciando algoritmo de análisis...</p>
             </div>
-            <div class="col-md-4 text-md-end mt-3 mt-md-0">
-                <div id="badge-ia" class="btn btn-sm" style="font-weight:bold; pointer-events:none">ANALIZANDO...</div>
-            </div>
+            <span id="ia-badge" class="badge bg-secondary status-badge">ESPERANDO</span>
         </div>
     </div>
 
-    <div class="table-res">
-        <table class="table table-dark table-hover mb-0">
+    <div class="table-responsive">
+        <table class="table table-dark table-sm border-secondary" style="font-size:0.85rem">
             <thead>
-                <tr>
-                    <th>Instrumento</th>
-                    <th>Vencimiento</th>
-                    <th>Tasa Est.</th>
-                    <th>Veredicto</th>
-                </tr>
+                <tr><th>Activo</th><th>Vence</th><th>TEM</th><th>Acción</th></tr>
             </thead>
             <tbody id="tbody">
-                <tr><td colspan="4" class="text-center p-4"><i class="fas fa-spinner fa-spin"></i> Sincronizando con mercado...</td></tr>
+                <tr><td colspan="4" class="text-center py-4">Sincronizando con mercado...</td></tr>
             </tbody>
         </table>
     </div>
 </div>
 
 <script>
-// CONFIGURACIÓN DE APIS
 const BCRA_TOKEN = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDM1NzQ3NjMsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJtdXJvY2FyaW5AaG90bWFpbC5jb20ifQ.sUg-29G9KKj-mSW2k3o3F-ovzdYlC6nzRtB1UKaLEeMQkNIhWEb9-jriFBQ8EbjSeumGcSI2OrsES8dxSOJS3Q";
-const PROXY = "https://api.allorigins.win/get?url=";
 
 async function refresh() {
-    try {
-        // 1. Obtener Inflación desde tu API BCRA (usamos proxy para evitar CORS)
-        const bcraUrl = encodeURIComponent("https://estadisticasbcra.com/api/inflacion_mensual_oficial");
-        const respIpc = await fetch(`${PROXY}${bcraUrl}&token=${BCRA_TOKEN}`).then(r => r.json());
-        const dataIpc = JSON.parse(respIpc.contents);
-        const ultimoIpc = dataIpc[dataIpc.length - 1];
+    document.getElementById('status-api').innerHTML = '<i class="fas fa-spinner fa-spin"></i> Conectando...';
+    
+    let ipcVal = 3.5; // Respaldo (Enero/Febrero est.)
+    let ipcDate = "Dato estimado (Fallback)";
 
-        // 2. Obtener Dólar y Tasas desde DolarAPI
-        const [dolar, tasas] = await Promise.all([
+    try {
+        // Intento de obtener Inflación (Si falla CORS, el catch maneja el error y usa el respaldo)
+        const respIpc = await fetch(`https://estadisticasbcra.com/api/inflacion_mensual_oficial?token=${BCRA_TOKEN}`);
+        if(respIpc.ok) {
+            const dataIpc = await respIpc.json();
+            const ultimo = dataIpc[dataIpc.length - 1];
+            ipcVal = ultimo.v;
+            ipcDate = "Mes: " + ultimo.d;
+        }
+    } catch (e) {
+        console.warn("Bloqueo CORS en BCRA. Usando estimación.");
+    }
+
+    try {
+        // Dólar y Tasas (DolarAPI suele tener CORS abierto para todos)
+        const [resDolar, resTasas] = await Promise.all([
             fetch('https://dolarapi.com/v1/dolares/blue').then(r => r.json()),
             fetch('https://dolarapi.com/v1/cotizaciones/tasas').then(r => r.json())
         ]);
 
-        const pf = tasas.find(t => t.casa === 'plazo_fijo');
+        const pf = resTasas.find(t => t.casa === 'plazo_fijo');
         const tna = pf ? pf.venta : 38;
         const tem = (Math.pow(1 + (tna/100/365), 30) - 1) * 100;
-        const ipcVal = ultimoIpc.v;
+        const spread = (tem - ipcVal).toFixed(2);
 
-        // Actualizar UI
+        // Actualizar Interfaz
         document.getElementById('ipc').textContent = ipcVal + '%';
-        document.getElementById('ipc-date').textContent = "Mes: " + ultimoIpc.d;
+        document.getElementById('ipc-date').textContent = ipcDate;
         document.getElementById('tna').textContent = tna + '%';
         document.getElementById('tem').textContent = "TEM: " + tem.toFixed(2) + '%';
-        document.getElementById('dolar').textContent = '$' + dolar.venta;
+        document.getElementById('dolar').textContent = '$' + resDolar.venta;
         
-        const spread = (tem - ipcVal).toFixed(2);
         const spEl = document.getElementById('spread');
         spEl.textContent = spread + '%';
         spEl.style.color = spread >= 0 ? 'var(--green)' : 'var(--red)';
 
         // IA Logic
-        const iaBadge = document.getElementById('badge-ia');
+        const iaBadge = document.getElementById('ia-badge');
         const iaDesc = document.getElementById('ia-desc');
-        
         if(spread > 0) {
-            iaBadge.textContent = "CARRY TRADE OK";
-            iaBadge.className = "btn btn-sm btn-success";
-            iaDesc.textContent = "La tasa le gana a la inflación. Sugerido: LECAPS o Plazo Fijo para capitalizar interés compuesto.";
+            iaBadge.textContent = "CARRY TRADE";
+            iaBadge.className = "badge bg-success status-badge";
+            iaDesc.textContent = "Tasas reales positivas. El peso rinde más que la inflación. Sugerido: LECAPS.";
         } else {
-            iaBadge.textContent = "COBERTURA REQUERIDA";
-            iaBadge.className = "btn btn-sm btn-danger";
-            iaDesc.textContent = "Tasa real negativa. Priorizar activos CER (TX26, Bonos UVA) para no perder poder adquisitivo.";
+            iaBadge.textContent = "COBERTURA";
+            iaBadge.className = "badge bg-danger status-badge";
+            iaDesc.textContent = "Inflación supera a la tasa. Buscar protección en activos CER o Dólar.";
         }
 
         renderTable(tem, ipcVal);
+        document.getElementById('status-api').innerHTML = '<i class="fas fa-check-circle text-success"></i> Datos actualizados';
 
     } catch (e) {
-        console.error("Error cargando datos:", e);
+        document.getElementById('status-api').innerHTML = '<i class="fas fa-exclamation-triangle text-danger"></i> Error de conexión';
     }
 }
 
 function renderTable(tem, ipc) {
     const assets = [
-        {n: 'LECAP S14A5', v: '14/04/25', t: tem + 0.4},
-        {n: 'Bono CER TX26', v: '09/11/26', t: ipc + 1.2},
+        {n: 'LECAP S14A5', v: '14/04/25', t: tem + 0.5},
+        {n: 'Bono CER TX26', v: '09/11/26', t: ipc + 1.1},
         {n: 'Plazo Fijo', v: '30 días', t: tem}
     ];
-    
-    const tbody = document.getElementById('tbody');
-    tbody.innerHTML = assets.map(a => `
+    document.getElementById('tbody').innerHTML = assets.map(a => `
         <tr>
             <td><b style="color:var(--blue)">${a.n}</b></td>
             <td>${a.v}</td>
             <td style="color:var(--green)">${a.t.toFixed(2)}%</td>
-            <td><span class="badge ${a.t > ipc ? 'bg-success' : 'bg-warning'} text-dark" style="font-size:0.6rem">
+            <td><span class="badge ${a.t > ipc ? 'bg-success' : 'bg-secondary'}" style="font-size:0.6rem">
                 ${a.t > ipc ? 'OPTIMO' : 'NEUTRO'}</span></td>
         </tr>
     `).join('');
 }
 
-// Inicio automático
 refresh();
 </script>
-
 </body>
 </html>
