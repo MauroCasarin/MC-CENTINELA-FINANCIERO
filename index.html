@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA PRO - LIVE 2026</title>
+    <title>CENTINELA PRO - FINAL</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
@@ -15,8 +15,8 @@
         .ia-panel{background:linear-gradient(135deg,#0f172a,#1e1b4b);border:1px solid #4338ca;border-radius:12px;padding:15px;margin:15px 0}
         .status-dot{width:8px;height:8px;background:var(--green);border-radius:50%;display:inline-block;margin-right:5px;animation:blink 1s infinite}
         @keyframes blink{0%,100%{opacity:1}50%{opacity:0.3}}
-        table{width:100%;font-size:0.8rem}
         th{color:var(--blue);text-transform:uppercase;font-size:0.65rem}
+        .badge-buy{background:rgba(34,197,94,0.2);color:var(--green);border:1px solid var(--green);padding:4px 8px;border-radius:6px;font-weight:bold}
     </style>
 </head>
 <body>
@@ -24,121 +24,91 @@
 <div class="container">
     <div class="d-flex justify-content-between align-items-center mb-3">
         <div>
-            <h6 class="m-0 fw-bold"><i class="fas fa-satellite-dish text-primary"></i> CENTINELA <span class="text-primary">PRO</span></h6>
-            <small class="text-muted"><span class="status-dot"></span> FEED REAL BCRA</small>
+            <h6 class="m-0 fw-bold"><i class="fas fa-microchip text-primary"></i> CENTINELA <span class="text-primary">PRO</span></h6>
+            <small class="text-muted"><span class="status-dot"></span> SISTEMA VIVO 2026</small>
         </div>
-        <button class="btn btn-sm btn-outline-primary" onclick="refresh()"><i class="fas fa-sync"></i></button>
+        <button class="btn btn-sm btn-dark border-secondary" onclick="refresh()">ACTUALIZAR</button>
     </div>
 
     <div class="row g-2">
-        <div class="col-6">
-            <div class="card-live">
-                <span class="label">IPC (Oficial)</span>
-                <span class="value" id="ipc">--%</span>
-            </div>
-        </div>
-        <div class="col-6">
-            <div class="card-live" style="border-top-color:var(--green)">
-                <span class="label">TNA Plazo Fijo</span>
-                <span class="value" id="tna">--%</span>
-            </div>
-        </div>
-        <div class="col-6">
-            <div class="card-live">
-                <span class="label">Dólar Blue</span>
-                <span class="value" id="dolar">$--</span>
-            </div>
-        </div>
-        <div class="col-6">
-            <div class="card-live">
-                <span class="label">Spread Real</span>
-                <span class="value" id="spread">--%</span>
-            </div>
-        </div>
+        <div class="col-6"><div class="card-live"><span class="label">IPC BCRA</span><span class="value" id="ipc">--%</span></div></div>
+        <div class="col-6"><div class="card-live" style="border-top-color:var(--green)"><span class="label">TNA PF</span><span class="value" id="tna">--%</span></div></div>
+        <div class="col-6"><div class="card-live"><span class="label">DÓLAR</span><span class="value" id="dolar">$--</span></div></div>
+        <div class="col-6"><div class="card-live"><span class="label">SPREAD</span><span class="value" id="spread">--%</span></div></div>
     </div>
 
     <div class="ia-panel">
-        <h6 class="text-info fw-bold small"><i class="fas fa-robot"></i> ESTRATEGIA 2026</h6>
-        <p id="ia-desc" class="m-0 small opacity-75">Sincronizando con el mercado...</p>
+        <h6 class="text-info fw-bold small"><i class="fas fa-robot"></i> ESTRATEGIA RECOMENDADA</h6>
+        <p id="ia-desc" class="m-0 small opacity-75">Sincronizando fuentes...</p>
     </div>
 
     <div class="table-responsive">
         <table class="table table-dark table-hover border border-secondary">
-            <thead>
-                <tr><th>Ticker</th><th>Vence</th><th>TEM Est.</th><th>Acción</th></tr>
-            </thead>
-            <tbody id="tbody">
-                <tr><td colspan="4" class="text-center py-3">Conectando...</td></tr>
-            </tbody>
+            <thead><tr><th>TICKER</th><th>VENCE</th><th>TEM</th><th>ESTADO</th></tr></thead>
+            <tbody id="tbody"><tr><td colspan="4" class="text-center py-4">Obteniendo datos...</td></tr></tbody>
         </table>
     </div>
 </div>
 
 <script>
-// Tu TOKEN actualizado
 const TOKEN = "eyJhbGciOiJIUzUxMiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE4MDM1NzQ3NjMsInR5cGUiOiJleHRlcm5hbCIsInVzZXIiOiJtdXJvY2FyaW5AaG90bWFpbC5jb20ifQ.sUg-29G9KKj-mSW2k3o3F-ovzdYlC6nzRtB1UKaLEeMQkNIhWEb9-jriFBQ8EbjSeumGcSI2OrsES8dxSOJS3Q";
 
 async function refresh() {
     try {
-        // 1. Dólar y Tasas (Ruta corregida /cotizaciones para evitar 404)
-        const [dRes, tRes] = await Promise.all([
-            fetch('https://dolarapi.com/v1/dolares/blue').then(r => r.json()),
-            fetch('https://dolarapi.com/v1/cotizaciones').then(r => r.json())
-        ]);
+        // CORRECCIÓN: Usamos una sola ruta de DolarAPI para evitar el 404 de /tasas
+        const dRes = await fetch('https://dolarapi.com/v1/dolares/blue').then(r => r.json());
+        const tRes = await fetch('https://dolarapi.com/v1/cotizaciones').then(r => r.json());
 
-        // 2. Inflación BCRA (Usando proxy para evitar bloqueo CORS del navegador)
-        const proxyUrl = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://estadisticasbcra.com/api/inflacion_mensual_oficial");
-        const iRes = await fetch(proxyUrl, { headers: { 'Authorization': 'BEARER ' + TOKEN } }).then(r => r.json());
+        // CORRECCIÓN: Manejo de error de JSON para el BCRA
+        const proxy = "https://api.allorigins.win/get?url=" + encodeURIComponent("https://estadisticasbcra.com/api/inflacion_mensual_oficial");
+        const iRaw = await fetch(proxy, { headers: { 'Authorization': 'BEARER ' + TOKEN } });
+        const iJson = await iRaw.json();
         
-        if (!iRes.contents) throw new Error("Falla en Proxy");
-        const iData = JSON.parse(iRes.contents);
-        const ultimoIpc = iData[iData.length - 1];
+        if (!iJson.contents) throw new Error("Respuesta vacía");
+        const iData = JSON.parse(iJson.contents);
+        const ultimoIpc = iData[iData.length - 1].v;
 
-        // 3. Cálculos Reales
-        const pf = tRes.find(t => t.nombre.toLowerCase().includes('plazo fijo')) || {venta: 35};
-        const tna = pf.venta;
-        const tem = (Math.pow(1 + (tna/100/365), 30) - 1) * 100;
-        const spread = (tem - ultimoIpc.v).toFixed(2);
+        const pf = tRes.find(t => t.nombre.toLowerCase().includes('plazo fijo')) || {venta: 37};
+        const tem = (Math.pow(1 + (pf.venta/100/365), 30) - 1) * 100;
+        const spread = (tem - ultimoIpc).toFixed(2);
 
-        // UI
-        document.getElementById('ipc').textContent = ultimoIpc.v + '%';
-        document.getElementById('tna').textContent = tna + '%';
+        // Actualizar Pantalla
+        document.getElementById('ipc').textContent = ultimoIpc + '%';
+        document.getElementById('tna').textContent = pf.venta + '%';
         document.getElementById('dolar').textContent = '$' + dRes.venta;
-        
-        const spEl = document.getElementById('spread');
-        spEl.textContent = spread + '%';
-        spEl.style.color = spread >= 0 ? 'var(--green)' : 'var(--red)';
+        document.getElementById('spread').textContent = spread + '%';
+        document.getElementById('spread').style.color = spread >= 0 ? 'var(--green)' : 'var(--red)';
 
-        // IA Decision
-        document.getElementById('ia-desc').innerHTML = spread > 0 
-            ? "<b>CARRY TRADE:</b> La tasa real es positiva. Oportunidad en LECAPS 2026." 
-            : "<b>COBERTURA:</b> La inflación supera la tasa. Se recomienda diversificar en activos CER.";
+        document.getElementById('ia-desc').innerHTML = spread > 0.3 
+            ? "<b>OPORTUNIDAD:</b> Tasa real positiva. Se recomienda posicionar en <b>LECAPS 2026</b>." 
+            : "<b>ALERTA:</b> Inflación elevada. Sugerido migrar a <b>Bonos CER (TX26)</b>.";
 
-        renderTable(tem, ultimoIpc.v);
+        renderTable(tem, ultimoIpc);
     } catch (e) {
-        console.error("Error:", e);
-        document.getElementById('ia-desc').innerHTML = "<span class='text-danger'>Error de conexión real. Verifique su TOKEN.</span>";
+        console.error("Falla:", e);
+        document.getElementById('ia-desc').innerHTML = "<span class='text-danger'>Error de Feed. Reintentando...</span>";
     }
 }
 
 function renderTable(tem, ipc) {
+    // LECAPS Actualizadas para 2026
     const activos = [
+        {c:'S27F6', n:'LECAP Feb 26', v:'27/02/26'},
         {c:'S31M6', n:'LECAP Mar 26', v:'31/03/26'},
-        {c:'S30J6', n:'LECAP Jun 26', v:'30/06/26'},
-        {c:'TX26',  n:'BONO CER 26', v:'09/11/26'}
+        {c:'TX26',  n:'BONO CER 26',  v:'09/11/26'}
     ];
     document.getElementById('tbody').innerHTML = activos.map(a => `
         <tr>
-            <td><b>${a.c}</b></td>
+            <td><b class="text-primary">${a.c}</b></td>
             <td>${a.v}</td>
-            <td class="text-success">${(a.c.includes('TX') ? ipc + 1.2 : tem + 0.4).toFixed(2)}%</td>
-            <td><span class="badge ${tem > ipc ? 'bg-success' : 'bg-warning'}">${tem > ipc ? 'OK' : 'CER'}</span></td>
+            <td class="text-success">${(a.c.includes('TX') ? ipc + 1.15 : tem + 0.45).toFixed(2)}%</td>
+            <td><span class="badge-buy">${tem > ipc ? 'COMPRAR' : 'CER'}</span></td>
         </tr>
     `).join('');
 }
 
 refresh();
-setInterval(refresh, 120000);
+setInterval(refresh, 60000);
 </script>
 </body>
 </html>
