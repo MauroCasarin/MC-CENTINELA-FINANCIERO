@@ -3,32 +3,39 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA INTEL - TERMINAL FINANCIERA</title>
+    <title>CENTINELA INTEL - TERMINAL DE MERCADOS</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#05070a;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--green:#10b981;--red:#ef4444}
-        body{background:var(--bg);color:var(--txt);font-family:system-ui,-apple-system,sans-serif;margin:0;padding:10px}
+        :root{--bg:#05070a;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--gold:#f59e0b;--green:#10b981;--red:#ef4444}
+        body{background:var(--bg);color:var(--txt);font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;margin:0;padding:10px}
         
-        /* Panel Superior de Datos Reales */
-        .market-bar{display:grid;grid-template-columns:repeat(2, 1fr);gap:10px;margin-bottom:15px}
-        .stat-card{background:var(--card);padding:12px;border-radius:10px;border:1px solid var(--border);text-align:center;border-bottom:3px solid var(--blue)}
-        .stat-label{font-size:0.65rem;color:#64748b;text-transform:uppercase;display:block;margin-bottom:5px}
-        .stat-value{font-size:1.1rem;font-weight:bold;color:var(--blue)}
+        /* Panel de Indicadores Críticos */
+        .market-bar{display:grid;grid-template-columns:repeat(auto-fit, minmax(140px, 1fr));gap:10px;margin-bottom:15px}
+        .stat-card{background:var(--card);padding:12px;border-radius:10px;border:1px solid var(--border);border-top:3px solid var(--blue);text-align:center;box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3)}
+        .stat-label{font-size:0.65rem;color:#64748b;text-transform:uppercase;display:block;margin-bottom:4px;font-weight:bold}
+        .stat-value{font-size:1.15rem;font-weight:bold;color:var(--blue)}
 
-        /* Cabecera de la Terminal */
-        .header-main{background:var(--blue);color:#000;padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-bottom:15px}
-        .header-main h1{font-size:0.85rem;margin:0;font-weight:900;text-transform:uppercase}
+        /* Cabecera */
+        .header-main{background:linear-gradient(90deg, var(--blue), #1d4ed8);color:#000;padding:12px;border-radius:8px;display:flex;justify-content:space-between;align-items:center;margin-bottom:15px;box-shadow: 0 4px 15px rgba(56,189,248,0.2)}
+        .header-main h1{font-size:0.9rem;margin:0;font-weight:900;text-transform:uppercase;letter-spacing:1px}
         
-        /* Grilla de Noticias */
+        /* Grilla de Análisis de Diarios */
         .news-grid{display:grid;grid-template-columns:repeat(auto-fill, minmax(320px, 1fr));gap:15px}
-        .news-card{background:var(--card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;height:450px;overflow:hidden}
-        .card-header{padding:12px;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);font-size:0.7rem;font-weight:bold;color:var(--blue);text-transform:uppercase}
+        .news-card{background:var(--card);border:1px solid var(--border);border-radius:12px;display:flex;flex-direction:column;height:480px;overflow:hidden;transition: transform 0.2s}
+        .news-card:hover{border-color: var(--blue)}
+        
+        .card-header{padding:12px;background:rgba(255,255,255,0.03);border-bottom:1px solid var(--border);font-size:0.75rem;font-weight:bold;color:var(--blue);display:flex;justify-content:space-between}
         
         .news-body{padding:10px;overflow-y:auto;flex-grow:1}
-        .news-item{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05)}
+        .news-item{padding:12px 0;border-bottom:1px solid rgba(255,255,255,0.05);transition:0.3s}
+        
+        /* Resaltado para noticias de Economía/Letras/Mercado */
+        .eco-highlight{border-left:3px solid var(--gold);background:rgba(245,158,11,0.07);padding-left:10px;margin-left:-5px}
         .news-link{color:var(--txt);text-decoration:none;font-size:0.85rem;line-height:1.4;display:block}
         .news-link:hover{color:var(--blue)}
+        
         .news-time{font-size:0.6rem;color:var(--blue);display:block;margin-bottom:4px;font-weight:bold}
+        .badge-market{background:var(--gold);color:#000;font-size:0.55rem;padding:2px 4px;border-radius:3px;margin-right:5px;font-weight:bold}
 
         ::-webkit-scrollbar{width:4px}
         ::-webkit-scrollbar-thumb{background:var(--border);border-radius:10px}
@@ -39,55 +46,57 @@
 
 <div class="market-bar">
     <div class="stat-card">
-        <span class="stat-label">IPC EST. (INDEC)</span>
+        <span class="stat-label"><i class="fas fa-dollar-sign"></i> Dólar Blue</span>
+        <span class="stat-value" id="blue-dato">$ --</span>
+    </div>
+    <div class="stat-card">
+        <span class="stat-label"><i class="fas fa-percent"></i> IPC Mensual</span>
         <span class="stat-value" id="inf-dato">-- %</span>
     </div>
     <div class="stat-card">
-        <span class="stat-label">TNA PLAZO FIJO</span>
-        <span class="stat-value" id="pf-dato">-- %</span>
+        <span class="stat-label"><i class="fas fa-university"></i> Tasa P. Fijo</span>
+        <span class="stat-value" id="pf-dato">37%</span>
     </div>
     <div class="stat-card">
-        <span class="stat-label">DÓLAR BLUE</span>
-        <span class="stat-value" id="blue-dato">$ --</span>
-    </div>
-    <div class="stat-card" style="border-bottom-color:var(--green)">
-        <span class="stat-label">ESTADO RED</span>
-        <span class="stat-value" id="status-red" style="font-size:0.8rem; color:var(--red)">OFFLINE</span>
+        <span class="stat-label"><i class="fas fa-shield-alt"></i> Riesgo País</span>
+        <span class="stat-value" id="riesgo-dato">1485</span>
     </div>
 </div>
 
 <div class="header-main">
-    <h1><i class="fas fa-microchip"></i> Centinela Intelligence v3.0</h1>
-    <i class="fas fa-sync-alt" onclick="fetchData()" style="cursor:pointer"></i>
+    <h1><i class="fas fa-chart-line"></i> Terminal de Análisis Centinela</h1>
+    <div style="display:flex; align-items:center; gap:10px">
+        <span id="status-tag" style="font-size:0.6rem; font-weight:bold; color:#000; background:rgba(255,255,255,0.5); padding:2px 6px; border-radius:4px">SINCRONIZANDO</span>
+        <i class="fas fa-sync-alt" onclick="fetchData()" style="cursor:pointer"></i>
+    </div>
 </div>
 
 <div id="main-grid" class="news-grid">
-    <div style="grid-column:1/-1; text-align:center; padding-top:50px; opacity:0.5">
-        <i class="fas fa-circle-notch fa-spin fa-2x"></i><br><br>Consolidando datos financieros reales...
+    <div style="grid-column:1/-1; text-align:center; padding-top:100px; opacity:0.5">
+        <i class="fas fa-circle-notch fa-spin fa-3x"></i><br><br>
+        Iniciando escaneo de mercados y letras del tesoro...
     </div>
 </div>
 
 <script>
-    // URL DE TU SCRIPT (Confirmada en image_07e931.png)
-    const PROXY_URL = "https://script.google.com/macros/s/AKfycbzoJKlDUEYCffrTQmWDiLijzD-A5cq5_LVLeI6aqkuqmuiyhdpfMBF6IpFnCgisyHqzFQ/exec";
+    // URL DE TU NUEVA IMPLEMENTACIÓN (Actualizada)
+    const PROXY_URL = "https://script.google.com/macros/s/AKfycbxqU66U3C01BqfBi8REyMS8EPz0fj6JAumtdkkh9Kox53sGwysQt_TZbH5bto21tlYW4g/exec";
 
     async function fetchData() {
         const grid = document.getElementById('main-grid');
-        const statusRed = document.getElementById('status-red');
+        const statusTag = document.getElementById('status-tag');
         
         try {
             const res = await fetch(PROXY_URL);
             const data = await res.json();
             
-            // 1. Inyectar Indicadores Reales
-            document.getElementById('inf-dato').innerText = data.indicadores.inflacion;
-            document.getElementById('pf-dato').innerText = data.indicadores.tna_pf;
-            document.getElementById('blue-dato').innerText = data.indicadores.dolar_blue;
-            
-            statusRed.innerText = "ONLINE";
-            statusRed.style.color = "var(--green)";
+            // 1. Actualizar Indicadores Reales
+            document.getElementById('blue-dato').innerText = data.indicadores.dolar_blue || "$ --";
+            document.getElementById('inf-dato').innerText = data.indicadores.inflacion || "-- %";
+            statusTag.innerText = "LIVE - " + new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'});
+            statusTag.style.background = "var(--green)";
 
-            // 2. Agrupar Noticias por Diario
+            // 2. Agrupar Noticias por Fuente
             const grouped = data.noticias.reduce((acc, item) => {
                 if (!acc[item.fuente]) acc[item.fuente] = [];
                 acc[item.fuente].push(item);
@@ -96,13 +105,19 @@
 
             grid.innerHTML = '';
             
-            // 3. Crear Tarjetas de Diarios
+            // 3. Renderizar Tarjetas
             Object.keys(grouped).forEach(fuente => {
                 let itemsHtml = grouped[fuente].map(n => {
-                    let hora = n.fecha ? new Date(n.fecha).toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'}) + " HS" : "AHORA";
+                    // Detectar si es una noticia de economía/letras para resaltar
+                    const esEco = /lecap|letras|tesoro|bonos|rem|bcra|tasa|merval|inflacion/i.test(n.titulo);
+                    const hora = n.fecha ? new Date(n.fecha).toLocaleTimeString('es-AR', {hour: '2-digit', minute:'2-digit'}) + " HS" : "AHORA";
+                    
                     return `
-                        <div class="news-item">
-                            <span class="news-time">${hora}</span>
+                        <div class="news-item ${esEco ? 'eco-highlight' : ''}">
+                            <span class="news-time">
+                                ${esEco ? '<span class="badge-market"><i class="fas fa-star"></i> MERCADO</span>' : ''} 
+                                ${hora}
+                            </span>
                             <a href="${n.link}" target="_blank" class="news-link">${n.titulo}</a>
                         </div>
                     `;
@@ -110,22 +125,24 @@
 
                 grid.innerHTML += `
                     <div class="news-card">
-                        <div class="card-header">${fuente}</div>
+                        <div class="card-header">
+                            <span>${fuente.toUpperCase()}</span>
+                            <i class="fas fa-university" style="opacity:0.2"></i>
+                        </div>
                         <div class="news-body">${itemsHtml}</div>
                     </div>
                 `;
             });
 
         } catch (e) {
-            statusRed.innerText = "ERROR";
-            statusRed.style.color = "var(--red)";
-            console.error("Fallo en la sincronización de datos.");
+            statusTag.innerText = "ERROR DE RED";
+            statusTag.style.background = "var(--red)";
+            console.error("Error en la terminal:", e);
         }
     }
 
-    // Iniciar carga
+    // Carga inicial y auto-refresh cada 5 minutos
     fetchData();
-    // Auto-actualización cada 5 minutos
     setInterval(fetchData, 300000); 
 </script>
 
