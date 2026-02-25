@@ -3,129 +3,139 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TERMINAL CENTINELA - REAL TIME ECONOMY</title>
+    <title>CENTINELA - INTELIGENCIA DE MERCADOS</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--gold:#fbbf24;--green:#10b981}
-        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:10px; overflow-x:hidden}
+        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--border:#1e293b;--gold:#fbbf24;--accent:#8b5cf6;--green:#10b981}
+        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:15px; line-height:1.6}
         
-        /* Dashboard de Datos Vivos */
-        .market-header{display:grid; grid-template-columns:repeat(auto-fit, minmax(140px, 1fr)); gap:10px; margin-bottom:20px}
-        .stat-card{background:var(--card); padding:15px; border-radius:12px; border:1px solid var(--border); border-top:4px solid var(--blue); text-align:center; box-shadow: 0 4px 20px rgba(0,0,0,0.5)}
-        .stat-label{font-size:0.65rem; color:#94a3b8; text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:5px}
-        .stat-value{font-size:1.4rem; font-weight:900; color:var(--blue); display:block}
-        .live-dot{width:8px; height:8px; background:var(--green); border-radius:50%; display:inline-block; margin-right:5px; animation: pulse 2s infinite}
+        /* BOX DE ESTRATEGIA - CENTRO DE LA APP */
+        .strategy-engine {
+            background: linear-gradient(145deg, #0f172a, #131e35);
+            border: 1px solid var(--border);
+            border-left: 5px solid var(--accent);
+            border-radius: 16px;
+            padding: 25px;
+            margin-bottom: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .engine-header {
+            color: var(--accent);
+            font-weight: 900;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 2px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .conclusion-box {
+            font-size: 1.15rem;
+            color: #e2e8f0;
+            font-weight: 500;
+            white-space: pre-line;
+        }
+        .status-pill {
+            display: inline-block;
+            padding: 4px 12px;
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--green);
+            border-radius: 20px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-top: 15px;
+        }
 
-        /* Grilla de Diarios Masiva */
-        .news-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(340px, 1fr)); gap:15px}
-        .news-card{background:var(--card); border:1px solid var(--border); border-radius:16px; height:500px; display:flex; flex-direction:column; overflow:hidden}
-        .card-header{padding:12px 15px; background:rgba(255,255,255,0.03); border-bottom:1px solid var(--border); font-size:0.8rem; font-weight:800; color:var(--blue); display:flex; justify-content:space-between; align-items:center}
-        
+        /* GRILLA DE DIARIOS */
+        .news-grid{display:grid; grid-template-columns:repeat(auto-fill, minmax(320px, 1fr)); gap:20px}
+        .news-card{background:var(--card); border:1px solid var(--border); border-radius:12px; height:450px; display:flex; flex-direction:column}
+        .card-header{padding:12px 15px; background:rgba(255,255,255,0.02); font-weight:800; font-size:0.75rem; color:var(--blue); border-bottom:1px solid var(--border)}
         .news-body{padding:10px; overflow-y:auto; flex-grow:1}
-        .news-item{padding:12px; border-bottom:1px solid rgba(255,255,255,0.05); transition: 0.2s}
-        .news-item:hover{background:rgba(56,189,248,0.03)}
+        .item{padding:12px; border-bottom:1px solid rgba(255,255,255,0.03); font-size:0.85rem}
+        a{color:var(--txt); text-decoration:none; transition: 0.2s}
+        a:hover{color:var(--blue)}
         
-        /* Alertas de Activos (LECAPS, Letras, Bonos) */
-        .market-alert{border-left:4px solid var(--gold); background:rgba(251,191,36,0.08); border-radius:0 8px 8px 0}
-        .badge-market{background:var(--gold); color:#000; font-size:0.55rem; padding:2px 5px; border-radius:4px; font-weight:900; display:inline-block; margin-bottom:5px}
-
-        .news-link{color:var(--txt); text-decoration:none; font-size:0.9rem; line-height:1.4; font-weight:500; display:block}
-        .news-time{font-size:0.65rem; color:#64748b; font-weight:bold; display:block; margin-bottom:4px}
-
-        @keyframes pulse{0%{opacity:1} 50%{opacity:0.3} 100%{opacity:1}}
         ::-webkit-scrollbar{width:5px}
         ::-webkit-scrollbar-thumb{background:var(--border); border-radius:10px}
+        @media (max-width: 600px) { .strategy-engine { padding: 15px; } .conclusion-box { font-size: 1rem; } }
     </style>
 </head>
 <body>
 
-<div class="market-header">
-    <div class="stat-card">
-        <span class="stat-label">Dólar Blue</span>
-        <span id="val-dolar" class="stat-value">...</span>
+<div class="strategy-engine">
+    <div class="engine-header"><i class="fas fa-brain"></i> Análisis de Conclusión Centinela</div>
+    <div id="ai-verdict" class="conclusion-box">
+        Sincronizando fuentes y procesando variables macroeconómicas...
     </div>
-    <div class="stat-card">
-        <span class="stat-label">IPC Mensual</span>
-        <span id="val-ipc" class="stat-value">...</span>
-    </div>
-    <div class="stat-card" style="border-top-color:var(--gold)">
-        <span class="stat-label">Tasa LECAP (TEM)</span>
-        <span id="val-lecap" class="stat-value" style="color:var(--gold)">...</span>
-    </div>
-    <div class="stat-card">
-        <span class="stat-label">Estado Red</span>
-        <span id="status" class="stat-value" style="font-size:0.7rem; color:var(--green)"><span class="live-dot"></span>LIVE</span>
-    </div>
+    <div id="update-pill" class="status-pill">PROCESANDO DATOS EN TIEMPO REAL</div>
 </div>
 
-<div id="grid-principal" class="news-grid">
-    <div style="grid-column:1/-1; text-align:center; padding:100px; opacity:0.5">
-        <i class="fas fa-sync fa-spin fa-2x"></i><br><br>CONECTANDO CON NODOS DE ECONOMÍA...
-    </div>
-</div>
+<div id="main-grid" class="news-grid"></div>
 
 <script>
-    // URL DE TU IMPLEMENTACIÓN V11
     const GOOGLE_URL = "https://script.google.com/macros/s/AKfycbwimyVoLDfgkhMsm5eTS5wBsp3sio_PhQaxcmXAq6GyDfxRHSQ29NvV2m9N22XjwD_gfQ/exec";
 
-    async function actualizarTerminal() {
+    async function processFinancialData() {
         try {
-            const respuesta = await fetch(GOOGLE_URL);
-            const data = await respuesta.json();
+            const response = await fetch(GOOGLE_URL);
+            const data = await response.json();
             
-            // 1. ASIGNACIÓN DE DATOS REALES A LOS CUADROS
-            // Usamos los nombres exactos que vienen de tu script
-            document.getElementById('val-dolar').innerText = data.indicadores.dolar_blue || "--";
-            document.getElementById('val-ipc').innerText = data.indicadores.inflacion || data.indicadores.ipc || "--";
-            document.getElementById('val-lecap').innerText = data.indicadores.tna_lecap || data.indicadores.lecap || "3.8%";
+            // 1. ANÁLISIS DE TITULARES EN TIEMPO REAL
+            const rawText = data.noticias.map(n => n.titulo.toLowerCase()).join(" ");
+            let conclusion = "";
+            let colorPill = "var(--green)";
 
-            // 2. PROCESAMIENTO DE DIARIOS
-            const agrupados = data.noticias.reduce((acc, n) => {
-                if (!acc[n.fuente]) acc[n.fuente] = [];
+            // Lógica de detección cruzada
+            const find = (word) => rawText.includes(word);
+
+            if (find("lecap") || find("licitación") || find("tesoro")) {
+                conclusion = "🔹 **RECOMENDACIÓN: ESTRATEGIA DE TASA (LECAPS)**\nSe detecta un flujo informativo centrado en deuda en pesos y licitaciones del Tesoro. Con la inflación en niveles estables, el rendimiento de las LECAPS rinde por encima del crawling-peg. Es momento de mantener posiciones en Letras para maximizar el interés compuesto frente al dólar.";
+            } 
+            else if (find("brecha") || find("salto") || find("dólar") || find("tensión")) {
+                conclusion = "🔸 **RECOMENDACIÓN: COBERTURA (DÓLAR / BONOS AL30)**\nLos titulares sugieren ruido cambiario o ampliación de brecha. Se recomienda refugio en Dólar MEP o Bonos Soberanos (AL30/GD30) para proteger el capital. Evitar Plazos Fijos si la volatilidad persiste.";
+                colorPill = "var(--gold)";
+            }
+            else if (find("merval") || find("acciones") || find("cedear")) {
+                conclusion = "🚀 **RECOMENDACIÓN: RENTA VARIABLE (ACCIONES)**\nEl sentimiento del mercado muestra optimismo en el sector privado. Considerar posicionarse en el Merval o Cedears de empresas tecnológicas. La tasa real podría estar perdiendo atractivo frente al crecimiento patrimonial.";
+            }
+            else {
+                conclusion = "⚖️ **RECOMENDACIÓN: DIVERSIFICACIÓN PRUDENTE**\nSin una tendencia clara en los diarios, la mejor opción es el 50/50: Letras de corto plazo para liquidez inmediata y Dólar para cobertura de fondo.";
+            }
+
+            document.getElementById('ai-verdict').innerHTML = conclusion;
+            document.getElementById('update-pill').style.color = colorPill;
+            document.getElementById('update-pill').innerText = "ÚLTIMA CONCLUSIÓN: " + new Date().toLocaleTimeString();
+
+            // 2. RENDERIZADO DE DIARIOS (Ocultando datos numéricos brutos)
+            const grouped = data.noticias.reduce((acc, n) => {
+                if(!acc[n.fuente]) acc[n.fuente] = [];
                 acc[n.fuente].push(n);
                 return acc;
             }, {});
 
-            const contenedor = document.getElementById('grid-principal');
-            contenedor.innerHTML = '';
-
-            Object.keys(agrupados).forEach(diario => {
-                const noticiasHtml = agrupados[diario].map(n => {
-                    // Si el título contiene palabras clave de activos, lo resaltamos
-                    const esActivo = /lecap|letras|tesoro|bonos|licitacion|rem|bcra/i.test(n.titulo);
-                    const hora = n.fecha ? new Date(n.fecha).toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'}) : "AHORA";
-                    
-                    return `
-                        <div class="news-item ${esActivo ? 'market-alert' : ''}">
-                            <span class="news-time">
-                                ${esActivo ? '<span class="badge-market"><i class="fas fa-chart-line"></i> MERCADO</span>' : ''}
-                                ${hora} HS
-                            </span>
-                            <a href="${n.link}" target="_blank" class="news-link">${n.titulo}</a>
-                        </div>
-                    `;
-                }).join('');
-
-                contenedor.innerHTML += `
-                    <div class="news-card">
-                        <div class="card-header">
-                            <span>${diario.toUpperCase()}</span>
-                            <i class="fas fa-landmark" style="opacity:0.2"></i>
-                        </div>
-                        <div class="news-body">${noticiasHtml}</div>
+            const grid = document.getElementById('main-grid');
+            grid.innerHTML = Object.keys(grouped).map(diario => `
+                <div class="news-card">
+                    <div class="card-header">${diario.toUpperCase()}</div>
+                    <div class="news-body">
+                        ${grouped[diario].map(n => `
+                            <div class="item">
+                                <a href="${n.link}" target="_blank">${n.titulo}</a>
+                            </div>
+                        `).join('')}
                     </div>
-                `;
-            });
+                </div>
+            `).join('');
 
-        } catch (error) {
-            document.getElementById('status').innerHTML = '<span style="color:red">ERROR DE ENLACE</span>';
-            console.error("Error de sincronización:", error);
+        } catch (e) {
+            document.getElementById('ai-verdict').innerText = "Error de conexión con la terminal de datos.";
         }
     }
 
-    // Iniciar y programar refresco cada 2 minutos para tiempo real total
-    actualizarTerminal();
-    setInterval(actualizarTerminal, 120000); 
+    processFinancialData();
+    // Refresco cada 3 minutos para mantener la "Conclusión" fresca
+    setInterval(processFinancialData, 180000); 
 </script>
 
 </body>
