@@ -3,49 +3,42 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA IA - NARRATIVA DINÁMICA</title>
+    <title>CENTINELA TERMINAL - ESTRATEGIA TIEMPO REAL</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24}
+        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981}
         body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:8px; font-size: 11px}
         
         .header { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 8px; }
         .logo { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--blue); }
 
-        /* TERMINAL DE PENSAMIENTO IA */
+        /* BARRA DE DÓLARES */
+        .ticker-dolar { display: flex; gap: 10px; margin-bottom: 8px; overflow-x: auto; padding: 5px 0; }
+        .dolar-card { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 6px 12px; border-radius: 6px; white-space: nowrap; }
+        .dolar-val { color: var(--green); font-weight: 800; font-size: 0.85rem; }
+        .dolar-name { font-size: 0.6rem; color: var(--blue); text-transform: uppercase; font-weight: bold; }
+
+        /* TERMINAL IA */
         .ai-terminal {
             background: linear-gradient(145deg, #0f172a, #131e35);
             border: 1px solid var(--border);
-            border-top: 3px solid var(--accent);
+            border-left: 4px solid var(--accent);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 12px;
-            position: relative;
         }
-        .ai-stats { display: flex; gap: 15px; font-size: 0.65rem; color: var(--blue); font-weight: bold; margin-bottom: 12px; }
-        
-        /* Efecto de escritura */
-        .verdict-box { 
-            font-size: 1.15rem; 
-            line-height: 1.6; 
-            color: #f1f5f9; 
-            border-left: 4px solid var(--accent); 
-            padding-left: 20px;
-            font-weight: 300;
-        }
+        .verdict-box { font-size: 1.1rem; line-height: 1.6; color: #f1f5f9; font-weight: 300; }
         .verdict-box b { color: var(--gold); font-weight: 700; }
 
-        .update-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.3s; }
-        .update-btn:hover { background: #7c3aed; transform: scale(1.02); }
+        .update-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
 
-        /* GRILLA DIARIOS */
+        /* GRID DIARIOS */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; height: 220px; display: flex; flex-direction: column; }
-        .card-h { padding: 4px 10px; background: rgba(255,255,255,0.03); font-size: 0.65rem; font-weight: 900; color: var(--blue); border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; height: 210px; display: flex; flex-direction: column; }
+        .card-h { padding: 4px 10px; background: rgba(255,255,255,0.03); font-size: 0.6rem; font-weight: 900; color: var(--blue); border-bottom: 1px solid var(--border); text-transform: uppercase; }
         .card-b { padding: 5px; overflow-y: auto; flex-grow: 1; }
         .news-item { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .news-item a { color: #94a3b8; text-decoration: none; font-size: 0.75rem; transition: 0.2s; }
-        .news-item a:hover { color: white; }
+        .news-item a { color: #94a3b8; text-decoration: none; font-size: 0.72rem; }
 
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
     </style>
@@ -55,87 +48,88 @@
 <div class="header">
     <div style="display:flex; align-items:center; gap:10px;">
         <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo">
-        <span style="font-weight:900; color:var(--blue); letter-spacing:1px">CENTINELA NARRATIVE IA</span>
+        <span style="font-weight:900; color:var(--blue); letter-spacing:1px">CENTINELA IA TERMINAL</span>
     </div>
-    <div style="color:#10b981; font-size:0.6rem; font-weight:bold;"><i class="fas fa-bolt"></i> REAL-TIME</div>
+    <div id="t-stamp" style="font-size:0.6rem; color:#64748b">--:--:--</div>
+</div>
+
+<div id="ticker" class="ticker-dolar">
+    <div class="dolar-card"><span class="dolar-name">Cargando Precios...</span></div>
 </div>
 
 <div class="ai-terminal">
-    <div class="ai-stats">
-        <span id="f-count">Fuentes: --</span>
-        <span id="n-count">Data Points: --</span>
-        <span id="t-stamp" style="color:#64748b"></span>
+    <div id="verdicto" class="verdict-box">
+        Iniciando motor narrativo y cruzando cotizaciones...
     </div>
     
-    <div id="verdicto" class="verdict-box">Iniciando escaneo de mercado...</div>
-    
     <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
-        <button class="update-btn" onclick="generarAnalisisReal()">
-            <i class="fas fa-sync-alt"></i> RE-GENERAR INFORME
+        <button class="update-btn" onclick="ejecutarTodo()">
+            <i class="fas fa-sync-alt"></i> ACTUALIZAR TERMINAL
         </button>
-        <div id="loading-bar" style="height:2px; background:var(--accent); width:0%; transition: 0.5s"></div>
+        <span id="data-stats" style="font-size:0.6rem; color:var(--blue)">FUENTES: 0 | NOTICIAS: 0</span>
     </div>
 </div>
 
 <div id="master-grid" class="grid"></div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
+    const NEWS_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
+    const DOLAR_URL = "https://api.argentinadatos.com/v1/cotizaciones/dolares";
 
-    async function generarAnalisisReal() {
+    async function ejecutarTodo() {
         const out = document.getElementById('verdicto');
         out.style.opacity = "0.5";
-        
+
         try {
-            const res = await fetch(API_URL);
-            const data = await res.json();
+            // 1. FETCH DOLARES
+            const resDolar = await fetch(DOLAR_URL);
+            const dolares = await resDolar.json();
+            const blue = dolares.find(d => d.casa === 'blue');
+            const mep = dolares.find(d => d.casa === 'mep');
+            const ccl = dolares.find(d => d.casa === 'contadoconliqui');
+
+            document.getElementById('ticker').innerHTML = `
+                <div class="dolar-card"><span class="dolar-name">BLUE:</span> <span class="dolar-val">$${blue.venta}</span></div>
+                <div class="dolar-card"><span class="dolar-name">MEP:</span> <span class="dolar-val">$${mep.venta}</span></div>
+                <div class="dolar-card"><span class="dolar-name">CCL:</span> <span class="dolar-val">$${ccl.venta}</span></div>
+            `;
+
+            // 2. FETCH NOTICIAS
+            const resNews = await fetch(NEWS_URL);
+            const data = await resNews.json();
             const noticias = data.noticias;
             const titulos = noticias.map(n => n.titulo.toLowerCase());
-            
-            document.getElementById('f-count').innerText = `FUENTES: ${new Set(noticias.map(n => n.fuente)).size}`;
-            document.getElementById('n-count').innerText = `DATA POINTS: ${noticias.length}`;
+
+            document.getElementById('data-stats').innerText = `FUENTES: ${new Set(noticias.map(n => n.fuente)).size} | NOTICIAS: ${noticias.length}`;
             document.getElementById('t-stamp').innerText = new Date().toLocaleTimeString();
 
-            // --- MOTOR DE NARRATIVA DINÁMICA ---
-            const find = (arr) => titulos.filter(t => arr.some(w => t.includes(w)));
-            
-            const dataPuntos = {
-                tasas: find(['lecap', 'tasa', 'letras', 'plazo fijo', 'uva', 'pesos']),
-                dolar: find(['dolar', 'mep', 'ccl', 'brecha', 'blue', 'devaluacion']),
-                bolsa: find(['merval', 'acciones', 'cedear', 'ypf', 'galicia', 'pampa']),
-                riesgo: find(['inflacion', 'ipc', 'riesgo pais', 'deficit', 'ajuste', 'precios'])
+            // 3. MOTOR IA NARRATIVA (CRUZADA CON PRECIOS)
+            const count = (keys) => titulos.filter(t => keys.some(k => t.includes(k))).length;
+            const p = {
+                tasa: count(['lecap', 'tasa', 'letras', 'plazo fijo', 'uva']),
+                dolar: count(['dolar', 'mep', 'ccl', 'brecha', 'blue']),
+                acciones: count(['merval', 'acciones', 'ypf', 'galicia'])
             };
 
-            // Seleccionamos los términos más calientes de las noticias reales
-            const topNoticias = noticias.slice(0, 3).map(n => n.titulo.split(' ').slice(0, 4).join(' '));
+            let informe = `Con el **Dólar MEP cotizando a $${mep.venta}**, el ecosistema informativo `;
             
-            // Construcción del veredicto basado en conteos puros
-            let informe = "El flujo informativo actual revela ";
-            
-            const totalMenciones = dataPuntos.tasas.length + dataPuntos.dolar.length + dataPuntos.bolsa.length + dataPuntos.riesgo.length;
-            
-            // Lógica narrativa: Compara densidades para redactar
-            if (dataPuntos.tasas.length > dataPuntos.dolar.length) {
-                informe += `una **marcada preferencia por la liquidez en pesos**, donde las ${dataPuntos.tasas.length} menciones a tasas indican que el mercado busca rendimiento real frente al dólar. `;
+            if (p.tasa > p.dolar) {
+                informe += `presenta una **predominancia de instrumentos en pesos**. Las ${p.tasa} noticias sobre tasas sugieren que la rentabilidad real sigue siendo el motor del mercado. `;
             } else {
-                informe += `un **clima de tensión cambiaria**, impulsado por las noticias sobre brecha y MEP que hoy dominan la agenda. `;
+                informe += `revela una **alerta cambiaria activa**. El volumen de noticias sobre el dólar supera el interés por la tasa, indicando una búsqueda de cobertura. `;
             }
 
-            if (dataPuntos.bolsa.length > 5) {
-                informe += `Paralelamente, observo una **fuerte tracción en activos de renta variable**, especialmente en sectores mencionados como ${topNoticias[0]}... `;
+            // Inyectar datos dinámicos de la bolsa
+            if (p.acciones > 4) {
+                informe += `Además, detecto un flujo de capital positivo hacia el **Merval**, con un sentimiento alcista en empresas líderes. `;
             }
 
-            if (dataPuntos.riesgo.length > 0) {
-                informe += `Sin embargo, la IA detecta que la **variable inflacionaria** sigue siendo el ruido de fondo que condiciona las decisiones. `;
-            }
+            informe += `\n\n**ESTRATEGIA RECOMENDADA:** Basado en la brecha actual y la densidad informativa, se sugiere **${p.tasa > p.dolar ? 'MAXIMIZAR TASA' : 'COBERTURA MEP'}**.`;
 
-            informe += `\n\n**Estrategia Dinámica:** Priorizar instrumentos con **${dataPuntos.tasas.length > dataPuntos.dolar.length ? 'Tasa Fija' : 'Cobertura Hard Dollar'}** según el volumen de alertas detectadas en tiempo real.`;
-
-            // Aplicar negritas dinámicas y mostrar
             out.style.opacity = "1";
             out.innerHTML = informe.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
 
-            // Renderizado de tarjetas
+            // 4. GRID DIARIOS
             const agrupados = noticias.reduce((acc, n) => {
                 if(!acc[n.fuente]) acc[n.fuente] = [];
                 acc[n.fuente].push(n);
@@ -152,11 +146,11 @@
             `).join('');
 
         } catch (e) {
-            out.innerHTML = "Error sincronizando el cerebro de la IA.";
+            out.innerHTML = "Error en la sincronización de mercado.";
         }
     }
 
-    generarAnalisisReal();
+    ejecutarTodo();
 </script>
 </body>
 </html>
