@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>QUANTUM CENTINELA v12 - ESTRUCTURA CLARA</title>
+    <title>CENTINELA DEL MERCADO v12.6</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -25,7 +25,6 @@
             margin: 0; padding: 10px; font-size: 11px;
         }
 
-        /* Scan Line Animation */
         #scan-line {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 2px;
             background: var(--blue); box-shadow: 0 0 15px var(--blue); z-index: 100;
@@ -45,14 +44,12 @@
             padding: 15px; position: relative;
         }
 
-        /* Loader mejorado */
         #loader-overlay {
             display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.95); z-index: 50; border-radius: 12px;
             flex-direction: column; align-items: center; justify-content: center;
         }
 
-        /* CONTENEDORES DE INFORMACIÓN ESPECÍFICA */
         .info-section { margin-bottom: 18px; }
         
         .section-title {
@@ -60,7 +57,6 @@
             text-transform: uppercase; margin-bottom: 8px; display: flex;
             align-items: center; gap: 8px; letter-spacing: 1px;
         }
-        .section-title i { font-size: 0.9rem; color: var(--accent); }
 
         .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
 
@@ -71,18 +67,17 @@
         .data-card span:first-child { font-size: 0.6rem; color: #666; font-weight: bold; text-transform: uppercase; }
         .data-card span:last-child { font-size: 1.1rem; font-weight: 900; font-family: monospace; margin-top: 4px; }
 
-        /* Veredictos IA */
         .strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
-        .strat-box { background: #050505; border: 1px solid #1a1a1a; border-radius: 8px; padding: 12px; }
-        .strat-box h4 { margin: 0 0 5px 0; font-size: 0.75rem; color: #555; text-transform: uppercase; }
-        .strat-text { font-size: 0.9rem; line-height: 1.4; color: #bbb; }
+        .strat-box { background: #050505; border: 1px solid #1a1a1a; border-radius: 8px; padding: 15px; }
+        .strat-box h4 { margin: 0 0 8px 0; font-size: 0.8rem; color: var(--blue); text-transform: uppercase; border-bottom: 1px solid #1a1a1a; padding-bottom: 5px; }
+        .strat-text { font-size: 0.95rem; line-height: 1.6; color: #ccc; }
+        .strat-text b { color: var(--gold); }
+        .strat-footer { margin-top: 10px; font-size: 0.75rem; color: #555; font-style: italic; border-top: 1px dashed #222; padding-top: 5px; }
 
-        /* Stats Bar inferior */
         .stats-bar {
             display: flex; justify-content: space-around; background: #0f0f0f;
             padding: 12px; border-radius: 8px; border: 1px dashed #222; margin-top: 10px;
         }
-        .stats-bar div { font-size: 0.75rem; color: #666; font-weight: bold; }
         .stats-bar b { color: var(--txt); font-size: 0.95rem; display: block; }
 
         .update-btn {
@@ -91,7 +86,6 @@
             cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
         }
 
-        /* Noticias */
         .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 15px; }
         .news-card { background: #080808; border: 1px solid #111; border-radius: 8px; padding: 10px; }
         .news-header { color: var(--accent); font-size: 0.7rem; font-weight: 900; border-bottom: 1px solid #1a1a1a; margin-bottom: 8px; padding-bottom: 4px; }
@@ -109,8 +103,10 @@
 
 <div class="header">
     <div style="display:flex; align-items:center; gap:8px;">
-        <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" style="width:20px; height:20px; border-radius:50%; border:1px solid var(--accent);">
-        <span style="font-weight:900; letter-spacing:1px;">QUANTUM <span style="color:var(--accent)">CENTINELA</span></span>
+        <a href="https://www.instagram.com/3d_mc_3d/" target="_blank" style="text-decoration:none;">
+            <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" style="width:24px; height:24px; border-radius:50%; border:2px solid var(--accent); display:block;">
+        </a>
+        <span style="font-weight:900; letter-spacing:1px; text-transform: uppercase;">CENTINELA <span style="color:var(--accent)">DEL MERCADO</span></span>
     </div>
     <div id="t-stamp" style="font-family:monospace; color:#444;">IDLE_MODE</div>
 </div>
@@ -118,18 +114,20 @@
 <div class="ai-terminal">
     <div id="loader-overlay">
         <div style="width:30px; height:30px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
-        <div id="loader-text" style="color:var(--accent); font-weight:bold; margin-top:10px; font-family:monospace;">SCANN_RUNNING...</div>
+        <div id="loader-text" style="color:var(--accent); font-weight:bold; margin-top:10px; font-family:monospace;">EXTRAYENDO_METRICAS...</div>
         <div id="loader-sub" style="color:#555; font-size:9px; margin-top:5px; text-transform:uppercase;">Iniciando Protocolos</div>
     </div>
 
     <div class="strategy-grid">
-        <div class="strat-box" style="border-left: 3px solid var(--blue);">
-            <h4>ANÁLISIS MODERADO</h4>
+        <div class="strat-box" style="border-left: 4px solid var(--blue);">
+            <h4><i class="fas fa-shield-alt"></i> Visión Corto Plazo (Liquidez)</h4>
             <div id="ai-cons" class="strat-text">--</div>
+            <div id="ai-cons-extra" class="strat-footer">--</div>
         </div>
-        <div class="strat-box" style="border-left: 3px solid var(--gold);">
-            <h4>ANÁLISIS AGRESIVO</h4>
+        <div class="strat-box" style="border-left: 4px solid var(--gold);">
+            <h4><i class="fas fa-bolt"></i> Visión Largo Plazo (Estructural)</h4>
             <div id="ai-agres" class="strat-text">--</div>
+            <div id="ai-agres-extra" class="strat-footer">--</div>
         </div>
     </div>
 
@@ -164,7 +162,7 @@
         <div>TASA REAL <b id="tasa-real-val">--</b></div>
     </div>
 
-    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar y Escanear Mercado</button>
+    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo</button>
 </div>
 
 <div id="master-grid" class="news-grid"></div>
@@ -181,7 +179,7 @@
 
     function typeWriter(text, elementId) {
         let i = 0; const ele = document.getElementById(elementId); ele.innerHTML = "";
-        function type() { if (i < text.length) { ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>'); i++; setTimeout(type, 10); } }
+        function type() { if (i < text.length) { ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>'); i++; setTimeout(type, 8); } }
         type();
     }
 
@@ -191,8 +189,8 @@
         const scanLine = document.getElementById('scan-line');
         loader.style.display = 'flex'; scanLine.style.display = 'block';
 
-        const logs = ["Escaneando Dólares", "Consultando Tasas", "Leyendo Noticias", "Calculando IPC", "Analizando Riesgo"];
-        let lIdx = 0; const logInt = setInterval(() => { loaderSub.innerText = logs[lIdx]; lIdx = (lIdx + 1) % logs.length; }, 500);
+        const logs = ["Escaneando Dólares", "Consultando Tasas", "Analizando Riesgo", "Proyectando Lecaps"];
+        let lIdx = 0; const logInt = setInterval(() => { loaderSub.innerText = logs[lIdx]; lIdx = (lIdx + 1) % logs.length; }, 400);
 
         try {
             const [resNews, resDolar, resInf, resTasa, resRP] = await Promise.all([
@@ -207,7 +205,7 @@
 
             // 1. Dólar
             document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `
-                <div class="data-card"><span>${d.nombre.substring(0,7)}</span><span class="neutral">$${Math.round(d.venta)}</span></div>
+                <div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>
             `).join('');
 
             // 2. Remuneradas
@@ -222,9 +220,10 @@
 
             // 4. Lecaps
             const tnaRef = resTasa[resTasa.length - 1].valor || 30;
+            const mensualLecap = (tnaRef/12+0.3).toFixed(2);
             document.getElementById('lecap-container').innerHTML = `
                 <div class="data-card"><span>Tasa Ref.</span><span>${(tnaRef/12).toFixed(2)}%</span></div>
-                <div class="data-card"><span>Lecap Est.</span><span class="up">${(tnaRef/12+0.3).toFixed(2)}%</span></div>
+                <div class="data-card"><span>Lecap Est.</span><span class="up">${mensualLecap}%</span></div>
             `;
 
             // 5. Riesgo País
@@ -232,7 +231,7 @@
                 <div class="data-card"><span>Puntos</span><span class="${riesgoPais < 700 ? 'up':'down'}">${riesgoPais}</span></div>
             `;
 
-            // Análisis
+            // Análisis Profundo
             const mejorM = (pfData[0].t * 100) / 12;
             const tasaR = mejorM - ipcVal;
             const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
@@ -241,22 +240,32 @@
 
             clearInterval(logInt); loader.style.display = 'none'; scanLine.style.display = 'none';
 
-            typeWriter(`Tasa real de **${tasaR.toFixed(2)}%**. Con IPC en ${ipcVal}%, el sistema recomienda mantener liquidez en billeteras.`, "ai-cons");
-            setTimeout(() => typeWriter(`Riesgo País en **${riesgoPais}**. Mercado con volatilidad moderada. Priorizar activos defensivos.`, "ai-agres"), 1000);
+            let vCons = `Situación de liquidez: Con IPC al **${ipcVal}%** y tasa real de **${tasaR.toFixed(2)}%**, el sistema detecta que las billeteras rinden un promedio de **${(mejorM-0.3).toFixed(2)}%**. `;
+            if(tasaR > 0) vCons += `Se aconseja **Pesificación Táctica** para gastos de corto plazo, aprovechando el interés compuesto diario frente a un dólar blue estable.`;
+            else vCons += `Alerta de pérdida de valor: La tasa no cubre la inflación. Se sugiere **Cobertura MEP** o activos **CER** de liquidación inmediata.`;
+            
+            typeWriter(vCons, "ai-cons");
+            document.getElementById('ai-cons-extra').innerText = `Estadística: Brecha en ${brecha.toFixed(1)}%.`;
+
+            let vAgres = `Estrategia Estructural: Con el Riesgo País en **${riesgoPais}** puntos, el potencial de compresión sigue activo. `;
+            if(riesgoPais < 700) vAgres += `Los Bonos Soberanos (AL30) mantienen upside. Para horizontes de 90 días+, las **Lecaps al ${mensualLecap}%** mensual son el activo estrella para maximizar capital.`;
+            else vAgres += `Mercado en cautela. Se recomienda rotar 50% de cartera a **CEDEARS (Apple/MSFT)** para desacoplar riesgo local hasta nueva compresión del EMBI.`;
+
+            setTimeout(() => typeWriter(vAgres, "ai-agres"), 1200);
+            document.getElementById('ai-agres-extra').innerText = `Proyección: TNA Lecap estimada ~${(mensualLecap*12).toFixed(0)}%.`;
 
             document.getElementById('brecha-val').innerText = `${brecha.toFixed(1)}%`;
             document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
             document.getElementById('tasa-real-val').innerText = `${tasaR.toFixed(2)}%`;
-            document.getElementById('t-stamp').innerText = "ONLINE: " + new Date().toLocaleTimeString();
+            document.getElementById('t-stamp').innerText = "V12.6_ONLINE: " + new Date().toLocaleTimeString();
 
-            // Noticias Únicas
+            // Noticias
             const seen = new Set();
             const unicas = noticias.filter(n => {
                 const t = n.titulo.toLowerCase().trim();
                 if(!seen.has(t)){ seen.add(t); return true; } return false;
             });
             const agrup = unicas.reduce((acc, n) => { if(!acc[n.fuente]) acc[n.fuente] = []; acc[n.fuente].push(n); return acc; }, {});
-            
             document.getElementById('master-grid').innerHTML = Object.keys(agrup).map(f => `
                 <div class="news-card"><div class="news-header">${f}</div><div class="news-items">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
             `).join('');
