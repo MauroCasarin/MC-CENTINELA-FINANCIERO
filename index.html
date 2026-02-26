@@ -3,14 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA NANO-IA v5.5 - ESTRATEGA</title>
+    <title>CENTINELA NANO-IA v5.9</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981;--orange:#fb923c;--red:#ff4444;--yellow:#fbbf24}
         body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:4px; font-size: 8px; overflow-x:hidden}
         
         .header { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #0f172a; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 4px; }
-        .logo { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--blue); cursor: pointer; transition: transform 0.2s; }
+        .logo { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--blue); }
 
         .ai-terminal {
             background: linear-gradient(145deg, #0f172a, #131e35);
@@ -18,26 +18,23 @@
             border-radius: 4px; padding: 6px; margin-bottom: 4px;
         }
 
-        /* Ventana de Análisis Estratégico */
-        .ai-brain-window {
-            background: rgba(139, 92, 246, 0.05);
-            border: 1px solid var(--accent);
-            border-radius: 4px; padding: 8px; margin: 6px 0;
-            position: relative; overflow: hidden;
-        }
-        .ai-brain-window::before {
-            content: "ESTRATEGIA IA EN TIEMPO REAL";
-            position: absolute; top: 0; right: 0; background: var(--accent);
-            color: white; font-size: 5px; padding: 1px 4px; font-weight: 900;
-        }
-        .ai-verdict-text { font-size: 0.7rem; line-height: 1.3; color: var(--txt); }
-        .ai-verdict-text b { color: var(--gold); }
-        .pulse { animation: blink 2s infinite; }
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+        /* Ventana Dual de Análisis */
+        .strategy-container { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 4px 0 6px 0; }
+        .strat-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; padding: 5px; }
+        .strat-box h4 { margin: 0 0 3px 0; font-size: 0.55rem; text-transform: uppercase; display: flex; align-items: center; gap: 3px; }
+        .strat-cons { border-left: 2px solid var(--blue); }
+        .strat-agres { border-left: 2px solid var(--orange); }
+        .strat-text { font-size: 0.58rem; line-height: 1.2; color: #cbd5e1; }
+        .strat-text b { color: var(--gold); }
 
-        .section-label { font-size: 0.45rem; color: #64748b; font-weight: 800; text-transform: uppercase; margin: 3px 0 1px 0; display: block; letter-spacing: 0.3px; }
-        .nano-grid { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 3px; }
-        .badge { background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 1px 3px; border-radius: 2px; display: flex; align-items: center; gap: 2px; }
+        .section-label { font-size: 0.45rem; color: #64748b; font-weight: 800; text-transform: uppercase; margin: 4px 0 2px 0; display: block; letter-spacing: 0.2px; }
+        .nano-grid { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 4px; }
+        
+        .badge { 
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border); 
+            padding: 1px 3px; border-radius: 2px; display: flex; align-items: center; gap: 2px;
+        }
+        .b-name { color: #94a3b8; font-size: 0.4rem; text-transform: uppercase; font-weight: bold; }
         .b-val { font-weight: 700; font-size: 0.55rem; }
         
         .up { color: var(--green) !important; }
@@ -45,13 +42,15 @@
         .down { color: var(--red) !important; }
         .neutral { color: var(--blue); }
 
-        .update-btn { background: var(--accent); color: white; border: none; padding: 4px 10px; border-radius: 2px; font-weight: bold; cursor: pointer; font-size: 0.6rem; width: 100%; margin-top: 4px;}
+        .ai-stats { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.5rem; color: #64748b; margin-top: 4px; padding-top: 2px; border-top: 1px solid rgba(255,255,255,0.05); }
+
+        .update-btn { background: var(--accent); color: white; border: none; padding: 4px; border-radius: 2px; font-weight: bold; cursor: pointer; font-size: 0.6rem; width: 100%; margin-top: 5px;}
 
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 2px; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 2px; height: 100px; display: flex; flex-direction: column; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 2px; height: 95px; display: flex; flex-direction: column; }
         .card-h { padding: 2px 5px; background: rgba(255,255,255,0.04); font-size: 0.45rem; font-weight: 900; color: var(--blue); border-bottom: 1px solid var(--border); text-transform: uppercase; }
         .card-b { padding: 2px 4px; overflow-y: auto; flex-grow: 1; scrollbar-width: none; }
-        .news-item a { color: #94a3b8; text-decoration: none; font-size: 0.55rem; display: block; line-height: 1; margin-bottom: 2px; }
+        .news-item a { color: #94a3b8; text-decoration: none; font-size: 0.5rem; display: block; line-height: 1.1; margin-bottom: 3px; }
 
         @media (max-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } }
     </style>
@@ -63,25 +62,41 @@
         <a href="https://www.instagram.com/3d_mc_3d/" target="_blank">
             <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo">
         </a>
-        <span style="font-weight:900; color:var(--blue);">CENTINELA AI v5.5</span>
+        <span style="font-weight:900; color:var(--blue);">CENTINELA AI v5.9</span>
     </div>
     <div id="t-stamp" style="color:var(--green); font-size:0.45rem;">--:--:--</div>
 </div>
 
 <div class="ai-terminal">
-    <div class="ai-brain-window">
-        <div id="ai-verdict" class="ai-verdict-text pulse">Iniciando redes neuronales de análisis...</div>
+    <div class="strategy-container">
+        <div class="strat-box strat-cons">
+            <h4><i class="fas fa-shield-alt" style="color:var(--blue)"></i> Conservador</h4>
+            <div id="ai-cons" class="strat-text">Analizando...</div>
+        </div>
+        <div class="strat-box strat-agres">
+            <h4><i class="fas fa-bolt" style="color:var(--orange)"></i> Agresivo</h4>
+            <div id="ai-agres" class="strat-text">Buscando...</div>
+        </div>
     </div>
 
-    <span class="section-label">Mercado de Tasas (Mensual vs IPC)</span>
-    <div id="rem-container" class="nano-grid"></div>
-    <div id="pf-container" class="nano-grid"></div>
-    <div id="lecap-container" class="nano-grid"></div>
-
-    <span class="section-label">Dólar y Brecha</span>
+    <span class="section-label">Dólar</span>
     <div id="dolar-container" class="nano-grid"></div>
 
-    <button class="update-btn" onclick="generarAnalisisReal()">SINCRONIZAR Y ANALIZAR</button>
+    <span class="section-label">Remuneradas (Top Rinde)</span>
+    <div id="rem-container" class="nano-grid"></div>
+
+    <span class="section-label">Plazos Fijos (Top Rinde)</span>
+    <div id="pf-container" class="nano-grid"></div>
+
+    <span class="section-label">Lecaps (Mensual Est.)</span>
+    <div id="lecap-container" class="nano-grid"></div>
+
+    <div class="ai-stats">
+        <span>BRECHA: <b id="brecha-val" style="color:var(--gold)">--%</b></span>
+        <span><b id="ipc-label">IPC:</b> <b id="inflacion-val" style="color:var(--blue)">--%</b></span>
+    </div>
+
+    <button class="update-btn" onclick="generarAnalisisReal()">RECALCULAR TODO</button>
 </div>
 
 <div id="master-grid" class="grid"></div>
@@ -103,17 +118,13 @@
         {e: "BBVA", t: 0.24}, {e: "Macro", t: 0.28}, {e: "Reba", t: 0.34}, {e: "Bica", t: 0.33}
     ];
 
-    function getColor(valor, ipc) {
-        if (valor >= ipc) return 'up';
-        if (ipc - valor <= 0.5) return 'mid';
-        return 'down';
+    function checkRindeColor(valor, ipc) {
+        if (valor >= ipc) return 'up'; 
+        if (ipc - valor <= 0.5) return 'mid'; 
+        return 'down'; 
     }
 
     async function generarAnalisisReal() {
-        const vBox = document.getElementById('ai-verdict');
-        vBox.classList.add('pulse');
-        vBox.innerHTML = "Analizando tendencias, noticias y tasas...";
-
         try {
             const [resNews, resDolar, resInf, resTasa] = await Promise.all([
                 fetch(NEWS_URL).then(r => r.json()),
@@ -124,73 +135,64 @@
 
             const noticias = resNews.noticias || [];
             const dolares = resDolar || [];
-            const ipcVal = resInf[resInf.length - 1].valor;
-            const tnaRef = (resTasa[resTasa.length - 1].valor || resTasa[resTasa.length - 1].tna * 100);
-            const rRefMensual = tnaRef / 12;
+            const ultimoIPC = resInf[resInf.length - 1];
+            const ipcVal = ultimoIPC.valor;
+            const mesIPC = new Date(ultimoIPC.fecha).toLocaleString('es-AR', { month: 'short' }).toUpperCase();
 
-            // RENDER DATA
-            document.getElementById('rem-container').innerHTML = remData.sort((a,b)=>b.t-a.t).map(r => {
-                const m = (r.t*100)/12;
-                return `<div class="badge"><span class="b-name">${r.f}</span><span class="b-val ${getColor(m, ipcVal)}">${m.toFixed(2)}%</span></div>`;
-            }).join('');
-
-            document.getElementById('pf-container').innerHTML = pfData.sort((a,b)=>b.t-a.t).map(p => {
-                const m = (p.t*100)/12;
-                return `<div class="badge"><span class="b-name">${p.e}</span><span class="b-val ${getColor(m, ipcVal)}">${m.toFixed(2)}%</span></div>`;
-            }).join('');
-
-            document.getElementById('lecap-container').innerHTML = `
-                <div class="badge"><span class="b-name">EST. LECAP</span><span class="b-val ${getColor(rRefMensual+0.3, ipcVal)}">${(rRefMensual+0.3).toFixed(2)}%</span></div>
-            `;
-
+            // 1. DÓLAR
             document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `
-                <div class="badge"><span class="b-name">${d.nombre.substring(0,6)}</span><span class="b-val neutral">$${Math.round(d.venta)}</span></div>
+                <div class="badge"><span class="b-name">${d.nombre.replace('Contado con liquidación', 'CCL').replace('Oficial', 'OFI')}</span><span class="b-val neutral">$${Math.round(d.venta)}</span></div>
             `).join('');
 
-            // --- LÓGICA DE INTELIGENCIA ARTIFICIAL (ANÁLISIS DE DATOS REALES) ---
-            
-            // 1. Análisis de Sentimiento de Noticias
-            const keywords = {
-                positivo: ['baja', 'cae', 'desciende', 'estabilidad', 'compra', 'superávit', 'calma'],
-                negativo: ['sube', 'salto', 'tensión', 'riesgo', 'deuda', 'crisis', 'cepo', 'inflación'],
-                dolar: ['dólar', 'blue', 'ccl', 'brecha', 'paralelo']
-            };
+            // 2. REMUNERADAS (TOP RINDE)
+            const sortedRem = [...remData].sort((a, b) => b.t - a.t);
+            document.getElementById('rem-container').innerHTML = sortedRem.map(r => {
+                const rMensual = (r.t * 100) / 12;
+                return `<div class="badge"><span class="b-name">${r.f}</span><span class="b-val ${checkRindeColor(rMensual, ipcVal)}">${rMensual.toFixed(2)}%</span></div>`;
+            }).join('');
 
-            let scoreSentimiento = 0;
-            let mencionesDolar = 0;
-            const titulares = noticias.map(n => n.titulo.toLowerCase()).join(' ');
+            // 3. PLAZOS FIJOS (TOP RINDE)
+            const sortedPF = [...pfData].sort((a, b) => b.t - a.t);
+            document.getElementById('pf-container').innerHTML = sortedPF.map(p => {
+                const pMensual = (p.t * 100) / 12;
+                return `<div class="badge"><span class="b-name">${p.e}</span><span class="b-val ${checkRindeColor(pMensual, ipcVal)}">${pMensual.toFixed(2)}%</span></div>`;
+            }).join('');
 
-            keywords.positivo.forEach(w => { if(titulares.includes(w)) scoreSentimiento++ });
-            keywords.negativo.forEach(w => { if(titulares.includes(w)) scoreSentimiento-- });
-            keywords.dolar.forEach(w => { if(titulares.includes(w)) mencionesDolar++ });
-
-            // 2. Análisis de Tasas vs Inflación
-            const mejorTasa = Math.max(...remData.map(r => (r.t*100)/12), ...pfData.map(p => (p.t*100)/12));
-            const pierdeContraIPC = mejorTasa < ipcVal;
-
-            // 3. Veredicto Final Basado en Variables
-            let recomendacion = "";
-            let riesgo = scoreSentimiento < 0 ? "ALTO" : "MODERADO";
-
-            if (pierdeContraIPC) {
-                if (mencionesDolar > 5 || scoreSentimiento < -2) {
-                    recomendacion = "El mercado está tenso. Con tasas perdiendo ante el IPC del **" + ipcVal + "%**, la IA sugiere **COBERTURA EN DÓLAR** o instrumentos vinculados a inflación (CER).";
-                } else {
-                    recomendacion = "Tasas negativas. El rinde óptimo de **" + mejorTasa.toFixed(2) + "%** no alcanza. Buscar Lecaps o billeteras de alto rinde para mitigar, pero el riesgo de licuación es real.";
-                }
-            } else {
-                recomendacion = "¡Oportunidad de Carry! Las tasas (**" + mejorTasa.toFixed(2) + "%**) superan al IPC. El flujo de noticias indica " + (scoreSentimiento > 0 ? "estabilidad" : "volatilidad") + ". Mantenerse en pesos de alto rinde (Billeteras TOP).";
-            }
-
-            // Actualizar Ventana de Estrategia
-            vBox.classList.remove('pulse');
-            vBox.innerHTML = `
-                <b>VERDICTO:</b> ${recomendacion}<br>
-                <b>ESTADO DEL CLIMA:</b> Sentiment Score: ${scoreSentimiento} | Riesgo Político-Económico: ${riesgo}.<br>
-                <b>ACCIÓN SUGERIDA:</b> ${(mejorTasa > ipcVal) ? "Aprovechar Tasa Verde" : "Mover a Cobertura / Dólar"}.
+            // 4. LECAPS
+            const datoTasa = resTasa[resTasa.length - 1];
+            const tnaRef = datoTasa.valor || (datoTasa.tna * 100) || 0;
+            const mensualRef = tnaRef / 12;
+            document.getElementById('lecap-container').innerHTML = `
+                <div class="badge"><span class="b-name">REF BCRA</span><span class="b-val ${checkRindeColor(mensualRef, ipcVal)}">${mensualRef.toFixed(2)}%</span></div>
+                <div class="badge"><span class="b-name">EST. LECAPS</span><span class="b-val ${checkRindeColor(mensualRef+0.3, ipcVal)}">${(mensualRef+0.3).toFixed(2)}%</span></div>
             `;
 
-            // Render Grilla de noticias
+            // --- IA ANALYTICS ---
+            const mejorTasa = (sortedRem[0].t * 100) / 12;
+            const titulares = noticias.map(n => n.titulo.toLowerCase()).join(' ');
+            let crisisScore = 0;
+            ['sube', 'riesgo', 'inflación', 'cepo', 'salto', 'dólar'].forEach(p => { if(titulares.includes(p)) crisisScore++ });
+
+            let vCons = mejorTasa < ipcVal ? 
+                `Tasas bajo el IPC (**${ipcVal}%**). Sugiero **Dólar MEP** o Plazo Fijo UVA para proteger capital.` : 
+                `Escenario calmo. Mantener en **Pesos (Top Rinde)**. La tasa de **${mejorTasa.toFixed(2)}%** protege tu ahorro.`;
+            
+            let vAgres = crisisScore > 3 ? 
+                `Ruido en mercado detectado. **Arbitrar a Dólar CCL/Blue**. El carry trade es riesgoso ahora.` : 
+                `¡Oportunidad! Tasa real positiva de **${(mejorTasa - ipcVal).toFixed(2)}%**. Maximizar rinde en **${sortedRem[0].f}**.`;
+
+            document.getElementById('ai-cons').innerHTML = vCons.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+            document.getElementById('ai-agres').innerHTML = vAgres.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
+
+            // Stats
+            const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
+            const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
+            document.getElementById('brecha-val').innerText = `${(((blue/oficial)-1)*100).toFixed(1)}%`;
+            document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
+            document.getElementById('ipc-label').innerText = `IPC ${mesIPC}:`;
+            document.getElementById('t-stamp').innerText = new Date().toLocaleTimeString();
+
+            // Noticias
             const agrupados = noticias.reduce((acc, n) => {
                 if(!acc[n.fuente]) acc[n.fuente] = [];
                 acc[n.fuente].push(n);
@@ -200,9 +202,7 @@
                 <div class="card"><div class="card-h">${f}</div><div class="card-b">${agrupados[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
             `).join('');
 
-            document.getElementById('t-stamp').innerText = new Date().toLocaleTimeString();
-
-        } catch (e) { vBox.innerHTML = "Error en el procesamiento de la IA."; }
+        } catch (e) { console.error(e); }
     }
     document.addEventListener('DOMContentLoaded', generarAnalisisReal);
 </script>
