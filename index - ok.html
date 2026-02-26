@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA DEL MERCADO v14.3</title>
+    <title>CENTINELA DEL MERCADO v14.4</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -57,7 +57,6 @@
         .strat-text { font-size: 0.88rem; line-height: 1.4; color: #ccc; flex-grow: 1; margin-bottom: 10px; }
         .strat-text b { color: var(--gold); }
         
-        /* Estilo para las definiciones técnicas */
         .tech-definitions { 
             font-size: 0.68rem; 
             color: #666; 
@@ -114,7 +113,7 @@
     </div>
     <div style="text-align: right; font-family: monospace;">
         <div id="news-counter" style="color:var(--blue); font-size: 9px; font-weight: bold; margin-bottom: 2px;">NEWS: --</div>
-        <div id="t-stamp" style="color:#444; font-size: 9px;">V14.3_ANALYTICS</div>
+        <div id="t-stamp" style="color:#444; font-size: 9px;">V14.4_LINKS_FIX</div>
     </div>
 </div>
 
@@ -167,7 +166,7 @@
         <div class="stat-item"><span class="stat-label">TASA REAL</span><b id="tasa-real-val" class="stat-value">--</b><span class="stat-desc">Rinde vs IPC</span></div>
     </div>
 
-    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v14.3</button>
+    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v14.4</button>
 </div>
 
 <div id="master-grid" class="news-grid"></div>
@@ -179,7 +178,20 @@
     const TASA_REF_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
     const RP_API = "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo";
     
-    // Diccionario de términos técnicos
+    // CORRECCIÓN DE LINKS OFICIALES
+    const remData = [
+        {f: "COCOS", t: 0.32, l: "https://www.cocos.capital/"}, 
+        {f: "FIWIND", t: 0.32, l: "https://www.fiwind.io/"}, 
+        {f: "UALÁ", t: 0.29, l: "https://www.uala.com.ar/"}, 
+        {f: "BRUBANK", t: 0.27, l: "https://www.brubank.com/"}
+    ];
+    const pfData = [
+        {e: "REBA", t: 0.34, l: "https://www.reba.com.ar/"}, 
+        {e: "BICA", t: 0.33, l: "https://www.bancobica.com.ar/"}, 
+        {e: "MACRO", t: 0.28, l: "https://www.macro.com.ar/"}, 
+        {e: "NACIÓN", t: 0.25, l: "https://www.bna.com.ar/"}
+    ];
+
     const diccionario = {
         "IPC": "Índice de Precios al Consumidor (mide la inflación).",
         "Rinde Real": "Ganancia final restándole la inflación.",
@@ -194,19 +206,13 @@
     function typeWriter(text, elementId, glossaryId) {
         let i = 0; const ele = document.getElementById(elementId); ele.innerHTML = "";
         const glos = document.getElementById(glossaryId); glos.innerHTML = "";
-        
         function type() { 
             if (i < text.length) { 
                 ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>'); 
                 i++; setTimeout(type, 5); 
             } else {
-                // Al terminar de escribir, buscar términos para el glosario
                 let encontrados = [];
-                for (let termino in diccionario) {
-                    if (text.includes(termino)) {
-                        encontrados.push(`<span class="tech-word">${termino}:</span> ${diccionario[termino]}`);
-                    }
-                }
+                for (let termino in diccionario) { if (text.includes(termino)) { encontrados.push(`<span class="tech-word">${termino}:</span> ${diccionario[termino]}`); } }
                 glos.innerHTML = encontrados.join("<br>");
             }
         }
@@ -238,12 +244,15 @@
             const rpVal = resRP.valor || 0;
             const noticias = resNews.noticias || [];
             
-            const remData = [{f: "C4", t: 0.32}, {f: "FIWIND", t: 0.32}, {f: "U. P2", t: 0.29}, {f: "BRUBANK", t: 0.27}];
-            const pfData = [{e: "Reba", t: 0.34}, {e: "Bica", t: 0.33}, {e: "Macro", t: 0.28}, {e: "Nación", t: 0.25}];
-
             document.getElementById('dolar-container').innerHTML = resDolar.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
-            document.getElementById('rem-container').innerHTML = remData.sort((a,b)=>b.t-a.t).map(r => `<div class="data-card"><span>${r.f}</span><span class="${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span></div>`).join('');
-            document.getElementById('pf-container').innerHTML = pfData.sort((a,b)=>b.t-a.t).map(p => `<div class="data-card"><span>${p.e}</span><span class="${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%%</span></div>`).join('');
+            
+            document.getElementById('rem-container').innerHTML = remData.sort((a,b)=>b.t-a.t).map(r => `
+                <a href="${r.l}" target="_blank" class="data-card"><span>${r.f}</span><span class="${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span></a>
+            `).join('');
+            
+            document.getElementById('pf-container').innerHTML = pfData.sort((a,b)=>b.t-a.t).map(p => `
+                <a href="${p.l}" target="_blank" class="data-card"><span>${p.e}</span><span class="${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span></a>
+            `).join('');
 
             const tnaRef = resTasa[resTasa.length - 1].valor || 30;
             const mensualLecap = (tnaRef/12+0.3).toFixed(2);
@@ -257,9 +266,7 @@
 
             loader.style.display = 'none'; scanLine.style.display = 'none';
 
-            // CONSEJOS AMPLIADOS
             const cCons = `Con un **IPC del ${ipcVal}%**, tu prioridad debe ser mantener el poder de compra. El **Rinde Real** actual es de **${tasaR.toFixed(2)}%**. Si este valor es negativo, el Plazo Fijo no es suficiente. Te aconsejo diversificar: mantén **Liquidez** en cuentas remuneradas para gastos diarios, pero considera instrumentos ajustados por **CER** si el horizonte es mayor a 30 días para cubrirte de saltos inflacionarios.`;
-            
             const cAgre = `La **Brecha** del **${brecha.toFixed(1)}%** y el descenso del **Riesgo País** a **${rpVal}** sugieren un escenario ideal para el **Carry Trade**. Las **Lecaps** rinden hoy un estimado de **${mensualLecap}%** mensual, superando ampliamente la devaluación programada. Es momento de maximizar tasa en pesos, monitoreando que la brecha no se dispare por encima del 20%, lo cual invalidaría la estrategia.`;
 
             typeWriter(cCons, "ai-cons", "ai-cons-glossary");
