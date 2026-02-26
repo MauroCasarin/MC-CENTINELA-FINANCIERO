@@ -73,10 +73,10 @@
     <span class="section-label">Dólar</span>
     <div id="dolar-container" class="nano-grid"></div>
 
-    <span class="section-label">Remuneradas (Mensual - TOP Rendimiento)</span>
+    <span class="section-label">Remuneradas (Mensual - Top Rinde)</span>
     <div id="rem-container" class="nano-grid"></div>
 
-    <span class="section-label">Plazos Fijos (Mensual - TOP Rendimiento)</span>
+    <span class="section-label">Plazos Fijos (Mensual - Top Rinde)</span>
     <div id="pf-container" class="nano-grid"></div>
 
     <span class="section-label">Lecaps (Mensual Est.)</span>
@@ -142,21 +142,21 @@
                 <div class="badge"><span class="b-name">${d.nombre.replace('Contado con liquidación', 'CCL').replace('Oficial', 'OFI')}</span><span class="b-val neutral">$${Math.round(d.venta)}</span></div>
             `).join('');
 
-            // 2. REMUNERADAS (ORDENADO MAYOR A MENOR)
+            // 2. REMUNERADAS (ORDENADO)
             const sortedRem = [...remData].sort((a, b) => b.t - a.t);
             remContainer.innerHTML = sortedRem.map(r => {
                 const rMensual = (r.t * 100) / 12;
                 return `<div class="badge"><span class="b-name">${r.f}</span><span class="b-val ${checkRinde(rMensual, ipcVal)}">${rMensual.toFixed(2)}%</span></div>`;
             }).join('');
 
-            // 3. PLAZOS FIJOS (ORDENADO MAYOR A MENOR)
+            // 3. PLAZOS FIJOS (ORDENADO)
             const sortedPF = [...pfData].sort((a, b) => b.t - a.t);
             pfContainer.innerHTML = sortedPF.map(p => {
                 const pMensual = (p.t * 100) / 12;
                 return `<div class="badge"><span class="b-name">${p.e}</span><span class="b-val ${checkRinde(pMensual, ipcVal)}">${pMensual.toFixed(2)}%</span></div>`;
             }).join('');
 
-            // 4. LECAPS (DEBAJO DE PLAZOS FIJOS)
+            // 4. LECAPS
             const datoTasa = resTasa[resTasa.length - 1];
             const tnaRef = datoTasa.valor || (datoTasa.tna * 100) || 0;
             const mensualRef = tnaRef / 12;
@@ -167,6 +167,7 @@
                 <div class="badge"><span class="b-name">EST. LECAPS</span><span class="b-val ${checkRinde(mensualLecap, ipcVal)}">${mensualLecap.toFixed(2)}%</span></div>
             `;
 
+            // STATS Y VERDICTO
             const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
             const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
             const brecha = (((blue / oficial) - 1) * 100).toFixed(1);
@@ -193,9 +194,7 @@
                     <div class="card-b">${agrupados[f].map(n => `<div class="news-item"><a href="${n.link || '#'}" target="_blank">${n.titulo}</a></div>`).join('')}</div>
                 </div>
             `).join('');
-        } catch (e) { 
-            out.innerHTML = "Error sincronizando datos..."; 
-        }
+        } catch (e) { out.innerHTML = "Error sincronizando datos..."; }
     }
     document.addEventListener('DOMContentLoaded', generarAnalisisReal);
 </script>
