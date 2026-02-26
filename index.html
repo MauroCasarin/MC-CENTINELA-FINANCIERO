@@ -3,70 +3,86 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA IA v8.0 - DEEP SCAN</title>
+    <title>CENTINELA IA v8.5 - DEEP SCAN LARGE</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981;--orange:#fb923c;--red:#ef4444;--yellow:#fbbf24}
-        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:4px; font-size: 8px; overflow-x:hidden}
+        /* Texto base aumentado de 8px a 11px */
+        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:6px; font-size: 11px; overflow-x:hidden}
         
-        .header { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #0f172a; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 4px; }
-        .logo { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--blue); }
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #0f172a; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 8px; }
+        .logo { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--blue); }
 
         .ai-terminal {
             background: linear-gradient(145deg, #0f172a, #131e35);
-            border: 1px solid var(--border); border-top: 2px solid var(--accent);
-            border-radius: 4px; padding: 6px; margin-bottom: 4px;
+            border: 1px solid var(--border); border-top: 3px solid var(--accent);
+            border-radius: 6px; padding: 10px; margin-bottom: 8px;
+            position: relative;
         }
 
-        .strategy-container { display: grid; grid-template-columns: 1fr 1fr; gap: 4px; margin: 4px 0 6px 0; }
-        .strat-box { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-radius: 3px; padding: 5px; min-height: 60px; }
-        .strat-box h4 { margin: 0 0 3px 0; font-size: 0.55rem; text-transform: uppercase; display: flex; align-items: center; gap: 3px; }
-        .strat-cons { border-left: 2px solid var(--blue); }
-        .strat-agres { border-left: 2px solid var(--orange); }
-        .strat-text { font-size: 0.58rem; line-height: 1.3; color: #cbd5e1; }
+        /* Overlay de carga */
+        #loader-overlay {
+            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
+            background: rgba(2, 6, 23, 0.85); z-index: 10; border-radius: 6px;
+            align-items: center; justify-content: center; font-weight: bold; color: var(--blue);
+            text-transform: uppercase; letter-spacing: 2px; animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
+
+        .strategy-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
+        .strat-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 8px; min-height: 80px; }
+        .strat-box h4 { margin: 0 0 5px 0; font-size: 0.75rem; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
+        .strat-cons { border-left: 3px solid var(--blue); }
+        .strat-agres { border-left: 3px solid var(--orange); }
+        .strat-text { font-size: 0.82rem; line-height: 1.4; color: #cbd5e1; }
         .strat-text b { color: var(--gold); }
 
-        .section-label { font-size: 0.45rem; color: #64748b; font-weight: 800; text-transform: uppercase; margin: 4px 0 2px 0; display: block; letter-spacing: 0.2px; }
-        .nano-grid { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 4px; }
-        .badge { background: rgba(255,255,255,0.02); border: 1px solid var(--border); padding: 1px 3px; border-radius: 2px; display: flex; align-items: center; gap: 2px; }
-        .b-name { color: #94a3b8; font-size: 0.4rem; text-transform: uppercase; font-weight: bold; }
-        .b-val { font-weight: 700; font-size: 0.55rem; }
+        .section-label { font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin: 10px 0 5px 0; display: block; letter-spacing: 0.5px; }
+        .nano-grid { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+        
+        /* Badges más grandes */
+        .badge { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+        .b-name { color: #94a3b8; font-size: 0.6rem; text-transform: uppercase; font-weight: bold; }
+        .b-val { font-weight: 700; font-size: 0.85rem; }
         
         .up { color: var(--green) !important; }
         .down { color: var(--red) !important; }
         .neutral { color: var(--blue); }
 
-        .ai-stats { display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.5rem; color: #64748b; margin-top: 4px; padding-top: 2px; border-top: 1px solid rgba(255,255,255,0.05); }
-        .update-btn { background: var(--accent); color: white; border: none; padding: 5px; border-radius: 2px; font-weight: bold; cursor: pointer; font-size: 0.6rem; width: 100%; margin-top: 5px; text-transform: uppercase; }
+        .ai-stats { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.75rem; color: #94a3b8; margin-top: 10px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); }
+        .update-btn { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 0.85rem; width: 100%; margin-top: 10px; text-transform: uppercase; transition: 0.3s; }
+        .update-btn:active { transform: scale(0.98); background: #7c3aed; }
 
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 2px; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 2px; height: 95px; display: flex; flex-direction: column; }
-        .card-h { padding: 2px 5px; background: rgba(255,255,255,0.04); font-size: 0.45rem; font-weight: 900; color: var(--blue); border-bottom: 1px solid var(--border); text-transform: uppercase; }
-        .card-b { padding: 2px 4px; overflow-y: auto; flex-grow: 1; scrollbar-width: none; }
-        .news-item a { color: #94a3b8; text-decoration: none; font-size: 0.5rem; display: block; line-height: 1.1; margin-bottom: 3px; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; height: 120px; display: flex; flex-direction: column; }
+        .card-h { padding: 5px 10px; background: rgba(255,255,255,0.04); font-size: 0.65rem; font-weight: 900; color: var(--blue); border-bottom: 1px solid var(--border); text-transform: uppercase; }
+        .card-b { padding: 6px 10px; overflow-y: auto; flex-grow: 1; scrollbar-width: none; }
+        .news-item a { color: #cbd5e1; text-decoration: none; font-size: 0.75rem; display: block; line-height: 1.3; margin-bottom: 6px; }
 
-        @media (max-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
 <body>
 
 <div class="header">
-    <div style="display:flex; align-items:center; gap:4px;">
+    <div style="display:flex; align-items:center; gap:6px;">
         <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo">
-        <span style="font-weight:900; color:var(--blue);">CENTINELA AI v8.0</span>
+        <span style="font-weight:900; color:var(--blue); font-size: 1rem;">CENTINELA AI v8.5</span>
     </div>
-    <div id="t-stamp" style="color:var(--green); font-size:0.45rem;">Actualizando...</div>
+    <div id="t-stamp" style="color:var(--green); font-size:0.75rem; font-weight: bold;">--:--:--</div>
 </div>
 
 <div class="ai-terminal">
+    <div id="loader-overlay"><i class="fas fa-sync-alt fa-spin"></i> &nbsp; Re-Escaneando Mercado...</div>
+    
     <div class="strategy-container">
         <div class="strat-box strat-cons">
             <h4><i class="fas fa-brain"></i> Análisis Moderado</h4>
-            <div id="ai-cons" class="strat-text">Esperando datos...</div>
+            <div id="ai-cons" class="strat-text">Cargando inteligencia...</div>
         </div>
         <div class="strat-box strat-agres">
             <h4><i class="fas fa-bolt"></i> Análisis Agresivo</h4>
-            <div id="ai-agres" class="strat-text">Esperando datos...</div>
+            <div id="ai-agres" class="strat-text">Escaneando activos...</div>
         </div>
     </div>
 
@@ -118,11 +134,8 @@
         let i = 0;
         const ele = document.getElementById(elementId);
         ele.innerHTML = "";
-        const formattedText = text.replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-        
         function type() {
             if (i < text.length) {
-                // Manejar negritas de forma simple para el efecto
                 ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
                 i++;
                 setTimeout(type, delay);
@@ -132,8 +145,10 @@
     }
 
     async function ejecutarDeepScanIA() {
+        const loader = document.getElementById('loader-overlay');
+        loader.style.display = 'flex'; // Mostrar cargando
+
         try {
-            document.getElementById('t-stamp').innerText = "Escaneando web...";
             const [resNews, resDolar, resInf, resTasa, resRP] = await Promise.all([
                 fetch(NEWS_URL).then(r => r.json()),
                 fetch(DOLAR_URL).then(r => r.json()),
@@ -147,12 +162,12 @@
             const riesgoPais = resRP.valor || 0;
             const dolares = resDolar || [];
             
-            // 1. Render Dólares
+            // Render Dólar
             document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `
                 <div class="badge"><span class="b-name">${d.nombre.replace('Contado con liquidación', 'CCL').replace('Oficial', 'OFI')}</span><span class="b-val neutral">$${Math.round(d.venta)}</span></div>
             `).join('');
 
-            // 2. Render Tasas
+            // Render Tasas (Remuneradas y PF)
             const sortedRem = [...remData].sort((a,b)=>b.t-a.t);
             document.getElementById('rem-container').innerHTML = sortedRem.slice(0,4).map(r => `
                 <div class="badge"><span class="b-name">${r.f}</span><span class="b-val ${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span></div>
@@ -163,7 +178,7 @@
                 <div class="badge"><span class="b-name">${p.e}</span><span class="b-val ${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span></div>
             `).join('');
 
-            // 4. Lecaps y Riesgo
+            // Lecaps y Riesgo
             const tnaRef = resTasa[resTasa.length - 1].valor || 30;
             const mensualRef = tnaRef / 12;
             document.getElementById('lecap-container').innerHTML = `
@@ -174,42 +189,31 @@
                 <div class="badge"><span class="b-name">EMBI ARG</span><span class="b-val ${riesgoPais < 700 ? 'up' : 'down'}">${riesgoPais} pts</span></div>
             `;
 
-            // --- DEEP AI SCAN ANALYSIS ---
+            // DEEP ANALYTICS
             const mejorMensual = (sortedPF[0].t * 100) / 12;
             const tasaReal = mejorMensual - ipcVal;
             const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
             const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
             const brecha = ((blue/oficial)-1)*100;
-            
-            // Análisis de Noticias para contexto
             const textoNoticias = noticias.map(n => n.titulo.toLowerCase()).join(' ');
-            const climaBono = textoNoticias.includes('canje') || textoNoticias.includes('deuda') || textoNoticias.includes('superavit');
-            const climaDolar = textoNoticias.includes('salto') || textoNoticias.includes('presion') || textoNoticias.includes('bcra');
 
-            // Redacción de Veredictos (Máquina de escribir)
-            let vCons = "";
-            if (tasaReal > 0.5) {
-                vCons = `Escaneo finalizado. La macro presenta una **tasa real positiva de ${tasaReal.toFixed(2)}%**. Con inflación en ${ipcVal}%, el veredicto es **PESIFICACIÓN ESTRATÉGICA** en fondos remunerados para mantener liquidez sin perder capital.`;
-            } else {
-                vCons = `Alerta de licuación. Las tasas no cubren la inflación proyectada de ${ipcVal}%. Se detecta **vulnerabilidad en pesos**. Recomiendo cobertura inmediata vía **Dólar MEP** o instrumentos **CER** de corto plazo.`;
-            }
+            let vCons = (tasaReal > 0.4) ? 
+                `Escaneo de portales y tasas completado. La macro actual ofrece una **tasa real de ${tasaReal.toFixed(2)}%**. Con el IPC en ${ipcVal}%, el veredicto óptimo es mantener **Pesos en Billeteras** de alto rinde para liquidez inmediata ante cualquier salto cambiario.` : 
+                `Análisis de riesgo detectado: El rinde actual es insuficiente frente al ${ipcVal}% de inflación. Se recomienda migrar capital hacia **Dólar MEP** o **Bonos CER** para evitar la licuación de tus ahorros en pesos.`;
 
-            let vAgres = "";
-            if (riesgoPais < 600 && !climaDolar) {
-                vAgres = `Oportunidad de Alpha detectada. Riesgo País en niveles de recuperación (**${riesgoPais}**). El análisis de portales sugiere confianza. Posicionarse agresivamente en **AL30** o **Lecaps largas** para capturar compresión de spreads.`;
-            } else {
-                vAgres = `Riesgo País en **${riesgoPais}** con ruido en noticias. El veredicto es **CAUTELA TOTAL**. Evitar riesgo soberano y buscar **CEDEARS** de baja volatilidad o **Obligaciones Negociables** hard-dollar para blindar el patrimonio.`;
-            }
+            let vAgres = (riesgoPais < 620 && !textoNoticias.includes('presion')) ? 
+                `Veredicto Agresivo: El Riesgo País en **${riesgoPais}** y la estabilidad en noticias habilitan una ventana de oportunidad única. Maximizar exposición en **Bonos Soberanos (AL30)** y **Lecaps** para capturar ganancias de capital superiores al 10% mensual.` : 
+                `Escaneo finalizado con advertencia: Riesgo País en **${riesgoPais}**. El análisis de sentimiento en portales sugiere volatilidad. El veredicto es **CAUTELA ESTRATÉGICA**; priorizar **CEDEARS de Energía** u Obligaciones Negociables hard-dollar.`;
 
             typeWriter(vCons, "ai-cons");
-            setTimeout(() => typeWriter(vAgres, "ai-agres"), 1500);
+            setTimeout(() => typeWriter(vAgres, "ai-agres"), 1200);
 
-            // Stats
+            // Stats Inferiores
             document.getElementById('brecha-val').innerText = `${brecha.toFixed(1)}%`;
             document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
             document.getElementById('tasa-real-val').innerText = `${tasaReal.toFixed(2)}%`;
             document.getElementById('tasa-real-val').className = tasaReal > 0 ? 'up' : 'down';
-            document.getElementById('t-stamp').innerText = "Última act: " + new Date().toLocaleTimeString();
+            document.getElementById('t-stamp').innerText = "Última Act: " + new Date().toLocaleTimeString();
 
             // Render Noticias
             const agrupados = noticias.reduce((acc, n) => {
@@ -222,6 +226,7 @@
             `).join('');
 
         } catch (e) { console.error(e); }
+        finally { loader.style.display = 'none'; } // Quitar cargando
     }
     document.addEventListener('DOMContentLoaded', ejecutarDeepScanIA);
 </script>
