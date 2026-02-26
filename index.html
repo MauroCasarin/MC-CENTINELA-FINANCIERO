@@ -3,31 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA TERMINAL - ESTRATEGIA TIEMPO REAL</title>
+    <title>CENTINELA - TERMINAL ESTRATÉGICA V15</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981}
+        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981;--red:#ef4444}
         body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:8px; font-size: 11px}
         
         .header { display: flex; align-items: center; justify-content: space-between; padding: 10px; background: #0f172a; border-radius: 8px; border: 1px solid var(--border); margin-bottom: 8px; }
         .logo { width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--blue); }
 
-        /* BARRA DE DÓLARES */
-        .ticker-dolar { display: flex; gap: 10px; margin-bottom: 8px; overflow-x: auto; padding: 5px 0; }
-        .dolar-card { background: rgba(56, 189, 248, 0.1); border: 1px solid rgba(56, 189, 248, 0.2); padding: 6px 12px; border-radius: 6px; white-space: nowrap; }
-        .dolar-val { color: var(--green); font-weight: 800; font-size: 0.85rem; }
-        .dolar-name { font-size: 0.6rem; color: var(--blue); text-transform: uppercase; font-weight: bold; }
+        /* TICKER DOLAR API */
+        .ticker-container { display: flex; gap: 8px; margin-bottom: 10px; overflow-x: auto; padding-bottom: 5px; }
+        .dolar-tag { background: rgba(15, 23, 42, 0.8); border: 1px solid var(--border); padding: 8px 14px; border-radius: 6px; display: flex; flex-direction: column; min-width: 100px; }
+        .dolar-tag .name { font-size: 0.55rem; color: var(--blue); font-weight: 900; text-transform: uppercase; }
+        .dolar-tag .price { font-size: 1rem; font-weight: 800; color: var(--green); }
+        .dolar-tag .diff { font-size: 0.55rem; color: #64748b; }
 
-        /* TERMINAL IA */
+        /* IA ENGINE */
         .ai-terminal {
-            background: linear-gradient(145deg, #0f172a, #131e35);
+            background: linear-gradient(145deg, #0f172a, #1a1b3a);
             border: 1px solid var(--border);
-            border-left: 4px solid var(--accent);
+            border-top: 3px solid var(--accent);
             border-radius: 8px;
             padding: 20px;
             margin-bottom: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
         }
-        .verdict-box { font-size: 1.1rem; line-height: 1.6; color: #f1f5f9; font-weight: 300; }
+        .verdict-box { font-size: 1.15rem; line-height: 1.6; color: #f1f5f9; font-weight: 300; border-left: 4px solid var(--accent); padding-left: 20px; }
         .verdict-box b { color: var(--gold); font-weight: 700; }
 
         .update-btn { background: var(--accent); color: white; border: none; padding: 10px 20px; border-radius: 6px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
@@ -35,10 +37,10 @@
         /* GRID DIARIOS */
         .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 6px; }
         .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; height: 210px; display: flex; flex-direction: column; }
-        .card-h { padding: 4px 10px; background: rgba(255,255,255,0.03); font-size: 0.6rem; font-weight: 900; color: var(--blue); border-bottom: 1px solid var(--border); text-transform: uppercase; }
-        .card-b { padding: 5px; overflow-y: auto; flex-grow: 1; }
+        .card-h { padding: 5px 10px; background: rgba(255,255,255,0.02); font-size: 0.65rem; font-weight: 900; color: var(--blue); border-bottom: 1px solid var(--border); }
+        .card-b { padding: 6px; overflow-y: auto; flex-grow: 1; }
         .news-item { padding: 4px; border-bottom: 1px solid rgba(255,255,255,0.02); }
-        .news-item a { color: #94a3b8; text-decoration: none; font-size: 0.72rem; }
+        .news-item a { color: #94a3b8; text-decoration: none; font-size: 0.75rem; }
 
         @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
     </style>
@@ -48,25 +50,25 @@
 <div class="header">
     <div style="display:flex; align-items:center; gap:10px;">
         <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo">
-        <span style="font-weight:900; color:var(--blue); letter-spacing:1px">CENTINELA IA TERMINAL</span>
+        <span style="font-weight:900; color:var(--blue); letter-spacing:1px">CENTINELA AI STRATEGY</span>
     </div>
-    <div id="t-stamp" style="font-size:0.6rem; color:#64748b">--:--:--</div>
+    <div id="t-stamp" style="font-size:0.6rem; color:#64748b">SINCRO: --:--</div>
 </div>
 
-<div id="ticker" class="ticker-dolar">
-    <div class="dolar-card"><span class="dolar-name">Cargando Precios...</span></div>
+<div id="ticker" class="ticker-container">
+    <div class="dolar-tag"><span class="name">Conectando...</span></div>
 </div>
 
 <div class="ai-terminal">
     <div id="verdicto" class="verdict-box">
-        Iniciando motor narrativo y cruzando cotizaciones...
+        Analizando paridades y titulares en tiempo real...
     </div>
     
     <div style="margin-top:20px; display:flex; justify-content:space-between; align-items:center;">
-        <button class="update-btn" onclick="ejecutarTodo()">
-            <i class="fas fa-sync-alt"></i> ACTUALIZAR TERMINAL
+        <button class="update-btn" onclick="ejecutarTerminal()">
+            <i class="fas fa-sync-alt"></i> ACTUALIZAR ANÁLISIS
         </button>
-        <span id="data-stats" style="font-size:0.6rem; color:var(--blue)">FUENTES: 0 | NOTICIAS: 0</span>
+        <span id="data-stats" style="font-size:0.6rem; color:var(--blue); font-weight:800;">BIG DATA MODE</span>
     </div>
 </div>
 
@@ -74,62 +76,64 @@
 
 <script>
     const NEWS_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
-    const DOLAR_URL = "https://api.argentinadatos.com/v1/cotizaciones/dolares";
+    const DOLAR_URL = "https://dolarapi.com/v1/dolares"; // API Principal
 
-    async function ejecutarTodo() {
+    async function ejecutarTerminal() {
         const out = document.getElementById('verdicto');
         out.style.opacity = "0.5";
 
         try {
-            // 1. FETCH DOLARES
+            // 1. OBTENER COTIZACIONES (DolarApi)
             const resDolar = await fetch(DOLAR_URL);
             const dolares = await resDolar.json();
+            
+            const oficial = dolares.find(d => d.casa === 'oficial');
             const blue = dolares.find(d => d.casa === 'blue');
             const mep = dolares.find(d => d.casa === 'mep');
-            const ccl = dolares.find(d => d.casa === 'contadoconliqui');
 
             document.getElementById('ticker').innerHTML = `
-                <div class="dolar-card"><span class="dolar-name">BLUE:</span> <span class="dolar-val">$${blue.venta}</span></div>
-                <div class="dolar-card"><span class="dolar-name">MEP:</span> <span class="dolar-val">$${mep.venta}</span></div>
-                <div class="dolar-card"><span class="dolar-name">CCL:</span> <span class="dolar-val">$${ccl.venta}</span></div>
+                <div class="dolar-tag"><span class="name">Dólar Oficial</span><span class="price">$${oficial.venta}</span><span class="diff">Bancos</span></div>
+                <div class="dolar-tag"><span class="name">Dólar MEP</span><span class="price">$${mep.venta}</span><span class="diff">Bolsa</span></div>
+                <div class="dolar-tag"><span class="name">Dólar Blue</span><span class="price">$${blue.venta}</span><span class="diff">Informal</span></div>
             `;
 
-            // 2. FETCH NOTICIAS
+            // 2. OBTENER NOTICIAS
             const resNews = await fetch(NEWS_URL);
             const data = await resNews.json();
             const noticias = data.noticias;
             const titulos = noticias.map(n => n.titulo.toLowerCase());
 
             document.getElementById('data-stats').innerText = `FUENTES: ${new Set(noticias.map(n => n.fuente)).size} | NOTICIAS: ${noticias.length}`;
-            document.getElementById('t-stamp').innerText = new Date().toLocaleTimeString();
+            document.getElementById('t-stamp').innerText = `SINCRO: ${new Date().toLocaleTimeString()}`;
 
-            // 3. MOTOR IA NARRATIVA (CRUZADA CON PRECIOS)
-            const count = (keys) => titulos.filter(t => keys.some(k => t.includes(k))).length;
-            const p = {
-                tasa: count(['lecap', 'tasa', 'letras', 'plazo fijo', 'uva']),
-                dolar: count(['dolar', 'mep', 'ccl', 'brecha', 'blue']),
-                acciones: count(['merval', 'acciones', 'ypf', 'galicia'])
+            // 3. IA GENERATIVA (Cruzando Oficial vs Noticias)
+            const find = (arr) => titulos.filter(t => arr.some(k => t.includes(k))).length;
+            const counts = {
+                pesos: find(['lecap', 'tasa', 'letras', 'plazo fijo']),
+                dolar: find(['dolar', 'brecha', 'mep', 'cepo', 'oficial']),
+                bolsa: find(['merval', 'acciones', 'cedear'])
             };
 
-            let informe = `Con el **Dólar MEP cotizando a $${mep.venta}**, el ecosistema informativo `;
+            const brecha = (((blue.venta / oficial.venta) - 1) * 100).toFixed(1);
             
-            if (p.tasa > p.dolar) {
-                informe += `presenta una **predominancia de instrumentos en pesos**. Las ${p.tasa} noticias sobre tasas sugieren que la rentabilidad real sigue siendo el motor del mercado. `;
+            let informeIA = `Con un **Dólar Oficial a $${oficial.venta}** y una brecha del **${brecha}%**, `;
+            
+            if (counts.dolar > counts.pesos) {
+                informeIA += `los titulares reflejan una **preocupación por el crawling-peg y la brecha**. La IA detecta que el ruido cambiario está opacando los rendimientos en pesos. `;
             } else {
-                informe += `revela una **alerta cambiaria activa**. El volumen de noticias sobre el dólar supera el interés por la tasa, indicando una búsqueda de cobertura. `;
+                informeIA += `la agenda mediática se concentra en la **tasa real de las LECAPS**. Con ${counts.pesos} noticias detectadas, el mercado parece validar la estrategia de Carry Trade. `;
             }
 
-            // Inyectar datos dinámicos de la bolsa
-            if (p.acciones > 4) {
-                informe += `Además, detecto un flujo de capital positivo hacia el **Merval**, con un sentimiento alcista en empresas líderes. `;
+            if (counts.bolsa > 5) {
+                informeIA += `Se observa además una fuerte inercia en el **Merval**, sugiriendo que las acciones locales actúan como cobertura ante la inflación. `;
             }
 
-            informe += `\n\n**ESTRATEGIA RECOMENDADA:** Basado en la brecha actual y la densidad informativa, se sugiere **${p.tasa > p.dolar ? 'MAXIMIZAR TASA' : 'COBERTURA MEP'}**.`;
+            informeIA += `\n\n**Estrategia:** Priorizar instrumentos de **${counts.pesos > counts.dolar ? 'Tasa Fija' : 'Cobertura Hard Dollar'}** con atención al soporte del MEP en **$${mep.venta}**.`;
 
             out.style.opacity = "1";
-            out.innerHTML = informe.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
+            out.innerHTML = informeIA.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
 
-            // 4. GRID DIARIOS
+            // 4. GRID DE DIARIOS
             const agrupados = noticias.reduce((acc, n) => {
                 if(!acc[n.fuente]) acc[n.fuente] = [];
                 acc[n.fuente].push(n);
@@ -146,11 +150,11 @@
             `).join('');
 
         } catch (e) {
-            out.innerHTML = "Error en la sincronización de mercado.";
+            out.innerHTML = "Error en el flujo de datos dinámicos.";
         }
     }
 
-    ejecutarTodo();
+    ejecutarTerminal();
 </script>
 </body>
 </html>
