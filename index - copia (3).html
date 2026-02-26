@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CENTINELA NANO-IA v5</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981;--orange:#fb923c;--red:#ff4444;--yellow:#fbbf24}
+        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:4px; font-size: 8px; overflow-x:hidden}
+        
+        .header { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #0f172a; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 4px; }
+        .logo { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--blue); cursor: pointer; transition: transform 0.2s; }
+        .logo:hover { transform: scale(1.1); }
+
+        .ai-terminal {
+            background: linear-gradient(145deg, #0f172a, #131e35);
+            border: 1px solid var(--border); border-top: 2px solid var(--accent);
+            border-radius: 4px; padding: 6px; margin-bottom: 4px;
+        }
+
+        .section-label { font-size: 0.45rem; color: #64748b; font-weight: 800; text-transform: uppercase; margin: 3px 0 1px 0; display: block; letter-spacing: 0.3px; }
+        .nano-grid { display: flex; flex-wrap: wrap; gap: 2px; margin-bottom: 3px; }
+        
+        .badge { 
+            background: rgba(255,255,255,0.02); border: 1px solid var(--border); 
+            padding: 1px 3px; border-radius: 2px; display: flex; align-items: center; gap: 2px;
+        }
+        .b-name { color: #94a3b8; font-size: 0.4rem; text-transform: uppercase; font-weight: bold; }
+        .b-val { font-weight: 700; font-size: 0.55rem; transition: color 0.3s; }
+        
+        /* Semáforo */
+        .up { color: var(--green) !important; }
+        .mid { color: var(--yellow) !important; }
+        .down { color: var(--red) !important; }
+        .neutral { color: var(--blue); }
+
+        .ai-stats { 
+            display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.5rem; color: #64748b; 
+            margin: 3px 0; padding-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .verdict-box { 
+            font-size: 0.75rem; line-height: 1.1; color: #cbd5e1; 
+            border-left: 2px solid var(--accent); padding-left: 5px; margin: 4px 0;
+        }
+        .verdict-box b { color: var(--gold); font-weight: 700; }
+
+        .update-btn { background: var(--accent); color: white; border: none; padding: 2px 6px; border-radius: 2px; font-weight: bold; cursor: pointer; font-size: 0.55rem; }
+
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 2px; }
+        .card { background: var(--card); border: 1px solid var(--border); border-radius: 2px; height: 110px; display: flex; flex-direction: column; }
+        .card-h { padding: 2px 5px; background: rgba(255,255,255,0.04); font-size: 0.45rem; font-weight: 900; color: var(--blue); border-bottom: 1px solid var(--border); text-transform: uppercase; overflow: hidden; }
+        .card-b { padding: 2px 4px; overflow-y: auto; flex-grow: 1; scrollbar-width: none; }
+        
+        .news-item { padding: 1px 0; border-bottom: 1px solid rgba(255,255,255,0.02); }
+        .news-item a { color: #94a3b8; text-decoration: none; font-size: 0.55rem; display: block; line-height: 1; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+        @media (max-width: 600px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body>
+
+<div class="header">
+    <div style="display:flex; align-items:center; gap:4px;">
+        <a href="https://www.instagram.com/3d_mc_3d/" target="_blank" style="display:flex; align-items:center;">
+            <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo" title="Visitar Instagram @3d_mc_3d">
+        </a>
+        <span style="font-weight:900; color:var(--blue); letter-spacing:0.1px">CENTINELA NANO v5</span>
+    </div>
+    <div id="t-stamp" style="color:var(--green); font-size:0.45rem; font-weight:bold;">--:--:--</div>
+</div>
+
+<div class="ai-terminal">
+    <span class="section-label">Dólar</span>
+    <div id="dolar-container" class="nano-grid"></div>
+
+    <span class="section-label">Remuneradas (Top Rinde - Semáforo)</span>
+    <div id="rem-container" class="nano-grid"></div>
+
+    <span class="section-label">Plazos Fijos (Top Rinde - Semáforo)</span>
+    <div id="pf-container" class="nano-grid"></div>
+
+    <span class="section-label">Lecaps (Mensual Est.)</span>
+    <div id="lecap-container" class="nano-grid"></div>
+
+    <div class="ai-stats">
+        <span>FUENTES: <b id="f-detail" style="color:var(--accent)">--</b></span>
+        <span>DATA POINTS: <b id="n-count" style="color:var(--accent)">--</b></span>
+        <span>BRECHA: <b id="brecha-val" style="color:var(--gold)">--%</b></span>
+        <span><b id="ipc-label">IPC:</b> <b id="inflacion-val" style="color:var(--blue)">--%</b></span>
+    </div>
+    
+    <div id="verdicto" class="verdict-box">Sincronizando modelos...</div>
+    <button class="update-btn" onclick="generarAnalisisReal()">RECARGAR</button>
+</div>
+
+<div id="master-grid" class="grid"></div>
+
+<script>
+    const NEWS_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
+    const DOLAR_URL = "https://dolarapi.com/v1/dolares";
+    const INFLACION_API = "https://api.argentinadatos.com/v1/finanzas/indices/inflacion";
+    const TASA_REF_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
+    
+    const remData = [
+        {f: "BELO", t: 0.245}, {f: "BNA", t: 0.22}, {f: "BRUBANK", t: 0.27}, {f: "C4", t: 0.32},
+        {f: "FIWIND", t: 0.32}, {f: "MONTEMAR", t: 0.25}, {f: "NX", t: 0.25}, {f: "SUP.", t: 0.205},
+        {f: "Ualá", t: 0.23}, {f: "U. P1", t: 0.26}, {f: "U. P2", t: 0.29}
+    ];
+
+    const pfData = [
+        {e: "Nación", t: 0.25}, {e: "Sant.", t: 0.23}, {e: "Galicia", t: 0.23}, {e: "Prov.", t: 0.25},
+        {e: "BBVA", t: 0.24}, {e: "Macro", t: 0.28}, {e: "Reba", t: 0.34}, {e: "Bica", t: 0.33}
+    ];
+
+    // Lógica de Semáforo
+    function checkRindeColor(valor, ipc) {
+        if (valor >= ipc) return 'up'; // Verde
+        if (ipc - valor <= 0.5) return 'mid'; // Amarillo
+        return 'down'; // Rojo
+    }
+
+    async function generarAnalisisReal() {
+        const out = document.getElementById('verdicto');
+        const dContainer = document.getElementById('dolar-container');
+        const remContainer = document.getElementById('rem-container');
+        const pfContainer = document.getElementById('pf-container');
+        const lContainer = document.getElementById('lecap-container');
+        
+        try {
+            const [resNews, resDolar, resInf, resTasa] = await Promise.all([
+                fetch(NEWS_URL).then(r => r.json()),
+                fetch(DOLAR_URL).then(r => r.json()),
+                fetch(INFLACION_API).then(r => r.json()),
+                fetch(TASA_REF_API).then(r => r.json())
+            ]);
+
+            const noticias = resNews.noticias || [];
+            const dolares = resDolar || [];
+            const ultimoIPC = resInf[resInf.length - 1];
+            const ipcVal = ultimoIPC.valor;
+            const mesIPC = new Date(ultimoIPC.fecha).toLocaleString('es-AR', { month: 'short' }).toUpperCase();
+
+            dContainer.innerHTML = dolares.map(d => `
+                <div class="badge"><span class="b-name">${d.nombre.replace('Contado con liquidación', 'CCL').replace('Oficial', 'OFI')}</span><span class="b-val neutral">$${Math.round(d.venta)}</span></div>
+            `).join('');
+
+            const sortedRem = [...remData].sort((a, b) => b.t - a.t);
+            remContainer.innerHTML = sortedRem.map(r => {
+                const rMensual = (r.t * 100) / 12;
+                return `<div class="badge"><span class="b-name">${r.f}</span><span class="b-val ${checkRindeColor(rMensual, ipcVal)}">${rMensual.toFixed(2)}%</span></div>`;
+            }).join('');
+
+            const sortedPF = [...pfData].sort((a, b) => b.t - a.t);
+            pfContainer.innerHTML = sortedPF.map(p => {
+                const pMensual = (p.t * 100) / 12;
+                return `<div class="badge"><span class="b-name">${p.e}</span><span class="b-val ${checkRindeColor(pMensual, ipcVal)}">${pMensual.toFixed(2)}%</span></div>`;
+            }).join('');
+
+            const datoTasa = resTasa[resTasa.length - 1];
+            const tnaRef = datoTasa.valor || (datoTasa.tna * 100) || 0;
+            const mensualRef = tnaRef / 12;
+            const mensualLecap = mensualRef + 0.25;
+            
+            lContainer.innerHTML = `
+                <div class="badge"><span class="b-name">REF BCRA</span><span class="b-val ${checkRindeColor(mensualRef, ipcVal)}">${mensualRef.toFixed(2)}%</span></div>
+                <div class="badge"><span class="b-name">EST. LECAPS</span><span class="b-val ${checkRindeColor(mensualLecap, ipcVal)}">${mensualLecap.toFixed(2)}%</span></div>
+            `;
+
+            const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
+            const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
+            const brecha = (((blue / oficial) - 1) * 100).toFixed(1);
+
+            document.getElementById('f-detail').innerText = [...new Set(noticias.map(n => n.fuente))].join(', ');
+            document.getElementById('n-count').innerText = noticias.length;
+            document.getElementById('brecha-val').innerText = `${brecha}%`;
+            document.getElementById('ipc-label').innerText = `IPC ${mesIPC}:`;
+            document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
+            document.getElementById('t-stamp').innerText = new Date().toLocaleTimeString();
+
+            out.innerHTML = `Análisis Centinela: Priorizar instrumentos en **VERDE**. Los marcados en **AMARILLO** requieren vigilancia ante el IPC de **${ipcVal}%**.`.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
+
+            const agrupados = noticias.reduce((acc, n) => {
+                if(!acc[n.fuente]) acc[n.fuente] = [];
+                acc[n.fuente].push(n);
+                return acc;
+            }, {});
+
+            document.getElementById('master-grid').innerHTML = Object.keys(agrupados).map(f => `
+                <div class="card">
+                    <div class="card-h">${f}</div>
+                    <div class="card-b">${agrupados[f].map(n => `<div class="news-item"><a href="${n.link || '#'}" target="_blank">${n.titulo}</a></div>`).join('')}</div>
+                </div>
+            `).join('');
+        } catch (e) { out.innerHTML = "Error sincronizando datos..."; }
+    }
+    document.addEventListener('DOMContentLoaded', generarAnalisisReal);
+</script>
+</body>
+</html>
