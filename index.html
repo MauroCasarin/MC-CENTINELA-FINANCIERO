@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA DEL MERCADO v13.0</title>
+    <title>CENTINELA DEL MERCADO v13.1</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -61,11 +61,13 @@
         .info-section { margin-bottom: 18px; }
         .section-title { font-size: 0.8rem; font-weight: 900; color: var(--blue); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
-        .data-card { background: #000; border: 1px solid #1a1a1a; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; }
-        .data-card span:first-child { font-size: 0.6rem; color: #666; font-weight: bold; text-transform: uppercase; }
-        .data-card span:last-child { font-size: 1.1rem; font-weight: 900; font-family: monospace; margin-top: 4px; }
+        
+        /* TARJETA CON LINK */
+        .data-card { background: #000; border: 1px solid #1a1a1a; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; text-decoration: none; transition: 0.2s; }
+        .data-card:hover { border-color: var(--accent); background: #050505; }
+        .data-card span:first-child { font-size: 0.6rem; color: var(--blue); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+        .data-card span:last-child { font-size: 1.1rem; font-weight: 900; font-family: monospace; color: var(--txt); }
 
-        /* --- BARRA DE STATS CON EXPLICACIÓN --- */
         .stats-bar { 
             display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; 
             background: #0f0f0f; padding: 12px; border-radius: 8px; 
@@ -84,8 +86,8 @@
         .news-scroll-area { overflow-y: auto; flex-grow: 1; }
         .news-item a { color: #888; text-decoration: none; font-size: 0.75rem; display: block; margin-bottom: 5px; line-height: 1.2; border-bottom: 1px solid #0f0f0f; }
 
-        .up { color: var(--green); }
-        .down { color: var(--red); }
+        .up { color: var(--green) !important; }
+        .down { color: var(--red) !important; }
         
         @media (max-width: 600px) { .strategy-grid { grid-template-columns: 1fr; } .news-grid { grid-template-columns: 1fr 1fr; } }
     </style>
@@ -103,14 +105,14 @@
     </div>
     <div style="text-align: right; font-family: monospace;">
         <div id="news-counter" style="color:var(--blue); font-size: 9px; font-weight: bold; margin-bottom: 2px;">NEWS: --</div>
-        <div id="t-stamp" style="color:#444; font-size: 9px;">V13.0_LIVE</div>
+        <div id="t-stamp" style="color:#444; font-size: 9px;">V13.1_CONNECTED</div>
     </div>
 </div>
 
 <div class="ai-terminal">
     <div id="loader-overlay">
         <div style="width:30px; height:30px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
-        <div id="loader-sub" style="color:#555; font-size:10px; margin-top:10px; text-transform:uppercase; font-family:monospace;">Interpretando variables...</div>
+        <div id="loader-sub" style="color:#555; font-size:10px; margin-top:10px; text-transform:uppercase; font-family:monospace;">Enlazando Entidades...</div>
     </div>
 
     <div class="strategy-grid">
@@ -131,15 +133,15 @@
         <div id="dolar-container" class="data-grid"></div>
     </div>
     <div class="info-section">
-        <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas</div>
+        <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas (Click para ir)</div>
         <div id="rem-container" class="data-grid"></div>
     </div>
     <div class="info-section">
-        <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos</div>
+        <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos (Click para ir)</div>
         <div id="pf-container" class="data-grid"></div>
     </div>
     <div class="info-section">
-        <div class="section-title"><i class="fas fa-chart-line"></i> Lecaps (Mensual)</div>
+        <div class="section-title"><i class="fas fa-chart-line"></i> Lecaps</div>
         <div id="lecap-container" class="data-grid"></div>
     </div>
     <div class="info-section">
@@ -151,21 +153,21 @@
         <div class="stat-item">
             <span class="stat-label">BRECHA</span>
             <b id="brecha-val" class="stat-value">--</b>
-            <span class="stat-desc">Diferencia entre Blue y Oficial. Indica tensión cambiaria.</span>
+            <span class="stat-desc">Blue vs Oficial</span>
         </div>
         <div class="stat-item">
             <span class="stat-label">IPC</span>
             <b id="inflacion-val" class="stat-value" style="color:var(--blue)">--</b>
-            <span class="stat-desc">Última inflación. Es el piso que tu inversión debe vencer.</span>
+            <span class="stat-desc">Última Inflación</span>
         </div>
         <div class="stat-item">
             <span class="stat-label">TASA REAL</span>
             <b id="tasa-real-val" class="stat-value">--</b>
-            <span class="stat-desc">Rinde vs Inflación. Si es negativa, estás perdiendo poder de compra.</span>
+            <span class="stat-desc">Rinde vs IPC</span>
         </div>
     </div>
 
-    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v13.0</button>
+    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar y Enlazar</button>
 </div>
 
 <div id="master-grid" class="news-grid"></div>
@@ -177,8 +179,19 @@
     const TASA_REF_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
     const RP_API = "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo";
     
-    const remData = [{f: "C4", t: 0.32}, {f: "FIWIND", t: 0.32}, {f: "U. P2", t: 0.29}, {f: "BRUBANK", t: 0.27}];
-    const pfData = [{e: "Reba", t: 0.34}, {e: "Bica", t: 0.33}, {e: "Macro", t: 0.28}, {e: "Nación", t: 0.25}];
+    // DATOS CON LINKS
+    const remData = [
+        {f: "C4", t: 0.32, l: "https://www.cocos.capital/"}, 
+        {f: "FIWIND", t: 0.32, l: "https://www.fiwind.io/"}, 
+        {f: "U. P2", t: 0.29, l: "https://www.uala.com.ar/"}, 
+        {f: "BRUBANK", t: 0.27, l: "https://www.brubank.com/"}
+    ];
+    const pfData = [
+        {e: "Reba", t: 0.34, l: "https://www.reba.com.ar/"}, 
+        {e: "Bica", t: 0.33, l: "https://www.bancobica.com.ar/"}, 
+        {e: "Macro", t: 0.28, l: "https://www.macro.com.ar/"}, 
+        {e: "Nación", t: 0.25, l: "https://www.bna.com.ar/"}
+    ];
 
     function typeWriter(text, elementId) {
         let i = 0; const ele = document.getElementById(elementId); ele.innerHTML = "";
@@ -192,9 +205,6 @@
         const scanLine = document.getElementById('scan-line');
         loader.style.display = 'flex'; scanLine.style.display = 'block';
 
-        const logs = ["Conectando con Servidores...", "Rastreando Titulares...", "Cruzando Datos..."];
-        let lIdx = 0; const logInt = setInterval(() => { loaderSub.innerText = logs[lIdx]; lIdx = (lIdx + 1) % logs.length; }, 500);
-
         try {
             const [resNews, resDolar, resInf, resTasa, resRP] = await Promise.all([
                 fetch(NEWS_URL).then(r => r.json()), fetch(DOLAR_URL).then(r => r.json()),
@@ -206,28 +216,43 @@
             const dolares = resDolar || [];
             const noticias = resNews.noticias || [];
 
-            // Renderizado Datos
-            document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
-            document.getElementById('rem-container').innerHTML = remData.map(r => `<div class="data-card"><span>${r.f}</span><span class="${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span></div>`).join('');
-            document.getElementById('pf-container').innerHTML = pfData.map(p => `<div class="data-card"><span>${p.e}</span><span class="${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span></div>`).join('');
+            // Render Dólares
+            document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `
+                <div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>
+            `).join('');
+
+            // Render Remuneradas con LINKS
+            document.getElementById('rem-container').innerHTML = remData.map(r => `
+                <a href="${r.l}" target="_blank" class="data-card">
+                    <span>${r.f}</span>
+                    <span class="${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span>
+                </a>
+            `).join('');
+
+            // Render PF con LINKS
+            document.getElementById('pf-container').innerHTML = pfData.map(p => `
+                <a href="${p.l}" target="_blank" class="data-card">
+                    <span>${p.e}</span>
+                    <span class="${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span>
+                </a>
+            `).join('');
+
             const tnaRef = resTasa[resTasa.length - 1].valor || 30;
             const mensualLecap = (tnaRef/12+0.3).toFixed(2);
             document.getElementById('lecap-container').innerHTML = `<div class="data-card"><span>Tasa Ref.</span><span>${(tnaRef/12).toFixed(2)}%</span></div><div class="data-card"><span>Lecap Est.</span><span class="up">${mensualLecap}%</span></div>`;
             document.getElementById('rp-container').innerHTML = `<div class="data-card"><span>Puntos</span><span class="${riesgoPais < 700 ? 'up':'down'}">${riesgoPais}</span></div>`;
 
-            // Análisis
             const mejorM = (pfData[0].t * 100) / 12;
             const tasaR = mejorM - ipcVal;
             const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
             const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
             const brecha = ((blue/oficial)-1)*100;
 
-            clearInterval(logInt); loader.style.display = 'none'; scanLine.style.display = 'none';
+            loader.style.display = 'none'; scanLine.style.display = 'none';
 
-            typeWriter(`**Prioridad: Protección.** Con IPC al **${ipcVal}%** y rinde real de **${tasaR.toFixed(2)}%**, la IA sugiere cobertura inmediata si la tasa real es negativa. Billeteras para el día a día, Dólar MEP para ahorro.`, "ai-cons");
-            typeWriter(`**Estrategia: Carry.** Riesgo País en **${riesgoPais}** puntos y brecha baja del **${brecha.toFixed(1)}%**. Las Lecaps al **${mensualLecap}%** mensual son la opción líder para ganar en dólares.`, "ai-agres");
+            typeWriter(`**Veredicto:** IPC al **${ipcVal}%**. La mejor opción es **${pfData[0].e}** para 30 días o **${remData[0].f}** para liquidez. Tasa Real: **${tasaR.toFixed(2)}%**.`, "ai-cons");
+            typeWriter(`**Estrategia:** Brecha estable del **${brecha.toFixed(1)}%**. Las Lecaps rinden **${mensualLecap}%** mensual. Carry Trade activo bajo supervisión del EMBI en **${riesgoPais}**.`, "ai-agres");
 
-            // Stats con colores lógicos
             document.getElementById('brecha-val').innerText = `${brecha.toFixed(1)}%`;
             document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
             document.getElementById('tasa-real-val').innerText = `${tasaR.toFixed(2)}%`;
@@ -242,7 +267,7 @@
                 <div class="news-card"><div class="news-header">${f}</div><div class="news-scroll-area">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
             `).join('');
 
-        } catch (e) { clearInterval(logInt); loader.style.display = 'none'; }
+        } catch (e) { loader.style.display = 'none'; }
     }
     document.addEventListener('DOMContentLoaded', ejecutarDeepScanIA);
 </script>
