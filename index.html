@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA DEL MERCADO v15.5</title>
+    <title>CENTINELA DEL MERCADO v15.6</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -71,16 +71,19 @@
             padding: 18px; margin-bottom: 15px; border-left: 4px solid var(--accent);
             height: auto; min-height: 60px;
         }
-        .strat-text { font-size: 1.05rem; line-height: 1.6; color: #ddd; white-space: pre-wrap; }
+        .strat-text { font-size: 1.05rem; line-height: 1.6; color: #ddd; white-space: pre-wrap; min-height: 1.6em; }
         .strat-text b { color: var(--gold); }
 
         .tech-definitions { font-size: 0.85rem; color: #777; background: #000; padding: 10px; border-radius: 4px; margin-top: 12px; border-top: 1px solid #111; line-height: 1.4; }
         
-        /* ESTADO DEL MERCADO DINÁMICO */
         .market-status-box { font-size: 0.75rem; color: #aaa; margin-top: 15px; border-top: 1px solid #222; padding-top: 12px; }
         .status-label { display: block; color: var(--blue); font-weight: 900; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-        .status-val { font-size: 1.1rem; color: var(--txt); font-family: monospace; font-weight: 900; }
-        .status-detail { display: block; font-size: 0.7rem; color: #666; font-style: italic; margin-top: 4px; line-height: 1.3; }
+        .status-val { font-size: 1.2rem; color: var(--txt); font-family: monospace; font-weight: 900; transition: 0.3s; }
+        .status-detail { display: block; font-size: 0.7rem; color: #666; font-style: italic; margin-top: 4px; line-height: 1.3; min-height: 2.6em; }
+
+        /* Animación Fade In para el porcentaje */
+        .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
 
         .section-title { font-size: 0.85rem; font-weight: 900; color: var(--blue); text-transform: uppercase; margin: 20px 0 10px 0; display: flex; align-items: center; gap: 8px; }
         .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; }
@@ -149,13 +152,13 @@
         </div>
 
         <div id="analysis-container" class="strat-box">
-            <div id="ai-text" class="strat-text">Iniciando protocolos de análisis...</div>
+            <div id="ai-text" class="strat-text"></div>
             <div id="ai-glossary" class="tech-definitions"></div>
             
             <div id="market-status-info" class="market-status-box">
                 <span class="status-label">ESTADO DEL MERCADO PARA ESTE PERFIL:</span>
-                <span id="market-pct" class="status-val">--%</span>
-                <span id="market-detail" class="status-detail">Analizando clima financiero...</span>
+                <span id="market-pct" class="status-val"></span>
+                <span id="market-detail" class="status-detail"></span>
             </div>
         </div>
 
@@ -177,7 +180,7 @@
             <div class="stat-item"><span class="stat-label">TASA REAL</span><b id="tasa-real-val" class="stat-value">--</b><span class="stat-desc">Rinde vs IPC</span></div>
         </div>
 
-        <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v15.5</button>
+        <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v15.6</button>
     </div>
 
     <div id="master-grid" class="news-grid"></div>
@@ -206,54 +209,65 @@
 
     let cacheData = { ipc: 0, brecha: 0, tasaR: 0, mensualLecap: 0, rpVal: 0, apiPoints: 0 };
     let typingTimer = null;
+    let typingDetailTimer = null;
 
-    function typeWriter(text, elementId, profileType) {
+    function resetAnálisis() {
         clearTimeout(typingTimer);
+        clearTimeout(typingDetailTimer);
+        document.getElementById('ai-text').innerHTML = "";
+        document.getElementById('ai-glossary').innerHTML = "";
+        document.getElementById('market-pct').innerHTML = "";
+        document.getElementById('market-detail').innerHTML = "";
+        document.getElementById('market-pct').classList.remove('fade-in');
+    }
+
+    function typeWriter(text, elementId, callback) {
         const ele = document.getElementById(elementId);
-        const glos = document.getElementById('ai-glossary');
-        ele.innerHTML = ""; glos.innerHTML = "";
         let i = 0;
-        
         function type() {
             if (i < text.length) {
                 ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
                 i++;
                 typingTimer = setTimeout(type, 8);
-            } else {
-                let encontrados = [];
-                for (let term in diccionario) { 
-                    if (text.toLowerCase().includes(term.toLowerCase())) { 
-                        encontrados.push(`<span style="color:var(--accent); font-weight:bold;">${term}:</span> ${diccionario[term]}`); 
-                    } 
-                }
-                if (encontrados.length > 0) glos.innerHTML = encontrados.join("<br>");
-                actualizarEstadoMercado(profileType);
+            } else if (callback) {
+                callback();
             }
         }
         type();
     }
 
-    function actualizarEstadoMercado(type) {
-        let pct = 98; // Base ideal
+    function typeWriterDetail(text, elementId, callback) {
+        const ele = document.getElementById(elementId);
+        let i = 0;
+        function type() {
+            if (i < text.length) {
+                ele.innerHTML = text.substring(0, i + 1);
+                i++;
+                typingDetailTimer = setTimeout(type, 12);
+            } else if (callback) {
+                callback();
+            }
+        }
+        type();
+    }
+
+    function actualizarEstadoMercadoAnimado(type) {
+        let pct = 98;
         let msg = "";
 
-        // Ajuste por conexión (Fuentes de datos)
         if (cacheData.apiPoints < 5) { pct -= 15; msg = "Estado parcial: No se pudieron sincronizar todos los indicadores externos."; }
 
         if (type === 'cons') {
-            // Lo que le molesta al conservador: Inflación alta y Tasa Real Negativa
             if (cacheData.ipc > 3.8) { pct -= 18; msg = "El mercado está 'revuelto' para el ahorro en pesos debido a la alta inflación que erosiona el capital."; }
             else if (cacheData.tasaR < 0) { pct -= 10; msg = "Estado de alerta: Las tasas de interés no alcanzan para cubrir la suba de precios."; }
             else { msg = "Mercado en calma. Las condiciones son óptimas para preservar el poder adquisitivo con bajo riesgo."; }
         } 
         else if (type === 'mod') {
-            // Lo que le molesta al moderado: Brecha saltando y Riesgo País alto
             if (cacheData.brecha > 18) { pct -= 15; msg = "Estado inestable: La brecha cambiaria genera dudas sobre la estabilidad de los bonos y activos mixtos."; }
             else if (cacheData.rpVal > 1150) { pct -= 12; msg = "El riesgo país elevado indica una desconfianza del mercado que afecta el rendimiento de carteras equilibradas."; }
             else { msg = "Estado saludable. Existe un equilibrio sólido entre el rendimiento de las tasas y la estabilidad del dólar."; }
         } 
         else if (type === 'agre') {
-            // Lo que le molesta al agresivo: Brecha muy alta (fin del Carry Trade) o Riesgo País disparado
             if (cacheData.brecha > 22) { pct -= 35; msg = "Mercado crítico: La brecha es demasiado alta, lo que indica un riesgo inminente de salto cambiario. Muy peligroso para tasas."; }
             else if (cacheData.rpVal > 1300) { pct -= 20; msg = "Volatilidad extrema: Los indicadores técnicos sugieren una posible corrección brusca de activos de riesgo."; }
             else if (cacheData.brecha < 10) { pct += 2; msg = "Escenario ideal: El mercado está 'planchado', permitiendo ganancias máximas mediante el Carry Trade."; }
@@ -263,27 +277,42 @@
         pct = Math.max(pct, 25);
         const color = pct > 80 ? 'var(--green)' : (pct > 50 ? 'var(--gold)' : 'var(--red)');
         
-        document.getElementById('market-pct').innerText = `${pct}%`;
-        document.getElementById('market-pct').style.color = color;
-        document.getElementById('market-detail').innerText = msg;
+        // Ejecutar máquina de escribir para el detalle y luego mostrar el %
+        typeWriterDetail(msg, 'market-detail', () => {
+            const pctEle = document.getElementById('market-pct');
+            pctEle.style.color = color;
+            pctEle.innerText = `${pct}%`;
+            pctEle.classList.add('fade-in');
+        });
     }
 
     function switchProfile(type) {
         document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
         document.querySelector(`[data-type="${type}"]`).classList.add('active');
+        resetAnálisis();
         generarAnalisis(type);
     }
 
     function generarAnalisis(type) {
         let content = "";
         if(type === 'cons') {
-            content = `PERFIL CONSERVADOR: Con un **IPC del ${cacheData.ipc}%**, tu prioridad es mantener el poder de compra. El **Rinde Real** actual es de **${cacheData.tasaR}%**. Si este valor es negativo, el Plazo Fijo tradicional está perdiendo frente a los precios. Te sugiero mantener **Liquidez** inmediata en cuentas remuneradas para gastos diarios, pero considera diversificar hacia instrumentos ajustados por **CER** si el horizonte de tu ahorro supera los 30 días para cubrirte de posibles saltos inflacionarios inesperados.`;
+            content = `PERFIL CONSERVADOR: Con un **IPC del ${cacheData.ipc}%**, tu prioridad es mantener el poder de compra. El **Rinde Real** actual es de **${cacheData.tasaR}%**. Te sugiero mantener **Liquidez** inmediata en cuentas remuneradas para gastos diarios, pero considera diversificar hacia instrumentos ajustados por **CER** si el horizonte de tu ahorro supera los 30 días.`;
         } else if(type === 'mod') {
-            content = `PERFIL MODERADO: La **Brecha** cambiaria se encuentra en **${cacheData.brecha}%**. En este escenario, el equilibrio es fundamental. Sugerimos un mix de cartera: 50% en instrumentos de tasa fija (Lecaps/PF) para aprovechar el rendimiento mensual, y un 50% en activos dolarizados o MEP para protegerte ante cualquier volatilidad del mercado. Con el **Riesgo País** en **${cacheData.rpVal}**, el mercado muestra una estabilidad frágil que requiere monitoreo semanal.`;
+            content = `PERFIL MODERADO: La **Brecha** cambiaria se encuentra en **${cacheData.brecha}%**. Sugerimos un mix de cartera: 50% en instrumentos de tasa fija para aprovechar el rinde mensual, y un 50% en activos dolarizados o MEP para protegerte ante cualquier volatilidad del mercado.`;
         } else {
-            content = `PERFIL AGRESIVO: Escenario ideal para el **Carry Trade**. La **Brecha** del **${cacheData.brecha}%** y la tendencia del **Riesgo País** sugieren que las **Lecaps**, con un rinde estimado de **${cacheData.mensualLecap}%** mensual, superan ampliamente la devaluación programada. Es momento de maximizar tasa en pesos, pero mantén un ojo crítico: si la brecha supera el 20% o el rinde real cae bruscamente, el riesgo de salto cambiario aumenta y se debe reducir exposición rápidamente.`;
+            content = `PERFIL AGRESIVO: Escenario ideal para el **Carry Trade**. La **Brecha** del **${cacheData.brecha}%** sugiere que las **Lecaps**, con un rinde estimado de **${cacheData.mensualLecap}%** mensual, superan ampliamente la devaluación. Maximiza tasa en pesos, pero reduce exposición si la brecha supera el 20%.`;
         }
-        typeWriter(content, "ai-text", type);
+        
+        typeWriter(content, "ai-text", () => {
+            let encontrados = [];
+            for (let term in diccionario) { 
+                if (content.toLowerCase().includes(term.toLowerCase())) { 
+                    encontrados.push(`<span style="color:var(--accent); font-weight:bold;">${term}:</span> ${diccionario[term]}`); 
+                } 
+            }
+            if (encontrados.length > 0) document.getElementById('ai-glossary').innerHTML = encontrados.join("<br>");
+            actualizarEstadoMercadoAnimado(type);
+        });
     }
 
     async function ejecutarDeepScanIA() {
