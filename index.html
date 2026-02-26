@@ -1,34 +1,292 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="es">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>CENTINELA DEL MERCADO v14.4</title>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CENTINELA DEL MERCADO v14.8</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-      html, body { 
-        margin: 0; 
-        padding: 0; 
-        width: 100%; 
-        height: 100%; 
-        background-image: url('https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/Fondo%20centinela.jpg');
-        background-attachment: fixed;
-        background-position: center;
-        background-repeat: no-repeat;
-        background-size: cover;
-      }
-      #root { 
-        margin: 0; 
-        padding: 0; 
-        width: 100%; 
-        min-height: 100%; 
-        background-color: rgba(0, 0, 0, 0.85); 
-      }
-    </style>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script type="module" src="./src/main.tsx"></script>
-  </body>
-</html>
+        :root {
+            --bg: #000000;
+            --surface: rgba(10, 10, 10, 0.9);
+            --blue: #00d2ff;
+            --txt: #e0e0e0;
+            --accent: #8b5cf6;
+            --border: #1a1a1a;
+            --green: #00ff88;
+            --red: #ff3366;
+            --gold: #fbbf24;
+            --orange: #f97316;
+        }
 
+        html, body { 
+            margin: 0; padding: 0; width: 100%; min-height: 100vh;
+            background-image: url('https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/Fondo%20centinela.jpg');
+            background-attachment: fixed; background-position: center;
+            background-repeat: no-repeat; background-size: cover;
+            font-family: 'Segoe UI', sans-serif; color: var(--txt); font-size: 11px;
+        }
+
+        #root { width: 100%; min-height: 100vh; background-color: rgba(0, 0, 0, 0.65); padding: 10px; box-sizing: border-box; }
+
+        #scan-line {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--blue); box-shadow: 0 0 15px var(--blue); z-index: 100;
+            animation: scanMove 2s linear infinite;
+        }
+        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px; background: var(--surface); border-radius: 8px;
+            border: 1px solid var(--border); margin-bottom: 12px; backdrop-filter: blur(5px);
+        }
+
+        .ai-terminal {
+            background: var(--surface); border: 1px solid var(--border);
+            border-top: 3px solid var(--accent); border-radius: 12px;
+            padding: 15px; position: relative; backdrop-filter: blur(10px);
+        }
+
+        #loader-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.96); z-index: 50; border-radius: 12px;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .profile-selector { display: flex; gap: 8px; margin-bottom: 15px; }
+        .profile-btn {
+            flex: 1; padding: 10px 5px; border: 1px solid #333; background: rgba(20,20,20,0.8);
+            color: #666; border-radius: 6px; cursor: pointer; font-weight: 900;
+            text-transform: uppercase; transition: 0.3s; font-size: 0.65rem;
+            display: flex; flex-direction: column; align-items: center; gap: 5px;
+        }
+        .profile-btn.active[data-type="cons"] { border-color: var(--blue); color: var(--blue); background: rgba(0, 210, 255, 0.1); }
+        .profile-btn.active[data-type="mod"] { border-color: var(--orange); color: var(--orange); background: rgba(249, 115, 22, 0.1); }
+        .profile-btn.active[data-type="agre"] { border-color: var(--gold); color: var(--gold); background: rgba(251, 191, 36, 0.1); }
+
+        .strat-box { 
+            background: rgba(5, 5, 5, 0.85); border: 1px solid #222; border-radius: 8px; 
+            padding: 15px; margin-bottom: 15px; border-left: 4px solid var(--accent);
+            height: auto; min-height: 50px;
+        }
+        .strat-text { font-size: 0.9rem; line-height: 1.5; color: #ddd; white-space: pre-wrap; }
+        .strat-text b { color: var(--gold); }
+
+        .section-title { font-size: 0.75rem; font-weight: 900; color: var(--blue); text-transform: uppercase; margin: 15px 0 8px 0; display: flex; align-items: center; gap: 8px; }
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+        
+        .data-card { background: #000; border: 1px solid #1a1a1a; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; text-decoration: none; transition: 0.2s; }
+        .data-card:hover { border-color: var(--accent); }
+        .data-card span:first-child { font-size: 0.55rem; color: var(--blue); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+        .data-card span:last-child { font-size: 1.05rem; font-weight: 900; font-family: monospace; color: var(--txt); }
+
+        .stats-bar { 
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; 
+            background: rgba(15, 15, 15, 0.9); padding: 12px; border-radius: 8px; 
+            border: 1px dashed #333; margin: 15px 0; 
+        }
+        .stat-item { text-align: center; }
+        .stat-label { font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: 900; margin-bottom: 4px; display: block;}
+        .stat-value { color: var(--txt); font-size: 1.1rem; font-family: monospace; display: block; margin-bottom: 4px; }
+        .stat-desc { font-size: 0.6rem; color: #555; line-height: 1.2; display: block; font-style: italic; }
+
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-top: 15px; }
+        .news-card { background: rgba(10, 10, 10, 0.9); border: 1px solid #222; border-radius: 8px; padding: 10px; height: 110px; display: flex; flex-direction: column; }
+        .news-header { color: var(--accent); font-size: 0.65rem; font-weight: 900; border-bottom: 1px solid #333; margin-bottom: 5px; padding-bottom: 3px; }
+        .news-scroll-area { overflow-y: auto; flex-grow: 1; }
+        .news-item a { color: #aaa; text-decoration: none; font-size: 0.75rem; display: block; margin-bottom: 6px; line-height: 1.2; border-bottom: 1px solid #1a1a1a; }
+
+        .update-btn { background: #fff; color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
+
+        .up { color: var(--green) !important; }
+        .down { color: var(--red) !important; }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+    </style>
+</head>
+<body>
+
+<div id="root">
+    <div id="scan-line"></div>
+
+    <div class="header">
+        <div style="display:flex; align-items:center; gap:8px;">
+            <a href="https://www.instagram.com/3d_mc_3d/" target="_blank">
+                <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" style="width:22px; height:22px; border-radius:50%; border:1px solid var(--accent);">
+            </a>
+            <span style="font-weight:900; letter-spacing:1px; font-size: 10px;">CENTINELA <span style="color:var(--accent)">FINANCIERO</span></span>
+        </div>
+        <div id="news-counter" style="color:var(--blue); font-size: 9px; font-weight: bold; font-family: monospace;">NEWS: --</div>
+    </div>
+
+    <div class="ai-terminal">
+        <div id="loader-overlay">
+            <div style="width:30px; height:30px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
+            <div style="margin-top:15px; text-align:center; font-family:monospace;">
+                <div id="loader-main-text" style="color:var(--txt); font-size:11px; font-weight:bold; text-transform:uppercase; margin-bottom:4px;">Capturando datos...</div>
+                <div id="loader-sub" style="color:var(--blue); font-size:9px; text-transform:uppercase; opacity:0.8;">Iniciando scan...</div>
+            </div>
+        </div>
+
+        <div class="profile-selector">
+            <button class="profile-btn active" data-type="cons" onclick="switchProfile('cons')">
+                <i class="fas fa-shield-alt"></i> Conservador
+            </button>
+            <button class="profile-btn" data-type="mod" onclick="switchProfile('mod')">
+                <i class="fas fa-balance-scale"></i> Moderado
+            </button>
+            <button class="profile-btn" data-type="agre" onclick="switchProfile('agre')">
+                <i class="fas fa-bolt"></i> Agresivo
+            </button>
+        </div>
+
+        <div id="analysis-container" class="strat-box">
+            <div id="ai-text" class="strat-text">Esperando sincronización de datos...</div>
+        </div>
+
+        <div class="section-title"><i class="fas fa-dollar-sign"></i> Dólar</div>
+        <div id="dolar-container" class="data-grid"></div>
+
+        <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas</div>
+        <div id="rem-container" class="data-grid"></div>
+
+        <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos</div>
+        <div id="pf-container" class="data-grid"></div>
+
+        <div class="section-title"><i class="fas fa-chart-line"></i> Lecaps / Riesgo</div>
+        <div id="lecap-container" class="data-grid"></div>
+
+        <div class="stats-bar">
+            <div class="stat-item"><span class="stat-label">BRECHA</span><b id="brecha-val" class="stat-value">--</b><span class="stat-desc">Blue vs Oficial</span></div>
+            <div class="stat-item"><span class="stat-label">IPC</span><b id="inflacion-val" class="stat-value" style="color:var(--blue)">--</b><span class="stat-desc">Última Inflación</span></div>
+            <div class="stat-item"><span class="stat-label">TASA REAL</span><b id="tasa-real-val" class="stat-value">--</b><span class="stat-desc">Rinde vs IPC</span></div>
+        </div>
+
+        <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v14.8</button>
+    </div>
+
+    <div id="master-grid" class="news-grid"></div>
+</div>
+
+<script>
+    const NEWS_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
+    const DOLAR_URL = "https://dolarapi.com/v1/dolares";
+    const INFLACION_API = "https://api.argentinadatos.com/v1/finanzas/indices/inflacion";
+    const TASA_REF_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
+    const RP_API = "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo";
+    
+    const remLinks = { "COCOS": "https://www.cocos.capital/", "FIWIND": "https://www.fiwind.io/", "UALÁ": "https://www.uala.com.ar/", "BRUBANK": "https://www.brubank.com/" };
+    const pfLinks = { "REBA": "https://www.reba.com.ar/", "BICA": "https://www.bancobica.com.ar/", "MACRO": "https://www.macro.com.ar/", "NACIÓN": "https://www.bna.com.ar/" };
+
+    let cacheData = { ipc: 0, brecha: 0, tasaR: 0, mensualLecap: 0, rpVal: 0 };
+    let typingTimer = null;
+
+    function typeWriter(text, elementId) {
+        clearTimeout(typingTimer);
+        const ele = document.getElementById(elementId);
+        ele.innerHTML = "";
+        let i = 0;
+        function type() {
+            if (i < text.length) {
+                ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
+                i++;
+                typingTimer = setTimeout(type, 8);
+            }
+        }
+        type();
+    }
+
+    function switchProfile(type) {
+        document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
+        document.querySelector(`[data-type="${type}"]`).classList.add('active');
+        generarAnalisis(type);
+    }
+
+    function generarAnalisis(type) {
+        let content = "";
+        if(type === 'cons') {
+            content = `PERFIL CONSERVADOR: Con un **IPC del ${cacheData.ipc}%**, tu prioridad es mantener el poder de compra. El **Rinde Real** actual es de **${cacheData.tasaR}%**. Si este valor es negativo, el Plazo Fijo tradicional está perdiendo frente a los precios. Te sugiero mantener **Liquidez** inmediata en cuentas remuneradas para gastos diarios, pero considera diversificar hacia instrumentos ajustados por **CER** si el horizonte de tu ahorro supera los 30 días para cubrirte de posibles saltos inflacionarios inesperados.`;
+        } else if(type === 'mod') {
+            content = `PERFIL MODERADO: La **Brecha** cambiaria se encuentra en **${cacheData.brecha}%**. En este escenario, el equilibrio es fundamental. Sugerimos un mix de cartera: 50% en instrumentos de tasa fija (Lecaps/PF) para aprovechar el rendimiento mensual, y un 50% en activos dolarizados o MEP para protegerte ante cualquier volatilidad del mercado. Con el **Riesgo País** en **${cacheData.rpVal}**, el mercado muestra una estabilidad frágil que requiere monitoreo semanal.`;
+        } else {
+            content = `PERFIL AGRESIVO: Escenario ideal para el **Carry Trade**. La **Brecha** del **${cacheData.brecha}%** y la tendencia del **Riesgo País** sugieren que las **Lecaps**, con un rinde estimado de **${cacheData.mensualLecap}%** mensual, superan ampliamente la devaluación programada. Es momento de maximizar tasa en pesos, pero mantén un ojo crítico: si la brecha supera el 20% o el rinde real cae bruscamente, el riesgo de salto cambiario aumenta y se debe reducir exposición rápidamente.`;
+        }
+        typeWriter(content, "ai-text");
+    }
+
+    async function ejecutarDeepScanIA() {
+        const loader = document.getElementById('loader-overlay');
+        const loaderSub = document.getElementById('loader-sub');
+        const scanLine = document.getElementById('scan-line');
+        loader.style.display = 'flex'; scanLine.style.display = 'block';
+
+        const descriptores = ["Diferencial Cambiario", "Tasas Nominales", "Riesgo Soberano", "Inflación Proyectada", "Protocolos de Liquidez"];
+        const loaderInterval = setInterval(() => {
+            loaderSub.innerText = `[ SCANNING: ${descriptores[Math.floor(Math.random() * descriptores.length)]} ]`;
+        }, 200);
+
+        try {
+            const [resDolar, resRP, resTasa, resInf, resNews] = await Promise.all([
+                fetch(DOLAR_URL).then(r => r.json()),
+                fetch(RP_API).then(r => r.json()),
+                fetch(TASA_REF_API).then(r => r.json()),
+                fetch(INFLACION_API).then(r => r.json()),
+                fetch(NEWS_URL).then(r => r.json())
+            ]);
+
+            clearInterval(loaderInterval);
+            cacheData.ipc = resInf[resInf.length - 1].valor;
+            cacheData.rpVal = resRP.valor || 0;
+            const tnaRef = resTasa[resTasa.length - 1].valor || 30;
+            cacheData.mensualLecap = (tnaRef/12+0.3).toFixed(2);
+            
+            const oficial = resDolar.find(d => d.casa === 'oficial')?.venta || 1;
+            const blue = resDolar.find(d => d.casa === 'blue')?.venta || 1;
+            cacheData.brecha = (((blue/oficial)-1)*100).toFixed(1);
+            cacheData.tasaR = (2.83 - cacheData.ipc).toFixed(2); 
+
+            // RENDER DÓLAR
+            document.getElementById('dolar-container').innerHTML = resDolar.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
+            
+            // RENDER REMUNERADAS CON LINKS
+            const rems = [{f: "COCOS", t: "3.1%"}, {f: "FIWIND", t: "3.0%"}, {f: "UALÁ", t: "2.5%"}, {f: "BRUBANK", t: "2.3%"}];
+            document.getElementById('rem-container').innerHTML = rems.map(r => `<a href="${remLinks[r.f]}" target="_blank" class="data-card"><span>${r.f}</span><span class="up">${r.t}</span></a>`).join('');
+
+            // RENDER PLAZOS FIJOS CON LINKS
+            const pfs = [{e: "REBA", t: "3.3%"}, {e: "BICA", t: "3.2%"}, {e: "MACRO", t: "2.8%"}, {e: "NACIÓN", t: "2.6%"}];
+            document.getElementById('pf-container').innerHTML = pfs.map(p => `<a href="${pfLinks[p.e]}" target="_blank" class="data-card"><span>${p.e}</span><span class="up">${p.t}</span></a>`).join('');
+
+            // RENDER LECAPS Y RIESGO
+            document.getElementById('lecap-container').innerHTML = `
+                <div class="data-card"><span>Lecap Est.</span><span class="up">${cacheData.mensualLecap}%</span></div>
+                <div class="data-card"><span>Riesgo País</span><span class="${cacheData.rpVal < 900 ? 'up':'down'}">${cacheData.rpVal}</span></div>
+            `;
+
+            // STATS BAR
+            document.getElementById('brecha-val').innerText = `${cacheData.brecha}%`;
+            document.getElementById('inflacion-val').innerText = `${cacheData.ipc}%`;
+            document.getElementById('tasa-real-val').innerText = `${cacheData.tasaR}%`;
+            document.getElementById('tasa-real-val').style.color = cacheData.tasaR >= 0 ? 'var(--green)' : 'var(--red)';
+
+            // NEWS
+            const unicas = resNews.noticias.filter((n, i, s) => s.findIndex(x => x.titulo === n.titulo) === i);
+            document.getElementById('news-counter').innerText = `NEWS: ${unicas.length}`;
+            const agrup = unicas.reduce((acc, n) => { if(!acc[n.fuente]) acc[n.fuente] = []; acc[n.fuente].push(n); return acc; }, {});
+            document.getElementById('master-grid').innerHTML = Object.keys(agrup).map(f => `
+                <div class="news-card"><div class="news-header">${f}</div><div class="news-scroll-area">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
+            `).join('');
+
+            loader.style.display = 'none'; scanLine.style.display = 'none';
+            switchProfile(document.querySelector('.profile-btn.active').getAttribute('data-type'));
+
+        } catch (e) { 
+            clearInterval(loaderInterval); 
+            loaderSub.innerText = "Error de Sincronización"; 
+            setTimeout(() => { loader.style.display = 'none'; scanLine.style.display = 'none'; }, 2000); 
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', ejecutarDeepScanIA);
+</script>
+</body>
+</html>
