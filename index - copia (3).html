@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QUANTUM CENTINELA v11.2 - LIVE SCAN</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --blue: #00d2ff;
+            --txt: #e0e0e0;
+            --accent: #8b5cf6;
+            --border: #1a1a1a;
+            --green: #00ff88;
+            --red: #ff3366;
+            --gold: #fbbf24;
+            --neon-glow: 0 0 15px rgba(0, 210, 255, 0.1);
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--txt);
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding: 8px;
+            font-size: 11px;
+            overflow-x: hidden;
+            letter-spacing: 0.3px;
+        }
+
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 15px;
+            background: var(--surface);
+            border-radius: 10px;
+            border: 1px solid var(--border);
+            margin-bottom: 12px;
+            box-shadow: var(--neon-glow);
+        }
+
+        .logo-ring {
+            width: 24px;
+            height: 24px;
+            border: 2px solid var(--accent);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: pulse-ring 2s infinite;
+        }
+        @keyframes pulse-ring { 0% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(139, 92, 246, 0); } 100% { box-shadow: 0 0 0 0 rgba(139, 92, 246, 0); } }
+
+        #scan-line {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--accent);
+            box-shadow: 0 0 20px var(--accent);
+            z-index: 100;
+            animation: scanMove 1.5s linear infinite;
+        }
+        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+
+        .ai-terminal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-top: 3px solid var(--accent);
+            border-radius: 12px;
+            padding: 15px;
+            position: relative;
+        }
+
+        #loader-overlay {
+            display: none;
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95);
+            z-index: 50;
+            border-radius: 12px;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--blue);
+            font-family: 'JetBrains Mono', monospace;
+            text-align: center;
+        }
+
+        .strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .strat-card { background: #050505; border: 1px solid #1a1a1a; border-radius: 8px; padding: 12px; transition: 0.3s; }
+        .strat-label { font-size: 0.65rem; text-transform: uppercase; color: #666; margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
+        .strat-cons { border-left: 3px solid var(--blue); }
+        .strat-agres { border-left: 3px solid var(--gold); }
+        .strat-content { font-size: 0.9rem; line-height: 1.5; color: #bbb; min-height: 60px; }
+
+        .section-header { font-size: 0.7rem; font-weight: bold; color: var(--blue); text-transform: uppercase; margin: 15px 0 8px 0; letter-spacing: 2px; display: flex; align-items: center; gap: 10px; }
+        .section-header::after { content: ""; height: 1px; background: linear-gradient(90deg, var(--border), transparent); flex-grow: 1; }
+
+        .data-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+        .data-item { background: #000; border: 1px solid #151515; padding: 8px 12px; border-radius: 6px; display: flex; flex-direction: column; min-width: 90px; }
+        .data-label { font-size: 0.65rem; color: #666; text-transform: uppercase; }
+        .data-value { font-size: 1.1rem; font-weight: 900; font-family: 'JetBrains Mono', monospace; margin-top: 3px; }
+
+        .stats-bar { display: flex; justify-content: space-around; background: #0a0a0a; padding: 10px; border-radius: 8px; margin-top: 15px; border: 1px dashed #222; }
+        .stats-bar b { font-family: 'JetBrains Mono', monospace; font-size: 1rem; color: var(--txt); }
+
+        .update-btn { 
+            background: var(--surface); 
+            color: var(--txt); 
+            border: 1px solid var(--accent); 
+            padding: 12px; 
+            border-radius: 8px; 
+            font-weight: 900; 
+            width: 100%; 
+            margin-top: 15px; 
+            cursor: pointer; 
+            text-transform: uppercase; 
+            letter-spacing: 2px;
+            transition: 0.3s;
+        }
+        .update-btn:hover { background: var(--accent); color: #000; }
+
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 10px; margin-top: 15px; }
+        .news-card { background: #050505; border: 1px solid #111; border-radius: 8px; padding: 10px; height: 130px; display: flex; flex-direction: column; }
+        .news-source { color: var(--accent); font-size: 0.7rem; font-weight: bold; margin-bottom: 6px; text-transform: uppercase; }
+        .news-item-list { overflow-y: auto; scrollbar-width: none; flex-grow: 1; }
+        .news-link { color: #bbb; text-decoration: none; font-size: 0.8rem; line-height: 1.4; display: block; margin-bottom: 5px; border-bottom: 1px solid #111; padding-bottom: 3px; }
+
+        .up { color: var(--green); }
+        .down { color: var(--red); }
+        
+        @media (max-width: 600px) { .strategy-grid { grid-template-columns: 1fr; } .news-grid { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+
+<div id="scan-line"></div>
+
+<div class="header">
+    <div style="display:flex; align-items:center; gap:10px;">
+        <div class="logo-ring">
+            <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" style="width:16px; height:16px; border-radius:50%;">
+        </div>
+        <span style="font-weight:900; font-size: 1rem; letter-spacing:1px;">QUANTUM <span style="color:var(--accent)">CENTINELA</span></span>
+    </div>
+    <div id="t-stamp" style="font-family: monospace; color:#555;">SYSTEM_READY</div>
+</div>
+
+<div class="ai-terminal">
+    <div id="loader-overlay">
+        <div style="width:40px; height:40px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite; margin-bottom:15px;"></div>
+        <div id="loader-text" style="color:var(--accent); font-weight:bold; font-size:12px;">INICIANDO...</div>
+        <div id="loader-subtext" style="color:#444; font-size:9px; margin-top:5px; text-transform:uppercase;">Buscando nodos de red</div>
+    </div>
+
+    <div class="strategy-grid">
+        <div class="strat-card strat-cons">
+            <div class="strat-label"><span>Análisis Moderado</span><i class="fas fa-shield-alt"></i></div>
+            <div id="ai-cons" class="strat-content">--</div>
+        </div>
+        <div class="strat-card strat-agres">
+            <div class="strat-label"><span>Análisis Agresivo</span><i class="fas fa-bolt"></i></div>
+            <div id="ai-agres" class="strat-content">--</div>
+        </div>
+    </div>
+
+    <div class="section-header">Dólar</div>
+    <div id="dolar-container" class="data-wrap"></div>
+
+    <div class="section-header">Tasas & Bonos</div>
+    <div id="rem-container" class="data-wrap"></div>
+    <div id="pf-container" class="data-wrap" style="margin-top:6px;"></div>
+    <div id="lecap-container" class="data-wrap" style="margin-top:6px;"></div>
+
+    <div class="stats-bar">
+        <div>BRECHA <b id="brecha-val">--</b></div>
+        <div>IPC <b id="inflacion-val" style="color:var(--blue)">--</b></div>
+        <div>TASA REAL <b id="tasa-real-val">--</b></div>
+    </div>
+
+    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo</button>
+</div>
+
+<div id="master-grid" class="news-grid"></div>
+
+<script>
+    const NEWS_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
+    const DOLAR_URL = "https://dolarapi.com/v1/dolares";
+    const INFLACION_API = "https://api.argentinadatos.com/v1/finanzas/indices/inflacion";
+    const TASA_REF_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
+    const RP_API = "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo";
+    
+    const remData = [{f: "C4", t: 0.32}, {f: "FIWIND", t: 0.32}, {f: "U. P2", t: 0.29}, {f: "BRUBANK", t: 0.27}];
+    const pfData = [{e: "Reba", t: 0.34}, {e: "Bica", t: 0.33}, {e: "Macro", t: 0.28}, {e: "Nación", t: 0.25}];
+
+    function typeWriter(text, elementId) {
+        let i = 0;
+        const ele = document.getElementById(elementId);
+        ele.innerHTML = "";
+        function type() {
+            if (i < text.length) {
+                ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
+                i++;
+                setTimeout(type, 8);
+            }
+        }
+        type();
+    }
+
+    async function ejecutarDeepScanIA() {
+        const loader = document.getElementById('loader-overlay');
+        const loaderText = document.getElementById('loader-text');
+        const loaderSub = document.getElementById('loader-subtext');
+        const scanLine = document.getElementById('scan-line');
+        
+        loader.style.display = 'flex';
+        scanLine.style.display = 'block';
+
+        const logs = [
+            "ESCANEANDO COTIZACIÓN DÓLAR...",
+            "CONECTANDO CON API BCRA...",
+            "RECOPILANDO NOTICIAS DE ÁMBITO...",
+            "EXTRAYENDO TITULARES DE INFOBAE...",
+            "CALCULANDO BRECHA CAMBIARIA...",
+            "ANALIZANDO RIESGO PAÍS (EMBI)...",
+            "CRUZANDO TASAS VS INFLACIÓN...",
+            "GENERANDO VEREDICTO FINAL..."
+        ];
+
+        let logIdx = 0;
+        const logInterval = setInterval(() => {
+            loaderText.innerText = "IA_PROCESSING";
+            loaderSub.innerText = logs[logIdx];
+            logIdx = (logIdx + 1) % logs.length;
+        }, 400);
+
+        try {
+            const [resNews, resDolar, resInf, resTasa, resRP] = await Promise.all([
+                fetch(NEWS_URL).then(r => r.json()),
+                fetch(DOLAR_URL).then(r => r.json()),
+                fetch(INFLACION_API).then(r => r.json()),
+                fetch(TASA_REF_API).then(r => r.json()),
+                fetch(RP_API).then(r => r.json())
+            ]);
+
+            const noticias = resNews.noticias || [];
+            const ipcVal = resInf[resInf.length - 1].valor;
+            const riesgoPais = resRP.valor || 0;
+            const dolares = resDolar || [];
+
+            // Renderizado
+            document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `
+                <div class="data-item"><span class="data-label">${d.nombre.substring(0,7)}</span><span class="data-value">$${Math.round(d.venta)}</span></div>
+            `).join('');
+
+            document.getElementById('rem-container').innerHTML = remData.map(r => `
+                <div class="data-item"><span class="data-label">${r.f}</span><span class="data-value ${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span></div>
+            `).join('');
+
+            document.getElementById('pf-container').innerHTML = pfData.map(p => `
+                <div class="data-item"><span class="data-label">${p.e}</span><span class="data-value ${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span></div>
+            `).join('');
+
+            const tnaRef = resTasa[resTasa.length - 1].valor || 30;
+            document.getElementById('lecap-container').innerHTML = `
+                <div class="data-item"><span class="data-label">LECAP (Est.)</span><span class="data-value up">${(tnaRef/12+0.3).toFixed(2)}%</span></div>
+                <div class="data-item"><span class="data-label">RIESGO PAÍS</span><span class="data-value ${riesgoPais < 700 ? 'up':'down'}">${riesgoPais}</span></div>
+            `;
+
+            // Análisis Lógico
+            const mejorMensual = (remData[0].t * 100) / 12;
+            const tasaReal = mejorMensual - ipcVal;
+            const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
+            const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
+            const brecha = ((blue/oficial)-1)*100;
+            const textoNoticias = noticias.map(n => n.titulo.toLowerCase()).join(' ');
+
+            let vCons = (tasaReal > 0.4) ? 
+                `Escaneo de portales finalizado. **Tasa real positiva de ${tasaReal.toFixed(2)}%**. Con IPC en ${ipcVal}%, el sistema valida la **Pesificación Táctica** en billeteras.` : 
+                `Alerta de licuación detectada. El rinde no cubre el ${ipcVal}% de IPC. El sistema recomienda **Cobertura MEP** o activos **CER** para proteger capital.`;
+
+            let vAgres = (riesgoPais < 620 && !textoNoticias.includes('presion')) ? 
+                `Análisis de sentimiento optimista. Riesgo País en **${riesgoPais}**. Las noticias habilitan ventana de oportunidad en **Bonos Soberanos** para capturar ganancias de capital.` : 
+                `Veredicto preventivo. El EMBI en **${riesgoPais}** y el clima mediático sugieren volatilidad. Priorizar **CEDEARS** o corporativos hard-dollar (ONs).`;
+
+            clearInterval(logInterval);
+            loader.style.display = 'none';
+            scanLine.style.display = 'none';
+
+            typeWriter(vCons, "ai-cons");
+            setTimeout(() => typeWriter(vAgres, "ai-agres"), 1200);
+
+            document.getElementById('brecha-val').innerText = `${brecha.toFixed(1)}%`;
+            document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
+            document.getElementById('tasa-real-val').innerText = `${tasaReal.toFixed(2)}%`;
+            document.getElementById('t-stamp').innerText = "ÚLTIMA_ACT: " + new Date().toLocaleTimeString();
+
+            // Noticias sin duplicados
+            const seenTitles = new Set();
+            const noticiasUnicas = noticias.filter(n => {
+                const lowerTitle = n.titulo.toLowerCase().trim();
+                if (!seenTitles.has(lowerTitle)) {
+                    seenTitles.add(lowerTitle);
+                    return true;
+                }
+                return false;
+            });
+
+            const agrupados = noticiasUnicas.reduce((acc, n) => {
+                if(!acc[n.fuente]) acc[n.fuente] = [];
+                acc[n.fuente].push(n);
+                return acc;
+            }, {});
+
+            document.getElementById('master-grid').innerHTML = Object.keys(agrupados).map(f => `
+                <div class="news-card">
+                    <div class="news-source">${f}</div>
+                    <div class="news-item-list">${agrupados[f].map(n => `<a class="news-link" href="${n.link}" target="_blank">${n.titulo}</a>`).join('')}</div>
+                </div>
+            `).join('');
+
+        } catch (e) { 
+            clearInterval(logInterval);
+            loader.style.display = 'none'; 
+            scanLine.style.display = 'none';
+        }
+    }
+    document.addEventListener('DOMContentLoaded', ejecutarDeepScanIA);
+</script>
+<style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+</body>
+</html>

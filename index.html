@@ -3,114 +3,171 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA IA v8.5 - DEEP SCAN LARGE</title>
+    <title>QUANTUM CENTINELA v12 - ESTRUCTURA CLARA</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981;--orange:#fb923c;--red:#ef4444;--yellow:#fbbf24}
-        /* Texto base aumentado de 8px a 11px */
-        body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:6px; font-size: 11px; overflow-x:hidden}
-        
-        .header { display: flex; align-items: center; justify-content: space-between; padding: 8px 12px; background: #0f172a; border-radius: 6px; border: 1px solid var(--border); margin-bottom: 8px; }
-        .logo { width: 18px; height: 18px; border-radius: 50%; border: 1px solid var(--blue); }
+        :root {
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --blue: #00d2ff;
+            --txt: #e0e0e0;
+            --accent: #8b5cf6;
+            --border: #1a1a1a;
+            --green: #00ff88;
+            --red: #ff3366;
+            --gold: #fbbf24;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--txt);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding: 10px; font-size: 11px;
+        }
+
+        /* Scan Line Animation */
+        #scan-line {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--blue); box-shadow: 0 0 15px var(--blue); z-index: 100;
+            animation: scanMove 2s linear infinite;
+        }
+        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px; background: var(--surface); border-radius: 8px;
+            border: 1px solid var(--border); margin-bottom: 12px;
+        }
 
         .ai-terminal {
-            background: linear-gradient(145deg, #0f172a, #131e35);
-            border: 1px solid var(--border); border-top: 3px solid var(--accent);
-            border-radius: 6px; padding: 10px; margin-bottom: 8px;
-            position: relative;
+            background: var(--surface); border: 1px solid var(--border);
+            border-top: 3px solid var(--accent); border-radius: 12px;
+            padding: 15px; position: relative;
         }
 
-        /* Overlay de carga */
+        /* Loader mejorado */
         #loader-overlay {
-            display: none; position: absolute; top:0; left:0; width:100%; height:100%;
-            background: rgba(2, 6, 23, 0.85); z-index: 10; border-radius: 6px;
-            align-items: center; justify-content: center; font-weight: bold; color: var(--blue);
-            text-transform: uppercase; letter-spacing: 2px; animation: pulse 1.5s infinite;
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 50; border-radius: 12px;
+            flex-direction: column; align-items: center; justify-content: center;
         }
-        @keyframes pulse { 0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; } }
 
-        .strategy-container { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 8px 0; }
-        .strat-box { background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; padding: 8px; min-height: 80px; }
-        .strat-box h4 { margin: 0 0 5px 0; font-size: 0.75rem; text-transform: uppercase; display: flex; align-items: center; gap: 5px; }
-        .strat-cons { border-left: 3px solid var(--blue); }
-        .strat-agres { border-left: 3px solid var(--orange); }
-        .strat-text { font-size: 0.82rem; line-height: 1.4; color: #cbd5e1; }
-        .strat-text b { color: var(--gold); }
-
-        .section-label { font-size: 0.65rem; color: #94a3b8; font-weight: 800; text-transform: uppercase; margin: 10px 0 5px 0; display: block; letter-spacing: 0.5px; }
-        .nano-grid { display: flex; flex-wrap: wrap; gap: 4px; margin-bottom: 8px; }
+        /* CONTENEDORES DE INFORMACIÓN ESPECÍFICA */
+        .info-section { margin-bottom: 18px; }
         
-        /* Badges más grandes */
-        .badge { background: rgba(255,255,255,0.03); border: 1px solid var(--border); padding: 4px 8px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
-        .b-name { color: #94a3b8; font-size: 0.6rem; text-transform: uppercase; font-weight: bold; }
-        .b-val { font-weight: 700; font-size: 0.85rem; }
+        .section-title {
+            font-size: 0.8rem; font-weight: 900; color: var(--blue);
+            text-transform: uppercase; margin-bottom: 8px; display: flex;
+            align-items: center; gap: 8px; letter-spacing: 1px;
+        }
+        .section-title i { font-size: 0.9rem; color: var(--accent); }
+
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+
+        .data-card {
+            background: #000; border: 1px solid #1a1a1a;
+            padding: 10px; border-radius: 6px; display: flex; flex-direction: column;
+        }
+        .data-card span:first-child { font-size: 0.6rem; color: #666; font-weight: bold; text-transform: uppercase; }
+        .data-card span:last-child { font-size: 1.1rem; font-weight: 900; font-family: monospace; margin-top: 4px; }
+
+        /* Veredictos IA */
+        .strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .strat-box { background: #050505; border: 1px solid #1a1a1a; border-radius: 8px; padding: 12px; }
+        .strat-box h4 { margin: 0 0 5px 0; font-size: 0.75rem; color: #555; text-transform: uppercase; }
+        .strat-text { font-size: 0.9rem; line-height: 1.4; color: #bbb; }
+
+        /* Stats Bar inferior */
+        .stats-bar {
+            display: flex; justify-content: space-around; background: #0f0f0f;
+            padding: 12px; border-radius: 8px; border: 1px dashed #222; margin-top: 10px;
+        }
+        .stats-bar div { font-size: 0.75rem; color: #666; font-weight: bold; }
+        .stats-bar b { color: var(--txt); font-size: 0.95rem; display: block; }
+
+        .update-btn {
+            background: #fff; color: #000; border: none; padding: 14px;
+            border-radius: 8px; font-weight: 900; width: 100%; margin-top: 15px;
+            cursor: pointer; text-transform: uppercase; letter-spacing: 1px;
+        }
+
+        /* Noticias */
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; margin-top: 15px; }
+        .news-card { background: #080808; border: 1px solid #111; border-radius: 8px; padding: 10px; }
+        .news-header { color: var(--accent); font-size: 0.7rem; font-weight: 900; border-bottom: 1px solid #1a1a1a; margin-bottom: 8px; padding-bottom: 4px; }
+        .news-item a { color: #aaa; text-decoration: none; font-size: 0.8rem; display: block; margin-bottom: 6px; line-height: 1.3; }
+
+        .up { color: var(--green); }
+        .down { color: var(--red); }
         
-        .up { color: var(--green) !important; }
-        .down { color: var(--red) !important; }
-        .neutral { color: var(--blue); }
-
-        .ai-stats { display: flex; flex-wrap: wrap; gap: 12px; font-size: 0.75rem; color: #94a3b8; margin-top: 10px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.1); }
-        .update-btn { background: var(--accent); color: white; border: none; padding: 10px; border-radius: 4px; font-weight: 900; cursor: pointer; font-size: 0.85rem; width: 100%; margin-top: 10px; text-transform: uppercase; transition: 0.3s; }
-        .update-btn:active { transform: scale(0.98); background: #7c3aed; }
-
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 6px; }
-        .card { background: var(--card); border: 1px solid var(--border); border-radius: 4px; height: 120px; display: flex; flex-direction: column; }
-        .card-h { padding: 5px 10px; background: rgba(255,255,255,0.04); font-size: 0.65rem; font-weight: 900; color: var(--blue); border-bottom: 1px solid var(--border); text-transform: uppercase; }
-        .card-b { padding: 6px 10px; overflow-y: auto; flex-grow: 1; scrollbar-width: none; }
-        .news-item a { color: #cbd5e1; text-decoration: none; font-size: 0.75rem; display: block; line-height: 1.3; margin-bottom: 6px; }
-
-        @media (max-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 600px) { .strategy-grid { grid-template-columns: 1fr; } .news-grid { grid-template-columns: 1fr 1fr; } }
     </style>
 </head>
 <body>
 
+<div id="scan-line"></div>
+
 <div class="header">
-    <div style="display:flex; align-items:center; gap:6px;">
-        <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo">
-        <span style="font-weight:900; color:var(--blue); font-size: 1rem;">CENTINELA AI v8.5</span>
+    <div style="display:flex; align-items:center; gap:8px;">
+        <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" style="width:20px; height:20px; border-radius:50%; border:1px solid var(--accent);">
+        <span style="font-weight:900; letter-spacing:1px;">QUANTUM <span style="color:var(--accent)">CENTINELA</span></span>
     </div>
-    <div id="t-stamp" style="color:var(--green); font-size:0.75rem; font-weight: bold;">--:--:--</div>
+    <div id="t-stamp" style="font-family:monospace; color:#444;">IDLE_MODE</div>
 </div>
 
 <div class="ai-terminal">
-    <div id="loader-overlay"><i class="fas fa-sync-alt fa-spin"></i> &nbsp; Re-Escaneando Mercado...</div>
-    
-    <div class="strategy-container">
-        <div class="strat-box strat-cons">
-            <h4><i class="fas fa-brain"></i> Análisis Moderado</h4>
-            <div id="ai-cons" class="strat-text">Cargando inteligencia...</div>
+    <div id="loader-overlay">
+        <div style="width:30px; height:30px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
+        <div id="loader-text" style="color:var(--accent); font-weight:bold; margin-top:10px; font-family:monospace;">SCANN_RUNNING...</div>
+        <div id="loader-sub" style="color:#555; font-size:9px; margin-top:5px; text-transform:uppercase;">Iniciando Protocolos</div>
+    </div>
+
+    <div class="strategy-grid">
+        <div class="strat-box" style="border-left: 3px solid var(--blue);">
+            <h4>ANÁLISIS MODERADO</h4>
+            <div id="ai-cons" class="strat-text">--</div>
         </div>
-        <div class="strat-box strat-agres">
-            <h4><i class="fas fa-bolt"></i> Análisis Agresivo</h4>
-            <div id="ai-agres" class="strat-text">Escaneando activos...</div>
+        <div class="strat-box" style="border-left: 3px solid var(--gold);">
+            <h4>ANÁLISIS AGRESIVO</h4>
+            <div id="ai-agres" class="strat-text">--</div>
         </div>
     </div>
 
-    <span class="section-label">Dólar</span>
-    <div id="dolar-container" class="nano-grid"></div>
-
-    <span class="section-label">Remuneradas (Top Rinde)</span>
-    <div id="rem-container" class="nano-grid"></div>
-
-    <span class="section-label">Plazos Fijos (Top Rinde)</span>
-    <div id="pf-container" class="nano-grid"></div>
-
-    <span class="section-label">Lecaps (Mensual Est.)</span>
-    <div id="lecap-container" class="nano-grid"></div>
-
-    <span class="section-label">Riesgo País</span>
-    <div id="rp-container" class="nano-grid"></div>
-
-    <div class="ai-stats">
-        <span>BRECHA: <b id="brecha-val" style="color:var(--gold)">--%</b></span>
-        <span>IPC: <b id="inflacion-val" style="color:var(--blue)">--%</b></span>
-        <span>TASA REAL: <b id="tasa-real-val">--%</b></span>
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-dollar-sign"></i> Dólar</div>
+        <div id="dolar-container" class="data-grid"></div>
     </div>
 
-    <button class="update-btn" onclick="ejecutarDeepScanIA()">RECARGAR Y ESCANEAR WEB</button>
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas (Top Rinde)</div>
+        <div id="rem-container" class="data-grid"></div>
+    </div>
+
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos (Top Rinde)</div>
+        <div id="pf-container" class="data-grid"></div>
+    </div>
+
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-chart-line"></i> Lecaps (Mensual Est.)</div>
+        <div id="lecap-container" class="data-grid"></div>
+    </div>
+
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-exclamation-triangle"></i> Riesgo País</div>
+        <div id="rp-container" class="data-grid"></div>
+    </div>
+
+    <div class="stats-bar">
+        <div>BRECHA <b id="brecha-val">--</b></div>
+        <div>IPC <b id="inflacion-val" style="color:var(--blue)">--</b></div>
+        <div>TASA REAL <b id="tasa-real-val">--</b></div>
+    </div>
+
+    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar y Escanear Mercado</button>
 </div>
 
-<div id="master-grid" class="grid"></div>
+<div id="master-grid" class="news-grid"></div>
 
 <script>
     const NEWS_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
@@ -119,116 +176,95 @@
     const TASA_REF_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
     const RP_API = "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo";
     
-    const remData = [
-        {f: "BELO", t: 0.245}, {f: "BNA", t: 0.22}, {f: "BRUBANK", t: 0.27}, {f: "C4", t: 0.32},
-        {f: "FIWIND", t: 0.32}, {f: "MONTEMAR", t: 0.25}, {f: "NX", t: 0.25}, {f: "SUP.", t: 0.205},
-        {f: "Ualá", t: 0.23}, {f: "U. P1", t: 0.26}, {f: "U. P2", t: 0.29}
-    ];
+    const remData = [{f: "C4", t: 0.32}, {f: "FIWIND", t: 0.32}, {f: "U. P2", t: 0.29}, {f: "BRUBANK", t: 0.27}];
+    const pfData = [{e: "Reba", t: 0.34}, {e: "Bica", t: 0.33}, {e: "Macro", t: 0.28}, {e: "Nación", t: 0.25}];
 
-    const pfData = [
-        {e: "Nación", t: 0.25}, {e: "Sant.", t: 0.23}, {e: "Galicia", t: 0.23}, {e: "Prov.", t: 0.25},
-        {e: "BBVA", t: 0.24}, {e: "Macro", t: 0.28}, {e: "Reba", t: 0.34}, {e: "Bica", t: 0.33}
-    ];
-
-    function typeWriter(text, elementId, delay = 15) {
-        let i = 0;
-        const ele = document.getElementById(elementId);
-        ele.innerHTML = "";
-        function type() {
-            if (i < text.length) {
-                ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
-                i++;
-                setTimeout(type, delay);
-            }
-        }
+    function typeWriter(text, elementId) {
+        let i = 0; const ele = document.getElementById(elementId); ele.innerHTML = "";
+        function type() { if (i < text.length) { ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>'); i++; setTimeout(type, 10); } }
         type();
     }
 
     async function ejecutarDeepScanIA() {
         const loader = document.getElementById('loader-overlay');
-        loader.style.display = 'flex'; // Mostrar cargando
+        const loaderSub = document.getElementById('loader-sub');
+        const scanLine = document.getElementById('scan-line');
+        loader.style.display = 'flex'; scanLine.style.display = 'block';
+
+        const logs = ["Escaneando Dólares", "Consultando Tasas", "Leyendo Noticias", "Calculando IPC", "Analizando Riesgo"];
+        let lIdx = 0; const logInt = setInterval(() => { loaderSub.innerText = logs[lIdx]; lIdx = (lIdx + 1) % logs.length; }, 500);
 
         try {
             const [resNews, resDolar, resInf, resTasa, resRP] = await Promise.all([
-                fetch(NEWS_URL).then(r => r.json()),
-                fetch(DOLAR_URL).then(r => r.json()),
-                fetch(INFLACION_API).then(r => r.json()),
-                fetch(TASA_REF_API).then(r => r.json()),
-                fetch(RP_API).then(r => r.json())
+                fetch(NEWS_URL).then(r => r.json()), fetch(DOLAR_URL).then(r => r.json()),
+                fetch(INFLACION_API).then(r => r.json()), fetch(TASA_REF_API).then(r => r.json()), fetch(RP_API).then(r => r.json())
             ]);
 
             const noticias = resNews.noticias || [];
             const ipcVal = resInf[resInf.length - 1].valor;
             const riesgoPais = resRP.valor || 0;
             const dolares = resDolar || [];
-            
-            // Render Dólar
+
+            // 1. Dólar
             document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `
-                <div class="badge"><span class="b-name">${d.nombre.replace('Contado con liquidación', 'CCL').replace('Oficial', 'OFI')}</span><span class="b-val neutral">$${Math.round(d.venta)}</span></div>
+                <div class="data-card"><span>${d.nombre.substring(0,7)}</span><span class="neutral">$${Math.round(d.venta)}</span></div>
             `).join('');
 
-            // Render Tasas (Remuneradas y PF)
-            const sortedRem = [...remData].sort((a,b)=>b.t-a.t);
-            document.getElementById('rem-container').innerHTML = sortedRem.slice(0,4).map(r => `
-                <div class="badge"><span class="b-name">${r.f}</span><span class="b-val ${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span></div>
+            // 2. Remuneradas
+            document.getElementById('rem-container').innerHTML = remData.map(r => `
+                <div class="data-card"><span>${r.f}</span><span class="${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span></div>
             `).join('');
 
-            const sortedPF = [...pfData].sort((a,b)=>b.t-a.t);
-            document.getElementById('pf-container').innerHTML = sortedPF.slice(0,4).map(p => `
-                <div class="badge"><span class="b-name">${p.e}</span><span class="b-val ${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span></div>
+            // 3. Plazos Fijos
+            document.getElementById('pf-container').innerHTML = pfData.map(p => `
+                <div class="data-card"><span>${p.e}</span><span class="${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span></div>
             `).join('');
 
-            // Lecaps y Riesgo
+            // 4. Lecaps
             const tnaRef = resTasa[resTasa.length - 1].valor || 30;
-            const mensualRef = tnaRef / 12;
             document.getElementById('lecap-container').innerHTML = `
-                <div class="badge"><span class="b-name">REF BCRA</span><span class="b-val neutral">${mensualRef.toFixed(2)}%</span></div>
-                <div class="badge"><span class="b-name">EST. LECAP</span><span class="b-val ${ (mensualRef+0.3) >= ipcVal ? 'up':'down'}">${(mensualRef+0.3).toFixed(2)}%</span></div>
-            `;
-            document.getElementById('rp-container').innerHTML = `
-                <div class="badge"><span class="b-name">EMBI ARG</span><span class="b-val ${riesgoPais < 700 ? 'up' : 'down'}">${riesgoPais} pts</span></div>
+                <div class="data-card"><span>Tasa Ref.</span><span>${(tnaRef/12).toFixed(2)}%</span></div>
+                <div class="data-card"><span>Lecap Est.</span><span class="up">${(tnaRef/12+0.3).toFixed(2)}%</span></div>
             `;
 
-            // DEEP ANALYTICS
-            const mejorMensual = (sortedPF[0].t * 100) / 12;
-            const tasaReal = mejorMensual - ipcVal;
+            // 5. Riesgo País
+            document.getElementById('rp-container').innerHTML = `
+                <div class="data-card"><span>Puntos</span><span class="${riesgoPais < 700 ? 'up':'down'}">${riesgoPais}</span></div>
+            `;
+
+            // Análisis
+            const mejorM = (pfData[0].t * 100) / 12;
+            const tasaR = mejorM - ipcVal;
             const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
             const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
             const brecha = ((blue/oficial)-1)*100;
-            const textoNoticias = noticias.map(n => n.titulo.toLowerCase()).join(' ');
 
-            let vCons = (tasaReal > 0.4) ? 
-                `Escaneo de portales y tasas completado. La macro actual ofrece una **tasa real de ${tasaReal.toFixed(2)}%**. Con el IPC en ${ipcVal}%, el veredicto óptimo es mantener **Pesos en Billeteras** de alto rinde para liquidez inmediata ante cualquier salto cambiario.` : 
-                `Análisis de riesgo detectado: El rinde actual es insuficiente frente al ${ipcVal}% de inflación. Se recomienda migrar capital hacia **Dólar MEP** o **Bonos CER** para evitar la licuación de tus ahorros en pesos.`;
+            clearInterval(logInt); loader.style.display = 'none'; scanLine.style.display = 'none';
 
-            let vAgres = (riesgoPais < 620 && !textoNoticias.includes('presion')) ? 
-                `Veredicto Agresivo: El Riesgo País en **${riesgoPais}** y la estabilidad en noticias habilitan una ventana de oportunidad única. Maximizar exposición en **Bonos Soberanos (AL30)** y **Lecaps** para capturar ganancias de capital superiores al 10% mensual.` : 
-                `Escaneo finalizado con advertencia: Riesgo País en **${riesgoPais}**. El análisis de sentimiento en portales sugiere volatilidad. El veredicto es **CAUTELA ESTRATÉGICA**; priorizar **CEDEARS de Energía** u Obligaciones Negociables hard-dollar.`;
+            typeWriter(`Tasa real de **${tasaR.toFixed(2)}%**. Con IPC en ${ipcVal}%, el sistema recomienda mantener liquidez en billeteras.`, "ai-cons");
+            setTimeout(() => typeWriter(`Riesgo País en **${riesgoPais}**. Mercado con volatilidad moderada. Priorizar activos defensivos.`, "ai-agres"), 1000);
 
-            typeWriter(vCons, "ai-cons");
-            setTimeout(() => typeWriter(vAgres, "ai-agres"), 1200);
-
-            // Stats Inferiores
             document.getElementById('brecha-val').innerText = `${brecha.toFixed(1)}%`;
             document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
-            document.getElementById('tasa-real-val').innerText = `${tasaReal.toFixed(2)}%`;
-            document.getElementById('tasa-real-val').className = tasaReal > 0 ? 'up' : 'down';
-            document.getElementById('t-stamp').innerText = "Última Act: " + new Date().toLocaleTimeString();
+            document.getElementById('tasa-real-val').innerText = `${tasaR.toFixed(2)}%`;
+            document.getElementById('t-stamp').innerText = "ONLINE: " + new Date().toLocaleTimeString();
 
-            // Render Noticias
-            const agrupados = noticias.reduce((acc, n) => {
-                if(!acc[n.fuente]) acc[n.fuente] = [];
-                acc[n.fuente].push(n);
-                return acc;
-            }, {});
-            document.getElementById('master-grid').innerHTML = Object.keys(agrupados).map(f => `
-                <div class="card"><div class="card-h">${f}</div><div class="card-b">${agrupados[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
+            // Noticias Únicas
+            const seen = new Set();
+            const unicas = noticias.filter(n => {
+                const t = n.titulo.toLowerCase().trim();
+                if(!seen.has(t)){ seen.add(t); return true; } return false;
+            });
+            const agrup = unicas.reduce((acc, n) => { if(!acc[n.fuente]) acc[n.fuente] = []; acc[n.fuente].push(n); return acc; }, {});
+            
+            document.getElementById('master-grid').innerHTML = Object.keys(agrup).map(f => `
+                <div class="news-card"><div class="news-header">${f}</div><div class="news-items">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
             `).join('');
 
-        } catch (e) { console.error(e); }
-        finally { loader.style.display = 'none'; } // Quitar cargando
+        } catch (e) { clearInterval(logInt); loader.style.display = 'none'; }
     }
     document.addEventListener('DOMContentLoaded', ejecutarDeepScanIA);
 </script>
+<style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
 </body>
 </html>
