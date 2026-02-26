@@ -10,8 +10,7 @@
         body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:4px; font-size: 8px; overflow-x:hidden}
         
         .header { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #0f172a; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 4px; }
-        .logo { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--blue); cursor: pointer; transition: transform 0.2s; }
-        .logo:hover { transform: scale(1.1); }
+        .logo { width: 14px; height: 14px; border-radius: 50%; border: 1px solid var(--blue); }
 
         .ai-terminal {
             background: linear-gradient(145deg, #0f172a, #131e35);
@@ -32,7 +31,7 @@
         .b-rem { color: var(--orange); }
 
         .ai-stats { 
-            display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.5rem; color: #64748b; 
+            display: flex; gap: 6px; font-size: 0.5rem; color: #64748b; 
             margin: 3px 0; padding-bottom: 2px; border-bottom: 1px solid rgba(255,255,255,0.05);
         }
         
@@ -59,9 +58,7 @@
 
 <div class="header">
     <div style="display:flex; align-items:center; gap:4px;">
-        <a href="https://www.instagram.com/3d_mc_3d/" target="_blank" style="display:flex; align-items:center;">
-            <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo" title="Visitar Instagram @3d_mc_3d">
-        </a>
+        <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" class="logo">
         <span style="font-weight:900; color:var(--blue); letter-spacing:0.1px">CENTINELA NANO v5</span>
     </div>
     <div id="t-stamp" style="color:var(--green); font-size:0.45rem; font-weight:bold;">--:--:--</div>
@@ -78,10 +75,10 @@
     <div id="pf-container" class="nano-grid"></div>
 
     <div class="ai-stats">
-        <span>FUENTES: <b id="f-detail" style="color:var(--accent)">--</b></span>
-        <span>DATA POINTS: <b id="n-count" style="color:var(--accent)">--</b></span>
-        <span>BRECHA: <b id="brecha-val" style="color:var(--gold)">--%</b></span>
-        <span><b id="ipc-label">IPC:</b> <b id="inflacion-val" style="color:var(--blue)">--%</b></span>
+        <span>F: <b id="f-count" style="color:var(--accent)">--</b></span>
+        <span>N: <b id="n-count" style="color:var(--accent)">--</b></span>
+        <span>B: <b id="brecha-val" style="color:var(--gold)">--%</b></span>
+        <span>IPC: <b id="inflacion-val" style="color:var(--blue)">--%</b></span>
     </div>
     
     <div id="verdicto" class="verdict-box">Sincronizando modelos...</div>
@@ -113,6 +110,7 @@
         const pfContainer = document.getElementById('pf-container');
         
         try {
+            // Petición TRIPLE: Noticias, Dólar e Inflación
             const [resNews, resDolar, resInf] = await Promise.all([
                 fetch(NEWS_URL).then(r => r.json()),
                 fetch(DOLAR_URL).then(r => r.json()),
@@ -122,18 +120,21 @@
             const noticias = resNews.noticias || [];
             const dolares = resDolar || [];
             
+            // Obtener el último dato de inflación real de la API
             const ultimoIPC = resInf[resInf.length - 1];
             const ipcValor = ultimoIPC.valor;
-            const mesIPC = new Date(ultimoIPC.fecha).toLocaleString('es-AR', { month: 'short' }).toUpperCase();
 
+            // Render Dólar
             dContainer.innerHTML = dolares.map(d => `
                 <div class="badge"><span class="b-name">${d.nombre.replace('Contado con liquidación', 'CCL').replace('Oficial', 'OFI')}</span><span class="b-val">$${Math.round(d.venta)}</span></div>
             `).join('');
 
+            // Render Remuneradas
             remContainer.innerHTML = remData.map(r => `
                 <div class="badge"><span class="b-name">${r.f}</span><span class="b-val b-rem">${(r.t * 100).toFixed(1)}%</span></div>
             `).join('');
 
+            // Render Plazos Fijos
             pfContainer.innerHTML = pfData.map(p => `
                 <div class="badge"><span class="b-name">${p.e}</span><span class="b-val b-pf">${(p.t * 100).toFixed(0)}%</span></div>
             `).join('');
@@ -142,15 +143,15 @@
             const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
             const brecha = (((blue / oficial) - 1) * 100).toFixed(1);
 
-            const listaFuentes = [...new Set(noticias.map(n => n.fuente))];
-            document.getElementById('f-detail').innerText = `${listaFuentes.length} (${listaFuentes.join(', ')})`;
+            // Actualizar Stats
+            document.getElementById('f-count').innerText = new Set(noticias.map(n => n.fuente)).size;
             document.getElementById('n-count').innerText = noticias.length;
             document.getElementById('brecha-val').innerText = `${brecha}%`;
-            document.getElementById('ipc-label').innerText = `IPC ${mesIPC}:`;
             document.getElementById('inflacion-val').innerText = `${ipcValor}%`;
             document.getElementById('t-stamp').innerText = new Date().toLocaleTimeString();
 
-            out.innerHTML = `IA: **${brecha > 10 ? 'Cobertura' : 'Tasa'}**. Foco en **${noticias.length > 30 ? 'Volatilidad' : 'Estabilidad'}**. IPC ${mesIPC}: **${ipcValor}%**.`.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
+            // Veredicto Dinámico con Inflación Real
+            out.innerHTML = `IA: **${brecha > 10 ? 'Cobertura' : 'Tasa'}**. Foco en **${noticias.length > 30 ? 'Volatilidad' : 'Estabilidad'}**. IPC: **${ipcValor}%**.`.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
 
             const agrupados = noticias.reduce((acc, n) => {
                 if(!acc[n.fuente]) acc[n.fuente] = [];
