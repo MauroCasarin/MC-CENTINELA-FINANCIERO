@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA DEL MERCADO v13.1</title>
+    <title>CENTINELA DEL MERCADO v13.8</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -62,7 +62,6 @@
         .section-title { font-size: 0.8rem; font-weight: 900; color: var(--blue); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
         .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
         
-        /* TARJETA CON LINK */
         .data-card { background: #000; border: 1px solid #1a1a1a; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; text-decoration: none; transition: 0.2s; }
         .data-card:hover { border-color: var(--accent); background: #050505; }
         .data-card span:first-child { font-size: 0.6rem; color: var(--blue); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
@@ -105,14 +104,14 @@
     </div>
     <div style="text-align: right; font-family: monospace;">
         <div id="news-counter" style="color:var(--blue); font-size: 9px; font-weight: bold; margin-bottom: 2px;">NEWS: --</div>
-        <div id="t-stamp" style="color:#444; font-size: 9px;">V13.1_CONNECTED</div>
+        <div id="t-stamp" style="color:#444; font-size: 9px;">V13.8_REALTIME_SCAN</div>
     </div>
 </div>
 
 <div class="ai-terminal">
     <div id="loader-overlay">
         <div style="width:30px; height:30px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
-        <div id="loader-sub" style="color:#555; font-size:10px; margin-top:10px; text-transform:uppercase; font-family:monospace;">Enlazando Entidades...</div>
+        <div id="loader-sub" style="color:#555; font-size:10px; margin-top:10px; text-transform:uppercase; font-family:monospace; text-align: center; line-height: 1.4; max-width: 80%;">Iniciando Scan...</div>
     </div>
 
     <div class="strategy-grid">
@@ -133,11 +132,11 @@
         <div id="dolar-container" class="data-grid"></div>
     </div>
     <div class="info-section">
-        <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas (Click para ir)</div>
+        <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas</div>
         <div id="rem-container" class="data-grid"></div>
     </div>
     <div class="info-section">
-        <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos (Click para ir)</div>
+        <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos</div>
         <div id="pf-container" class="data-grid"></div>
     </div>
     <div class="info-section">
@@ -150,24 +149,12 @@
     </div>
 
     <div class="stats-bar">
-        <div class="stat-item">
-            <span class="stat-label">BRECHA</span>
-            <b id="brecha-val" class="stat-value">--</b>
-            <span class="stat-desc">Blue vs Oficial</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">IPC</span>
-            <b id="inflacion-val" class="stat-value" style="color:var(--blue)">--</b>
-            <span class="stat-desc">Última Inflación</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-label">TASA REAL</span>
-            <b id="tasa-real-val" class="stat-value">--</b>
-            <span class="stat-desc">Rinde vs IPC</span>
-        </div>
+        <div class="stat-item"><span class="stat-label">BRECHA</span><b id="brecha-val" class="stat-value">--</b><span class="stat-desc">Blue vs Oficial</span></div>
+        <div class="stat-item"><span class="stat-label">IPC</span><b id="inflacion-val" class="stat-value" style="color:var(--blue)">--</b><span class="stat-desc">Última Inflación</span></div>
+        <div class="stat-item"><span class="stat-label">TASA REAL</span><b id="tasa-real-val" class="stat-value">--</b><span class="stat-desc">Rinde vs IPC</span></div>
     </div>
 
-    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar y Enlazar</button>
+    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v13.8</button>
 </div>
 
 <div id="master-grid" class="news-grid"></div>
@@ -179,7 +166,6 @@
     const TASA_REF_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
     const RP_API = "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo";
     
-    // DATOS CON LINKS
     const remData = [
         {f: "C4", t: 0.32, l: "https://www.cocos.capital/"}, 
         {f: "FIWIND", t: 0.32, l: "https://www.fiwind.io/"}, 
@@ -201,40 +187,56 @@
 
     async function ejecutarDeepScanIA() {
         const loader = document.getElementById('loader-overlay');
-        const loaderSub = document.getElementById('loader-sub');
+        const loaderText = document.getElementById('loader-sub');
         const scanLine = document.getElementById('scan-line');
-        loader.style.display = 'flex'; scanLine.style.display = 'block';
+        
+        loader.style.display = 'flex'; 
+        scanLine.style.display = 'block';
 
         try {
-            const [resNews, resDolar, resInf, resTasa, resRP] = await Promise.all([
-                fetch(NEWS_URL).then(r => r.json()), fetch(DOLAR_URL).then(r => r.json()),
-                fetch(INFLACION_API).then(r => r.json()), fetch(TASA_REF_API).then(r => r.json()), fetch(RP_API).then(r => r.json())
-            ]);
+            loaderText.innerText = "Conectando con servidores IPC e Inflación...";
+            const resInf = await fetch(INFLACION_API).then(r => r.json());
+            
+            loaderText.innerText = "Extrayendo cotizaciones de Dólar Oficial y Blue...";
+            const resDolar = await fetch(DOLAR_URL).then(r => r.json());
+            
+            loaderText.innerText = "Analizando EMBI (Riesgo País) en tiempo real...";
+            const resRP = await fetch(RP_API).then(r => r.json());
+            
+            loaderText.innerText = "Rastreando portales de noticias...";
+            const resNews = await fetch(NEWS_URL).then(r => r.json());
+            const noticias = resNews.noticias || [];
+
+            // CAMBIO: ESCANEO DE PALABRAS REALES DE LOS PORTALES
+            if(noticias.length > 0) {
+                for(let i=0; i<3; i++) {
+                    const noticiaAzar = noticias[Math.floor(Math.random() * noticias.length)];
+                    const palabras = noticiaAzar.titulo.split(' ').filter(p => p.length > 4);
+                    const palabraClave = palabras[Math.floor(Math.random() * palabras.length)];
+                    
+                    loaderText.innerHTML = `Escaneando portal: <span style="color:var(--blue)">${noticiaAzar.fuente}</span><br>Detectado: "<span style="color:var(--gold)">${palabraClave}...</span>"`;
+                    await new Promise(r => setTimeout(r, 600));
+                }
+            }
+
+            loaderText.innerText = "Procesando Tasas de Interés y Plazos Fijos...";
+            const resTasa = await fetch(TASA_REF_API).then(r => r.json());
 
             const ipcVal = resInf[resInf.length - 1].valor;
             const riesgoPais = resRP.valor || 0;
             const dolares = resDolar || [];
-            const noticias = resNews.noticias || [];
 
-            // Render Dólares
-            document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `
-                <div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>
-            `).join('');
+            remData.sort((a, b) => b.t - a.t);
+            pfData.sort((a, b) => b.t - a.t);
 
-            // Render Remuneradas con LINKS
+            document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
+
             document.getElementById('rem-container').innerHTML = remData.map(r => `
-                <a href="${r.l}" target="_blank" class="data-card">
-                    <span>${r.f}</span>
-                    <span class="${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span>
-                </a>
+                <a href="${r.l}" target="_blank" class="data-card"><span>${r.f}</span><span class="${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span></a>
             `).join('');
 
-            // Render PF con LINKS
             document.getElementById('pf-container').innerHTML = pfData.map(p => `
-                <a href="${p.l}" target="_blank" class="data-card">
-                    <span>${p.e}</span>
-                    <span class="${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span>
-                </a>
+                <a href="${p.l}" target="_blank" class="data-card"><span>${p.e}</span><span class="${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span></a>
             `).join('');
 
             const tnaRef = resTasa[resTasa.length - 1].valor || 30;
@@ -250,15 +252,17 @@
 
             loader.style.display = 'none'; scanLine.style.display = 'none';
 
-            typeWriter(`**Veredicto:** IPC al **${ipcVal}%**. La mejor opción es **${pfData[0].e}** para 30 días o **${remData[0].f}** para liquidez. Tasa Real: **${tasaR.toFixed(2)}%**.`, "ai-cons");
-            typeWriter(`**Estrategia:** Brecha estable del **${brecha.toFixed(1)}%**. Las Lecaps rinden **${mensualLecap}%** mensual. Carry Trade activo bajo supervisión del EMBI en **${riesgoPais}**.`, "ai-agres");
+            const consejoCons = `**Estrategia Conservadora:** Con IPC en **${ipcVal}%**, el rinde real es de **${tasaR.toFixed(2)}%**. Si es negativo, el Plazo Fijo pierde poder de compra; prioriza liquidez en **${remData[0].f}** para gastos inmediatos o busca activos CER si planeas a largo plazo para no quedar debajo de la inflación.`;
+            const consejoAgres = `**Estrategia Agresiva:** La brecha del **${brecha.toFixed(1)}%** y un Riesgo País de **${riesgoPais}** puntos sugieren calma cambiaria. Las **Lecaps al ${mensualLecap}%** mensual superan al Plazo Fijo. Es momento de "Carry Trade": capturar tasa alta en pesos mientras el dólar permanezca planchado por debajo del 2% de suba mensual.`;
+
+            typeWriter(consejoCons, "ai-cons");
+            typeWriter(consejoAgres, "ai-agres");
 
             document.getElementById('brecha-val').innerText = `${brecha.toFixed(1)}%`;
             document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
             document.getElementById('tasa-real-val').innerText = `${tasaR.toFixed(2)}%`;
             document.getElementById('tasa-real-val').style.color = tasaR >= 0 ? 'var(--green)' : 'var(--red)';
 
-            // Noticias
             const seen = new Set();
             const unicas = noticias.filter(n => { const t = n.titulo.toLowerCase().trim(); if(!seen.has(t)){ seen.add(t); return true; } return false; });
             document.getElementById('news-counter').innerText = `NEWS: ${unicas.length}`;
@@ -267,7 +271,10 @@
                 <div class="news-card"><div class="news-header">${f}</div><div class="news-scroll-area">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
             `).join('');
 
-        } catch (e) { loader.style.display = 'none'; }
+        } catch (e) { 
+            loaderText.innerText = "Falla en el Sistema";
+            setTimeout(() => { loader.style.display = 'none'; }, 2000);
+        }
     }
     document.addEventListener('DOMContentLoaded', ejecutarDeepScanIA);
 </script>
