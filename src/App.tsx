@@ -49,6 +49,7 @@ export default function App() {
 
   // Refs for typeWriter effect
   const analysisRef = useRef<HTMLDivElement>(null);
+  const typingIntervalRef = useRef<NodeJS.Timeout | null>(null);
 
   // Constants
   const remData = [
@@ -80,6 +81,12 @@ export default function App() {
     setAiAnalysis("Analizando mercado con IA...");
     setGlossary("");
     
+    // Clear any existing typing interval
+    if (typingIntervalRef.current) {
+      clearInterval(typingIntervalRef.current);
+      typingIntervalRef.current = null;
+    }
+    
     try {
       const prompt = `
         Actúa como un analista financiero experto en el mercado argentino ("Centinela del Mercado").
@@ -104,9 +111,13 @@ export default function App() {
       
       const text = response.text.trim();
       typeWriter(text);
-    } catch (error) {
+    } catch (error: any) {
       console.error("Error generating AI analysis:", error);
-      setAiAnalysis("Error al generar análisis. Intente nuevamente.");
+      if (error.message?.includes('429') || error.message?.includes('quota') || error.status === 'RESOURCE_EXHAUSTED') {
+        setAiAnalysis("⚠️ **Cuota de IA excedida.** El análisis se pausó temporalmente por límites de uso de la API. Por favor, espere unos minutos antes de reintentar o cambie de perfil.");
+      } else {
+        setAiAnalysis("Error al generar análisis. Intente nuevamente.");
+      }
     } finally {
       setAnalyzing(false);
     }
@@ -117,11 +128,11 @@ export default function App() {
       setAiAnalysis("");
       setGlossary("");
       
-      // We need to manipulate the DOM or state incrementally. 
-      // Since we are using React, let's update state incrementally but formatted.
-      // However, the original code used innerHTML for bold tags.
+      if (typingIntervalRef.current) {
+        clearInterval(typingIntervalRef.current);
+      }
       
-      const interval = setInterval(() => {
+      typingIntervalRef.current = setInterval(() => {
         if (i < text.length) {
           const currentText = text.substring(0, i + 1);
           // Simple bold replacement for display
@@ -129,7 +140,10 @@ export default function App() {
           setAiAnalysis(formatted);
           i++;
         } else {
-          clearInterval(interval);
+          if (typingIntervalRef.current) {
+            clearInterval(typingIntervalRef.current);
+            typingIntervalRef.current = null;
+          }
           // Generate glossary
           let encontrados = [];
           for (let termino in diccionario) { 
