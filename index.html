@@ -6,7 +6,7 @@
     <title>CENTINELA NANO-IA v5</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981;--orange:#fb923c;--red:#ff4444}
+        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981;--orange:#fb923c;--red:#ff4444;--yellow:#fbbf24}
         body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:4px; font-size: 8px; overflow-x:hidden}
         
         .header { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #0f172a; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 4px; }
@@ -29,7 +29,9 @@
         .b-name { color: #94a3b8; font-size: 0.4rem; text-transform: uppercase; font-weight: bold; }
         .b-val { font-weight: 700; font-size: 0.55rem; transition: color 0.3s; }
         
+        /* Semáforo */
         .up { color: var(--green) !important; }
+        .mid { color: var(--yellow) !important; }
         .down { color: var(--red) !important; }
         .neutral { color: var(--blue); }
 
@@ -73,10 +75,10 @@
     <span class="section-label">Dólar</span>
     <div id="dolar-container" class="nano-grid"></div>
 
-    <span class="section-label">Remuneradas (Mensual - Top Rinde)</span>
+    <span class="section-label">Remuneradas (Top Rinde - Semáforo)</span>
     <div id="rem-container" class="nano-grid"></div>
 
-    <span class="section-label">Plazos Fijos (Mensual - Top Rinde)</span>
+    <span class="section-label">Plazos Fijos (Top Rinde - Semáforo)</span>
     <div id="pf-container" class="nano-grid"></div>
 
     <span class="section-label">Lecaps (Mensual Est.)</span>
@@ -112,8 +114,11 @@
         {e: "BBVA", t: 0.24}, {e: "Macro", t: 0.28}, {e: "Reba", t: 0.34}, {e: "Bica", t: 0.33}
     ];
 
-    function checkRinde(valor, ipc) {
-        return valor < ipc ? 'down' : 'up';
+    // Lógica de Semáforo
+    function checkRindeColor(valor, ipc) {
+        if (valor >= ipc) return 'up'; // Verde
+        if (ipc - valor <= 0.5) return 'mid'; // Amarillo
+        return 'down'; // Rojo
     }
 
     async function generarAnalisisReal() {
@@ -137,50 +142,44 @@
             const ipcVal = ultimoIPC.valor;
             const mesIPC = new Date(ultimoIPC.fecha).toLocaleString('es-AR', { month: 'short' }).toUpperCase();
 
-            // 1. DÓLARES
             dContainer.innerHTML = dolares.map(d => `
                 <div class="badge"><span class="b-name">${d.nombre.replace('Contado con liquidación', 'CCL').replace('Oficial', 'OFI')}</span><span class="b-val neutral">$${Math.round(d.venta)}</span></div>
             `).join('');
 
-            // 2. REMUNERADAS (ORDENADO)
             const sortedRem = [...remData].sort((a, b) => b.t - a.t);
             remContainer.innerHTML = sortedRem.map(r => {
                 const rMensual = (r.t * 100) / 12;
-                return `<div class="badge"><span class="b-name">${r.f}</span><span class="b-val ${checkRinde(rMensual, ipcVal)}">${rMensual.toFixed(2)}%</span></div>`;
+                return `<div class="badge"><span class="b-name">${r.f}</span><span class="b-val ${checkRindeColor(rMensual, ipcVal)}">${rMensual.toFixed(2)}%</span></div>`;
             }).join('');
 
-            // 3. PLAZOS FIJOS (ORDENADO)
             const sortedPF = [...pfData].sort((a, b) => b.t - a.t);
             pfContainer.innerHTML = sortedPF.map(p => {
                 const pMensual = (p.t * 100) / 12;
-                return `<div class="badge"><span class="b-name">${p.e}</span><span class="b-val ${checkRinde(pMensual, ipcVal)}">${pMensual.toFixed(2)}%</span></div>`;
+                return `<div class="badge"><span class="b-name">${p.e}</span><span class="b-val ${checkRindeColor(pMensual, ipcVal)}">${pMensual.toFixed(2)}%</span></div>`;
             }).join('');
 
-            // 4. LECAPS
             const datoTasa = resTasa[resTasa.length - 1];
             const tnaRef = datoTasa.valor || (datoTasa.tna * 100) || 0;
             const mensualRef = tnaRef / 12;
             const mensualLecap = mensualRef + 0.25;
             
             lContainer.innerHTML = `
-                <div class="badge"><span class="b-name">REF BCRA</span><span class="b-val ${checkRinde(mensualRef, ipcVal)}">${mensualRef.toFixed(2)}%</span></div>
-                <div class="badge"><span class="b-name">EST. LECAPS</span><span class="b-val ${checkRinde(mensualLecap, ipcVal)}">${mensualLecap.toFixed(2)}%</span></div>
+                <div class="badge"><span class="b-name">REF BCRA</span><span class="b-val ${checkRindeColor(mensualRef, ipcVal)}">${mensualRef.toFixed(2)}%</span></div>
+                <div class="badge"><span class="b-name">EST. LECAPS</span><span class="b-val ${checkRindeColor(mensualLecap, ipcVal)}">${mensualLecap.toFixed(2)}%</span></div>
             `;
 
-            // STATS Y VERDICTO
             const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
             const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
             const brecha = (((blue / oficial) - 1) * 100).toFixed(1);
 
-            const listaFuentes = [...new Set(noticias.map(n => n.fuente))];
-            document.getElementById('f-detail').innerText = `${listaFuentes.length} (${listaFuentes.join(', ')})`;
+            document.getElementById('f-detail').innerText = [...new Set(noticias.map(n => n.fuente))].join(', ');
             document.getElementById('n-count').innerText = noticias.length;
             document.getElementById('brecha-val').innerText = `${brecha}%`;
             document.getElementById('ipc-label').innerText = `IPC ${mesIPC}:`;
             document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
             document.getElementById('t-stamp').innerText = new Date().toLocaleTimeString();
 
-            out.innerHTML = `IA: **${brecha > 10 ? 'Cobertura' : 'Tasa'}**. Foco en **${noticias.length > 30 ? 'Volatilidad' : 'Estabilidad'}**. IPC ${mesIPC}: **${ipcVal}%**.`.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
+            out.innerHTML = `Análisis Centinela: Priorizar instrumentos en **VERDE**. Los marcados en **AMARILLO** requieren vigilancia ante el IPC de **${ipcVal}%**.`.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
 
             const agrupados = noticias.reduce((acc, n) => {
                 if(!acc[n.fuente]) acc[n.fuente] = [];
