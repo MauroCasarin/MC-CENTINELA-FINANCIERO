@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CENTINELA DEL MERCADO v13.1</title>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: #0a0a0a;
+            --blue: #00d2ff;
+            --txt: #e0e0e0;
+            --accent: #8b5cf6;
+            --border: #1a1a1a;
+            --green: #00ff88;
+            --red: #ff3366;
+            --gold: #fbbf24;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--txt);
+            font-family: 'Segoe UI', sans-serif;
+            margin: 0; padding: 10px; font-size: 11px;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        #scan-line {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 2px;
+            background: var(--blue); box-shadow: 0 0 15px var(--blue); z-index: 100;
+            animation: scanMove 2s linear infinite;
+        }
+        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+
+        .header {
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 12px; background: var(--surface); border-radius: 8px;
+            border: 1px solid var(--border); margin-bottom: 12px;
+        }
+
+        .ai-terminal {
+            background: var(--surface); border: 1px solid var(--border);
+            border-top: 3px solid var(--accent); border-radius: 12px;
+            padding: 15px; position: relative;
+        }
+
+        #loader-overlay {
+            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.95); z-index: 50; border-radius: 12px;
+            flex-direction: column; align-items: center; justify-content: center;
+        }
+
+        .strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+        .strat-box { background: #050505; border: 1px solid #1a1a1a; border-radius: 8px; padding: 15px; display: flex; flex-direction: column; }
+        .strat-box h4 { margin: 0 0 10px 0; font-size: 0.85rem; color: var(--blue); text-transform: uppercase; border-bottom: 1px solid #1a1a1a; padding-bottom: 5px; letter-spacing: 1px;}
+        .strat-text { font-size: 0.92rem; line-height: 1.5; color: #ccc; flex-grow: 1; }
+        .strat-text b { color: var(--gold); }
+        .strat-footer { margin-top: 12px; font-size: 0.75rem; color: #666; font-style: italic; border-top: 1px dashed #222; padding-top: 6px; }
+
+        .info-section { margin-bottom: 18px; }
+        .section-title { font-size: 0.8rem; font-weight: 900; color: var(--blue); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+        .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+        
+        /* TARJETA CON LINK */
+        .data-card { background: #000; border: 1px solid #1a1a1a; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; text-decoration: none; transition: 0.2s; }
+        .data-card:hover { border-color: var(--accent); background: #050505; }
+        .data-card span:first-child { font-size: 0.6rem; color: var(--blue); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+        .data-card span:last-child { font-size: 1.1rem; font-weight: 900; font-family: monospace; color: var(--txt); }
+
+        .stats-bar { 
+            display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; 
+            background: #0f0f0f; padding: 12px; border-radius: 8px; 
+            border: 1px dashed #333; margin-top: 10px; 
+        }
+        .stat-item { text-align: center; }
+        .stat-label { font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: 900; margin-bottom: 4px; display: block;}
+        .stat-value { color: var(--txt); font-size: 1.1rem; font-family: monospace; display: block; margin-bottom: 4px; }
+        .stat-desc { font-size: 0.6rem; color: #555; line-height: 1.2; display: block; font-style: italic; }
+
+        .update-btn { background: #fff; color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
+
+        .news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-top: 15px; }
+        .news-card { background: #080808; border: 1px solid #111; border-radius: 8px; padding: 8px; height: 100px; display: flex; flex-direction: column; }
+        .news-header { color: var(--accent); font-size: 0.65rem; font-weight: 900; border-bottom: 1px solid #1a1a1a; margin-bottom: 5px; padding-bottom: 3px; }
+        .news-scroll-area { overflow-y: auto; flex-grow: 1; }
+        .news-item a { color: #888; text-decoration: none; font-size: 0.75rem; display: block; margin-bottom: 5px; line-height: 1.2; border-bottom: 1px solid #0f0f0f; }
+
+        .up { color: var(--green) !important; }
+        .down { color: var(--red) !important; }
+        
+        @media (max-width: 600px) { .strategy-grid { grid-template-columns: 1fr; } .news-grid { grid-template-columns: 1fr 1fr; } }
+    </style>
+</head>
+<body>
+
+<div id="scan-line"></div>
+
+<div class="header">
+    <div style="display:flex; align-items:center; gap:8px;">
+        <a href="https://www.instagram.com/3d_mc_3d/" target="_blank">
+            <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" style="width:24px; height:24px; border-radius:50%; border:2px solid var(--accent);">
+        </a>
+        <span style="font-weight:900; letter-spacing:1px; text-transform: uppercase;">CENTINELA <span style="color:var(--accent)">DEL MERCADO</span></span>
+    </div>
+    <div style="text-align: right; font-family: monospace;">
+        <div id="news-counter" style="color:var(--blue); font-size: 9px; font-weight: bold; margin-bottom: 2px;">NEWS: --</div>
+        <div id="t-stamp" style="color:#444; font-size: 9px;">V13.1_CONNECTED</div>
+    </div>
+</div>
+
+<div class="ai-terminal">
+    <div id="loader-overlay">
+        <div style="width:30px; height:30px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
+        <div id="loader-sub" style="color:#555; font-size:10px; margin-top:10px; text-transform:uppercase; font-family:monospace;">Enlazando Entidades...</div>
+    </div>
+
+    <div class="strategy-grid">
+        <div class="strat-box" style="border-left: 4px solid var(--blue);">
+            <h4><i class="fas fa-user-shield"></i> PERFIL CONSERVADOR</h4>
+            <div id="ai-cons" class="strat-text">--</div>
+            <div id="ai-cons-extra" class="strat-footer">--</div>
+        </div>
+        <div class="strat-box" style="border-left: 4px solid var(--gold);">
+            <h4><i class="fas fa-fire"></i> PERFIL AGRESIVO</h4>
+            <div id="ai-agres" class="strat-text">--</div>
+            <div id="ai-agres-extra" class="strat-footer">--</div>
+        </div>
+    </div>
+
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-dollar-sign"></i> Dólar</div>
+        <div id="dolar-container" class="data-grid"></div>
+    </div>
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas (Click para ir)</div>
+        <div id="rem-container" class="data-grid"></div>
+    </div>
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos (Click para ir)</div>
+        <div id="pf-container" class="data-grid"></div>
+    </div>
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-chart-line"></i> Lecaps</div>
+        <div id="lecap-container" class="data-grid"></div>
+    </div>
+    <div class="info-section">
+        <div class="section-title"><i class="fas fa-exclamation-triangle"></i> Riesgo País</div>
+        <div id="rp-container" class="data-grid"></div>
+    </div>
+
+    <div class="stats-bar">
+        <div class="stat-item">
+            <span class="stat-label">BRECHA</span>
+            <b id="brecha-val" class="stat-value">--</b>
+            <span class="stat-desc">Blue vs Oficial</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">IPC</span>
+            <b id="inflacion-val" class="stat-value" style="color:var(--blue)">--</b>
+            <span class="stat-desc">Última Inflación</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-label">TASA REAL</span>
+            <b id="tasa-real-val" class="stat-value">--</b>
+            <span class="stat-desc">Rinde vs IPC</span>
+        </div>
+    </div>
+
+    <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar y Enlazar</button>
+</div>
+
+<div id="master-grid" class="news-grid"></div>
+
+<script>
+    const NEWS_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
+    const DOLAR_URL = "https://dolarapi.com/v1/dolares";
+    const INFLACION_API = "https://api.argentinadatos.com/v1/finanzas/indices/inflacion";
+    const TASA_REF_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
+    const RP_API = "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo";
+    
+    // DATOS CON LINKS
+    const remData = [
+        {f: "C4", t: 0.32, l: "https://www.cocos.capital/"}, 
+        {f: "FIWIND", t: 0.32, l: "https://www.fiwind.io/"}, 
+        {f: "U. P2", t: 0.29, l: "https://www.uala.com.ar/"}, 
+        {f: "BRUBANK", t: 0.27, l: "https://www.brubank.com/"}
+    ];
+    const pfData = [
+        {e: "Reba", t: 0.34, l: "https://www.reba.com.ar/"}, 
+        {e: "Bica", t: 0.33, l: "https://www.bancobica.com.ar/"}, 
+        {e: "Macro", t: 0.28, l: "https://www.macro.com.ar/"}, 
+        {e: "Nación", t: 0.25, l: "https://www.bna.com.ar/"}
+    ];
+
+    function typeWriter(text, elementId) {
+        let i = 0; const ele = document.getElementById(elementId); ele.innerHTML = "";
+        function type() { if (i < text.length) { ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>'); i++; setTimeout(type, 5); } }
+        type();
+    }
+
+    async function ejecutarDeepScanIA() {
+        const loader = document.getElementById('loader-overlay');
+        const loaderSub = document.getElementById('loader-sub');
+        const scanLine = document.getElementById('scan-line');
+        loader.style.display = 'flex'; scanLine.style.display = 'block';
+
+        try {
+            const [resNews, resDolar, resInf, resTasa, resRP] = await Promise.all([
+                fetch(NEWS_URL).then(r => r.json()), fetch(DOLAR_URL).then(r => r.json()),
+                fetch(INFLACION_API).then(r => r.json()), fetch(TASA_REF_API).then(r => r.json()), fetch(RP_API).then(r => r.json())
+            ]);
+
+            const ipcVal = resInf[resInf.length - 1].valor;
+            const riesgoPais = resRP.valor || 0;
+            const dolares = resDolar || [];
+            const noticias = resNews.noticias || [];
+
+            // Render Dólares
+            document.getElementById('dolar-container').innerHTML = dolares.slice(0,4).map(d => `
+                <div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>
+            `).join('');
+
+            // Render Remuneradas con LINKS
+            document.getElementById('rem-container').innerHTML = remData.map(r => `
+                <a href="${r.l}" target="_blank" class="data-card">
+                    <span>${r.f}</span>
+                    <span class="${((r.t*100)/12) >= ipcVal ? 'up':'down'}">${((r.t*100)/12).toFixed(2)}%</span>
+                </a>
+            `).join('');
+
+            // Render PF con LINKS
+            document.getElementById('pf-container').innerHTML = pfData.map(p => `
+                <a href="${p.l}" target="_blank" class="data-card">
+                    <span>${p.e}</span>
+                    <span class="${((p.t*100)/12) >= ipcVal ? 'up':'down'}">${((p.t*100)/12).toFixed(2)}%</span>
+                </a>
+            `).join('');
+
+            const tnaRef = resTasa[resTasa.length - 1].valor || 30;
+            const mensualLecap = (tnaRef/12+0.3).toFixed(2);
+            document.getElementById('lecap-container').innerHTML = `<div class="data-card"><span>Tasa Ref.</span><span>${(tnaRef/12).toFixed(2)}%</span></div><div class="data-card"><span>Lecap Est.</span><span class="up">${mensualLecap}%</span></div>`;
+            document.getElementById('rp-container').innerHTML = `<div class="data-card"><span>Puntos</span><span class="${riesgoPais < 700 ? 'up':'down'}">${riesgoPais}</span></div>`;
+
+            const mejorM = (pfData[0].t * 100) / 12;
+            const tasaR = mejorM - ipcVal;
+            const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
+            const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
+            const brecha = ((blue/oficial)-1)*100;
+
+            loader.style.display = 'none'; scanLine.style.display = 'none';
+
+            typeWriter(`**Veredicto:** IPC al **${ipcVal}%**. La mejor opción es **${pfData[0].e}** para 30 días o **${remData[0].f}** para liquidez. Tasa Real: **${tasaR.toFixed(2)}%**.`, "ai-cons");
+            typeWriter(`**Estrategia:** Brecha estable del **${brecha.toFixed(1)}%**. Las Lecaps rinden **${mensualLecap}%** mensual. Carry Trade activo bajo supervisión del EMBI en **${riesgoPais}**.`, "ai-agres");
+
+            document.getElementById('brecha-val').innerText = `${brecha.toFixed(1)}%`;
+            document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
+            document.getElementById('tasa-real-val').innerText = `${tasaR.toFixed(2)}%`;
+            document.getElementById('tasa-real-val').style.color = tasaR >= 0 ? 'var(--green)' : 'var(--red)';
+
+            // Noticias
+            const seen = new Set();
+            const unicas = noticias.filter(n => { const t = n.titulo.toLowerCase().trim(); if(!seen.has(t)){ seen.add(t); return true; } return false; });
+            document.getElementById('news-counter').innerText = `NEWS: ${unicas.length}`;
+            const agrup = unicas.reduce((acc, n) => { if(!acc[n.fuente]) acc[n.fuente] = []; acc[n.fuente].push(n); return acc; }, {});
+            document.getElementById('master-grid').innerHTML = Object.keys(agrup).map(f => `
+                <div class="news-card"><div class="news-header">${f}</div><div class="news-scroll-area">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
+            `).join('');
+
+        } catch (e) { loader.style.display = 'none'; }
+    }
+    document.addEventListener('DOMContentLoaded', ejecutarDeepScanIA);
+</script>
+<style>@keyframes spin { 100% { transform: rotate(360deg); } }</style>
+</body>
+</html>
