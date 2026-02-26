@@ -6,7 +6,7 @@
     <title>CENTINELA NANO-IA v5</title>
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981;--orange:#fb923c}
+        :root{--bg:#020617;--card:#0f172a;--blue:#38bdf8;--txt:#f1f5f9;--accent:#8b5cf6;--border:#1e293b;--gold:#fbbf24;--green:#10b981;--orange:#fb923c;--red:#ff4444}
         body{background:var(--bg); color:var(--txt); font-family: 'Inter', sans-serif; margin:0; padding:4px; font-size: 8px; overflow-x:hidden}
         
         .header { display: flex; align-items: center; justify-content: space-between; padding: 4px 8px; background: #0f172a; border-radius: 4px; border: 1px solid var(--border); margin-bottom: 4px; }
@@ -27,9 +27,11 @@
             padding: 1px 3px; border-radius: 2px; display: flex; align-items: center; gap: 2px;
         }
         .b-name { color: #94a3b8; font-size: 0.4rem; text-transform: uppercase; font-weight: bold; }
-        .b-val { color: var(--blue); font-weight: 700; font-size: 0.55rem; }
-        .b-pf { color: var(--green); }
-        .b-rem { color: var(--orange); }
+        .b-val { font-weight: 700; font-size: 0.55rem; transition: color 0.3s; }
+        
+        .up { color: var(--green) !important; }
+        .down { color: var(--red) !important; }
+        .neutral { color: var(--blue); }
 
         .ai-stats { 
             display: flex; flex-wrap: wrap; gap: 6px; font-size: 0.5rem; color: #64748b; 
@@ -71,11 +73,14 @@
     <span class="section-label">Dólar</span>
     <div id="dolar-container" class="nano-grid"></div>
 
-    <span class="section-label">Remuneradas (TNA)</span>
+    <span class="section-label">Remuneradas (Mensual - TOP Rendimiento)</span>
     <div id="rem-container" class="nano-grid"></div>
 
-    <span class="section-label">Plazos Fijos (TNA)</span>
+    <span class="section-label">Plazos Fijos (Mensual - TOP Rendimiento)</span>
     <div id="pf-container" class="nano-grid"></div>
+
+    <span class="section-label">Lecaps (Mensual Est.)</span>
+    <div id="lecap-container" class="nano-grid"></div>
 
     <div class="ai-stats">
         <span>FUENTES: <b id="f-detail" style="color:var(--accent)">--</b></span>
@@ -94,6 +99,7 @@
     const NEWS_URL = "https://script.google.com/macros/s/AKfycbw_6kSGlPNmSytvAZcyQKZE1EFYTo7zuhp8Nt5YyOtCNoHcx_MAksyIe_TFvorL52EYwQ/exec";
     const DOLAR_URL = "https://dolarapi.com/v1/dolares";
     const INFLACION_API = "https://api.argentinadatos.com/v1/finanzas/indices/inflacion";
+    const TASA_REF_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
     
     const remData = [
         {f: "BELO", t: 0.245}, {f: "BNA", t: 0.22}, {f: "BRUBANK", t: 0.27}, {f: "C4", t: 0.32},
@@ -106,37 +112,60 @@
         {e: "BBVA", t: 0.24}, {e: "Macro", t: 0.28}, {e: "Reba", t: 0.34}, {e: "Bica", t: 0.33}
     ];
 
+    function checkRinde(valor, ipc) {
+        return valor < ipc ? 'down' : 'up';
+    }
+
     async function generarAnalisisReal() {
         const out = document.getElementById('verdicto');
         const dContainer = document.getElementById('dolar-container');
         const remContainer = document.getElementById('rem-container');
         const pfContainer = document.getElementById('pf-container');
+        const lContainer = document.getElementById('lecap-container');
         
         try {
-            const [resNews, resDolar, resInf] = await Promise.all([
+            const [resNews, resDolar, resInf, resTasa] = await Promise.all([
                 fetch(NEWS_URL).then(r => r.json()),
                 fetch(DOLAR_URL).then(r => r.json()),
-                fetch(INFLACION_API).then(r => r.json())
+                fetch(INFLACION_API).then(r => r.json()),
+                fetch(TASA_REF_API).then(r => r.json())
             ]);
 
             const noticias = resNews.noticias || [];
             const dolares = resDolar || [];
-            
             const ultimoIPC = resInf[resInf.length - 1];
-            const ipcValor = ultimoIPC.valor;
+            const ipcVal = ultimoIPC.valor;
             const mesIPC = new Date(ultimoIPC.fecha).toLocaleString('es-AR', { month: 'short' }).toUpperCase();
 
+            // 1. DÓLARES
             dContainer.innerHTML = dolares.map(d => `
-                <div class="badge"><span class="b-name">${d.nombre.replace('Contado con liquidación', 'CCL').replace('Oficial', 'OFI')}</span><span class="b-val">$${Math.round(d.venta)}</span></div>
+                <div class="badge"><span class="b-name">${d.nombre.replace('Contado con liquidación', 'CCL').replace('Oficial', 'OFI')}</span><span class="b-val neutral">$${Math.round(d.venta)}</span></div>
             `).join('');
 
-            remContainer.innerHTML = remData.map(r => `
-                <div class="badge"><span class="b-name">${r.f}</span><span class="b-val b-rem">${(r.t * 100).toFixed(1)}%</span></div>
-            `).join('');
+            // 2. REMUNERADAS (ORDENADO MAYOR A MENOR)
+            const sortedRem = [...remData].sort((a, b) => b.t - a.t);
+            remContainer.innerHTML = sortedRem.map(r => {
+                const rMensual = (r.t * 100) / 12;
+                return `<div class="badge"><span class="b-name">${r.f}</span><span class="b-val ${checkRinde(rMensual, ipcVal)}">${rMensual.toFixed(2)}%</span></div>`;
+            }).join('');
 
-            pfContainer.innerHTML = pfData.map(p => `
-                <div class="badge"><span class="b-name">${p.e}</span><span class="b-val b-pf">${(p.t * 100).toFixed(0)}%</span></div>
-            `).join('');
+            // 3. PLAZOS FIJOS (ORDENADO MAYOR A MENOR)
+            const sortedPF = [...pfData].sort((a, b) => b.t - a.t);
+            pfContainer.innerHTML = sortedPF.map(p => {
+                const pMensual = (p.t * 100) / 12;
+                return `<div class="badge"><span class="b-name">${p.e}</span><span class="b-val ${checkRinde(pMensual, ipcVal)}">${pMensual.toFixed(2)}%</span></div>`;
+            }).join('');
+
+            // 4. LECAPS (DEBAJO DE PLAZOS FIJOS)
+            const datoTasa = resTasa[resTasa.length - 1];
+            const tnaRef = datoTasa.valor || (datoTasa.tna * 100) || 0;
+            const mensualRef = tnaRef / 12;
+            const mensualLecap = mensualRef + 0.25;
+            
+            lContainer.innerHTML = `
+                <div class="badge"><span class="b-name">REF BCRA</span><span class="b-val ${checkRinde(mensualRef, ipcVal)}">${mensualRef.toFixed(2)}%</span></div>
+                <div class="badge"><span class="b-name">EST. LECAPS</span><span class="b-val ${checkRinde(mensualLecap, ipcVal)}">${mensualLecap.toFixed(2)}%</span></div>
+            `;
 
             const oficial = dolares.find(d => d.casa === 'oficial')?.venta || 1;
             const blue = dolares.find(d => d.casa === 'blue')?.venta || 1;
@@ -147,10 +176,10 @@
             document.getElementById('n-count').innerText = noticias.length;
             document.getElementById('brecha-val').innerText = `${brecha}%`;
             document.getElementById('ipc-label').innerText = `IPC ${mesIPC}:`;
-            document.getElementById('inflacion-val').innerText = `${ipcValor}%`;
+            document.getElementById('inflacion-val').innerText = `${ipcVal}%`;
             document.getElementById('t-stamp').innerText = new Date().toLocaleTimeString();
 
-            out.innerHTML = `IA: **${brecha > 10 ? 'Cobertura' : 'Tasa'}**. Foco en **${noticias.length > 30 ? 'Volatilidad' : 'Estabilidad'}**. IPC ${mesIPC}: **${ipcValor}%**.`.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
+            out.innerHTML = `IA: **${brecha > 10 ? 'Cobertura' : 'Tasa'}**. Foco en **${noticias.length > 30 ? 'Volatilidad' : 'Estabilidad'}**. IPC ${mesIPC}: **${ipcVal}%**.`.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
 
             const agrupados = noticias.reduce((acc, n) => {
                 if(!acc[n.fuente]) acc[n.fuente] = [];
@@ -164,7 +193,9 @@
                     <div class="card-b">${agrupados[f].map(n => `<div class="news-item"><a href="${n.link || '#'}" target="_blank">${n.titulo}</a></div>`).join('')}</div>
                 </div>
             `).join('');
-        } catch (e) { out.innerHTML = "Error sincronizando datos..."; }
+        } catch (e) { 
+            out.innerHTML = "Error sincronizando datos..."; 
+        }
     }
     document.addEventListener('DOMContentLoaded', generarAnalisisReal);
 </script>
