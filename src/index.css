@@ -1,0 +1,95 @@
+@import "tailwindcss";
+
+:root {
+  --bg: #000000;
+  --surface: #0a0a0a;
+  --blue: #00d2ff;
+  --txt: #e0e0e0;
+  --accent: #8b5cf6;
+  --border: #1a1a1a;
+  --green: #00ff88;
+  --red: #ff3366;
+  --gold: #fbbf24;
+}
+
+body {
+  background-color: var(--bg);
+  color: var(--txt);
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0; padding: 10px; font-size: 11px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+#scan-line {
+  display: none; position: fixed; top: 0; left: 0; width: 100%; height: 2px;
+  background: var(--blue); box-shadow: 0 0 15px var(--blue); z-index: 100;
+  animation: scanMove 2s linear infinite;
+}
+@keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+
+.header {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 12px; background: var(--surface); border-radius: 8px;
+  border: 1px solid var(--border); margin-bottom: 12px;
+}
+
+.ai-terminal {
+  background: var(--surface); border: 1px solid var(--border);
+  border-top: 3px solid var(--accent); border-radius: 12px;
+  padding: 15px; position: relative;
+}
+
+#loader-overlay {
+  display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+  background: rgba(0,0,0,0.96); z-index: 50; border-radius: 12px;
+  flex-direction: column; align-items: center; justify-content: center;
+}
+
+.strategy-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+.strat-box { background: #050505; border: 1px solid #1a1a1a; border-radius: 8px; padding: 12px; display: flex; flex-direction: column; min-height: 160px;}
+.strat-box h4 { margin: 0 0 10px 0; font-size: 0.85rem; color: var(--blue); text-transform: uppercase; border-bottom: 1px solid #1a1a1a; padding-bottom: 5px; letter-spacing: 1px;}
+.strat-text { font-size: 0.88rem; line-height: 1.4; color: #ccc; flex-grow: 1; margin-bottom: 10px; }
+.strat-text b { color: var(--gold); }
+
+.tech-definitions { 
+  font-size: 0.68rem; 
+  color: #666; 
+  background: #000; 
+  padding: 6px; 
+  border-radius: 4px; 
+  border-top: 1px solid #111;
+}
+.tech-word { color: var(--accent); font-weight: bold; }
+
+.info-section { margin-bottom: 18px; }
+.section-title { font-size: 0.8rem; font-weight: 900; color: var(--blue); text-transform: uppercase; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; }
+.data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(90px, 1fr)); gap: 8px; }
+
+.data-card { background: #000; border: 1px solid #1a1a1a; padding: 10px; border-radius: 6px; display: flex; flex-direction: column; text-decoration: none; transition: 0.2s; }
+.data-card:hover { border-color: var(--accent); background: #050505; }
+.data-card span:first-child { font-size: 0.6rem; color: var(--blue); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
+.data-card span:last-child { font-size: 1.1rem; font-weight: 900; font-family: monospace; color: var(--txt); }
+
+.stats-bar { 
+  display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; 
+  background: #0f0f0f; padding: 12px; border-radius: 8px; 
+  border: 1px dashed #333; margin-top: 10px; 
+}
+.stat-item { text-align: center; }
+.stat-label { font-size: 0.65rem; color: #888; text-transform: uppercase; font-weight: 900; margin-bottom: 4px; display: block;}
+.stat-value { color: var(--txt); font-size: 1.1rem; font-family: monospace; display: block; margin-bottom: 4px; }
+.stat-desc { font-size: 0.6rem; color: #555; line-height: 1.2; display: block; font-style: italic; }
+
+.update-btn { background: #fff; color: #000; border: none; padding: 14px; border-radius: 8px; font-weight: 900; width: 100%; margin-top: 15px; cursor: pointer; text-transform: uppercase; }
+
+.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(160px, 1fr)); gap: 8px; margin-top: 15px; }
+.news-card { background: #080808; border: 1px solid #111; border-radius: 8px; padding: 8px; height: 100px; display: flex; flex-direction: column; }
+.news-header { color: var(--accent); font-size: 0.65rem; font-weight: 900; border-bottom: 1px solid #1a1a1a; margin-bottom: 5px; padding-bottom: 3px; }
+.news-scroll-area { overflow-y: auto; flex-grow: 1; }
+.news-item a { color: #888; text-decoration: none; font-size: 0.75rem; display: block; margin-bottom: 5px; line-height: 1.2; border-bottom: 1px solid #0f0f0f; }
+
+.up { color: var(--green) !important; }
+.down { color: var(--red) !important; }
+
+@media (max-width: 600px) { .strategy-grid { grid-template-columns: 1fr; } .news-grid { grid-template-columns: 1fr 1fr; } }
+@keyframes spin { 100% { transform: rotate(360deg); } }
