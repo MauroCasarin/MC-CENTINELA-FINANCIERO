@@ -53,7 +53,6 @@
             box-shadow: 0 0 20px var(--blue), 0 0 40px var(--blue); 
             z-index: 300; 
             animation: scanMove 3s linear infinite;
-            backdrop-filter: brightness(2) contrast(1.5); 
             pointer-events: none; 
         }
         
@@ -90,6 +89,12 @@
         .toggle-icon { transition: 0.3s; font-size: 0.8rem; color: var(--accent); }
         .collapsed .toggle-icon { transform: rotate(-90deg); }
 
+        .header-badge {
+            font-size: 0.6rem; padding: 2px 6px; border-radius: 4px;
+            background: rgba(0, 210, 255, 0.1); border: 1px solid var(--blue);
+            color: var(--blue); font-weight: bold; margin-left: auto; margin-right: 10px;
+        }
+
         #loader-overlay {
             display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background: rgba(0,0,0,0.8); z-index: 200;
@@ -113,15 +118,19 @@
         }
         .strat-text { font-size: 1.05rem; line-height: 1.6; color: #ddd; white-space: pre-wrap; }
 
-        .tech-definitions { font-size: 0.85rem; color: #777; background: #000; padding: 10px; border-radius: 4px; margin-top: 12px; border-top: 1px solid #111; line-height: 1.4; }
-        
+        .term-tooltip {
+            color: var(--accent); border-bottom: 1px dotted var(--accent);
+            cursor: help; position: relative; display: inline-block;
+        }
+
         .market-status-box { font-size: 0.75rem; color: #aaa; margin-top: 15px; border-top: 1px solid #222; padding-top: 12px; }
         .status-label { display: block; color: var(--blue); font-weight: 900; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
         .status-val { font-size: 1.2rem; color: var(--txt); font-family: monospace; font-weight: 900; }
 
+        .section-title { font-size: 0.7rem; color: var(--gold); font-weight: 900; text-transform: uppercase; margin: 15px 0 8px 0; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
+
         .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); gap: 10px; margin-bottom: 15px; }
         .data-card { background: #000; border: 1px solid #1a1a1a; padding: 12px; border-radius: 6px; display: flex; flex-direction: column; text-decoration: none; transition: 0.2s; }
-        .data-card:hover { border-color: var(--accent); }
         .data-card span:first-child { font-size: 0.65rem; color: var(--blue); font-weight: bold; text-transform: uppercase; margin-bottom: 6px; }
         .data-card span:last-child { font-size: 1.2rem; font-weight: 900; font-family: monospace; color: var(--txt); }
 
@@ -143,49 +152,32 @@
 
         .update-btn { background: #fff; color: #000; border: none; padding: 16px; border-radius: 8px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; }
 
+        #panic-button {
+            display: none; background: var(--red); color: white; border: none; padding: 12px;
+            border-radius: 8px; font-weight: 900; width: 100%; margin-top: 15px;
+            text-transform: uppercase; font-size: 0.8rem; cursor: pointer;
+            animation: pulse-red 1.5s infinite;
+        }
+        @keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
+
+        .sentiment-container {
+            background: rgba(0, 0, 0, 0.5); border: 1px solid #222; padding: 5px 10px;
+            margin-bottom: 12px; border-radius: 4px; overflow: hidden;
+            white-space: nowrap; display: flex; align-items: center; gap: 10px;
+        }
+        .sentiment-label { color: var(--accent); font-weight: 900; font-size: 0.65rem; text-transform: uppercase; flex-shrink: 0; }
+        .sentiment-track { display: inline-block; font-family: monospace; font-size: 0.75rem; color: var(--blue); animation: marquee 30s linear infinite; }
+        @keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
+
         .transparency-footer {
             margin-top: 35px; padding: 20px; border-top: 1px double #222; 
             opacity: 0.6; font-size: 0.65rem; text-align: center; 
             font-family: monospace; line-height: 1.5; color: #888;
         }
 
-        /* NUEVO: ESTILO PARA EL SCANNER DE SENTIMIENTO */
-        .sentiment-container {
-            background: rgba(0, 0, 0, 0.5);
-            border: 1px solid #222;
-            padding: 5px 10px;
-            margin-bottom: 12px;
-            border-radius: 4px;
-            overflow: hidden;
-            white-space: nowrap;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        .sentiment-label {
-            color: var(--accent);
-            font-weight: 900;
-            font-size: 0.65rem;
-            text-transform: uppercase;
-            flex-shrink: 0;
-        }
-        .sentiment-track {
-            display: inline-block;
-            font-family: monospace;
-            font-size: 0.75rem;
-            color: var(--blue);
-            animation: marquee 30s linear infinite;
-        }
-        @keyframes marquee {
-            0% { transform: translateX(100%); }
-            100% { transform: translateX(-100%); }
-        }
-
         .up { color: var(--green) !important; }
         .down { color: var(--red) !important; }
         @keyframes spin { 100% { transform: rotate(360deg); } }
-        .fade-in { animation: fadeIn 0.5s ease forwards; opacity: 0; }
-        @keyframes fadeIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: translateY(0); } }
     </style>
 </head>
 <body>
@@ -214,6 +206,7 @@
     <div class="collapsible-container" id="container-ia">
         <div class="container-header" onclick="toggleContainer('container-ia')">
             <h2><i class="fas fa-brain"></i> Inteligencia</h2>
+            <span id="ia-badge" class="header-badge">SYNC</span>
             <i class="fas fa-chevron-down toggle-icon"></i>
         </div>
         <div class="container-content ai-terminal">
@@ -230,7 +223,9 @@
             </div>
             <div id="analysis-container" class="strat-box">
                 <div id="ai-text" class="strat-text"></div>
-                <div id="ai-glossary" class="tech-definitions"></div>
+                <button id="panic-button" onclick="alert('ALERTA: Escenario crítico. Proteja su capital.')">
+                    <i class="fas fa-exclamation-triangle"></i> Orden de Pánico: Dolarizar
+                </button>
                 <div id="market-status-info" class="market-status-box">
                     <span class="status-label">ESTADO DEL MERCADO PARA ESTE PERFIL:</span>
                     <span id="market-pct" class="status-val"></span>
@@ -243,6 +238,7 @@
     <div class="collapsible-container" id="container-metrics">
         <div class="container-header" onclick="toggleContainer('container-metrics')">
             <h2><i class="fas fa-chart-pie"></i> Métricas</h2>
+            <span id="metrics-badge" class="header-badge">--%</span>
             <i class="fas fa-chevron-down toggle-icon"></i>
         </div>
         <div class="container-content">
@@ -258,6 +254,7 @@
     <div class="collapsible-container" id="container-monitoring">
         <div class="container-header" onclick="toggleContainer('container-monitoring')">
             <h2><i class="fas fa-broadcast-tower"></i> Monitoreo</h2>
+            <span id="mon-badge" class="header-badge">LIVE</span>
             <i class="fas fa-chevron-down toggle-icon"></i>
         </div>
         <div class="container-content">
@@ -275,6 +272,7 @@
     <div class="collapsible-container" id="container-news">
         <div class="container-header" onclick="toggleContainer('container-news')">
             <h2><i class="fas fa-newspaper"></i> Noticias</h2>
+            <span id="news-badge" class="header-badge">IDLE</span>
             <i class="fas fa-chevron-down toggle-icon"></i>
         </div>
         <div class="container-content">
@@ -294,14 +292,7 @@
 </div>
 
 <script>
-    function toggleContainer(id) {
-        document.getElementById(id).classList.toggle('collapsed');
-    }
-
-    window.addEventListener('scroll', () => {
-        const scrollValue = window.scrollY;
-        document.body.style.backgroundPosition = `center ${scrollValue * 0.2}px`;
-    });
+    function toggleContainer(id) { document.getElementById(id).classList.toggle('collapsed'); }
 
     const NEWS_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCgq6dfLzp7R6-xO0zvComD3gg1CJbODXaZdqUe5GX9zi0lP4A/exec";
     const DOLAR_URL = "https://dolarapi.com/v1/dolares";
@@ -315,89 +306,42 @@
     const diccionario = {
         "IPC": "Inflación mensual medida por el INDEC.",
         "Rinde Real": "Ganancia neta descontando la inflación.",
-        "Liquidez": "Disponibilidad del dinero al instante.",
-        "CER": "Coeficiente de Estabilización de Referencia (ajuste por inflación).",
-        "Carry Trade": "Estrategia de invertir en pesos para ganar tasa frente a un dólar estable.",
-        "Brecha": "Diferencia porcentual entre el dólar oficial y los dólares libres.",
-        "Lecaps": "Letras de capitalización que pagan una tasa fija mensual.",
-        "Riesgo País": "Indicador de la capacidad de pago de un país y su costo de financiamiento."
+        "CER": "Coeficiente que ajusta por inflación.",
+        "Carry Trade": "Invertir en pesos frente a dólar estable.",
+        "Brecha": "Diferencia entre dólar oficial y libres.",
+        "Lecaps": "Letras con tasa fija mensual.",
+        "Riesgo País": "Costo de deuda de un país."
     };
 
-    let cacheData = { ipc: 0, brecha: 0, tasaR: 0, mensualLecap: 0, rpVal: 0, apiPoints: 0, blueVal: 0 };
+    let cacheData = { ipc: 0, brecha: 0, tasaR: 0, mensualLecap: 0, rpVal: 0, blueVal: 0 };
     let typingTimer = null;
-    let typingDetailTimer = null;
 
     function resetAnálisis() {
         clearTimeout(typingTimer);
-        clearTimeout(typingDetailTimer);
         document.getElementById('ai-text').innerHTML = "";
-        document.getElementById('ai-glossary').innerHTML = "";
         document.getElementById('market-pct').innerHTML = "";
         document.getElementById('market-detail').innerHTML = "";
-        document.getElementById('market-pct').classList.remove('fade-in');
+        document.getElementById('panic-button').style.display = 'none';
     }
 
     function typeWriter(text, elementId, callback) {
         const ele = document.getElementById(elementId);
         let i = 0;
+        let processedText = text;
+        for (let term in diccionario) {
+            const regex = new RegExp(`\\b${term}\\b`, 'gi');
+            processedText = processedText.replace(regex, `<span class="term-tooltip" title="${diccionario[term]}">${term}</span>`);
+        }
+        processedText = processedText.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
+
         function type() {
-            if (i < text.length) {
-                ele.innerHTML = text.substring(0, i + 1).replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
-                i++;
-                typingTimer = setTimeout(type, 8);
-            } else if (callback) {
-                callback();
-            }
+            if (i < processedText.length) {
+                if (processedText[i] === '<') i = processedText.indexOf('>', i) + 1; else i++;
+                ele.innerHTML = processedText.substring(0, i);
+                typingTimer = setTimeout(type, 5);
+            } else if (callback) callback();
         }
         type();
-    }
-
-    function typeWriterDetail(text, elementId, callback) {
-        const ele = document.getElementById(elementId);
-        let i = 0;
-        function type() {
-            if (i < text.length) {
-                ele.innerHTML = text.substring(0, i + 1);
-                i++;
-                typingDetailTimer = setTimeout(type, 12);
-            } else if (callback) {
-                callback();
-            }
-        }
-        type();
-    }
-
-    function actualizarEstadoMercadoAnimado(type) {
-        let pct = 98;
-        let msg = "";
-        if (cacheData.apiPoints < 5) { pct -= 15; msg = "Estado parcial: No se pudieron sincronizar todos los indicadores externos."; }
-
-        if (type === 'cons') {
-            if (cacheData.ipc > 3.8) { pct -= 18; msg = "El mercado está 'revuelto' para el ahorro en pesos debido a la alta inflación."; }
-            else if (cacheData.tasaR < 0) { pct -= 10; msg = "Estado de alerta: Las tasas de interés no alcanzan para cubrir la suba de precios."; }
-            else { msg = "Mercado en calma. Las condiciones son óptimas para preservar el poder adquisitivo."; }
-        } 
-        else if (type === 'mod') {
-            if (cacheData.brecha > 18) { pct -= 15; msg = "Estado inestable: La brecha cambiaria genera dudas sobre activos mixtos."; }
-            else if (cacheData.rpVal > 1150) { pct -= 12; msg = "El riesgo país elevado indica una desconfianza del mercado."; }
-            else { msg = "Estado saludable. Existe un equilibrio sólido entre tasas y estabilidad del dólar."; }
-        } 
-        else if (type === 'agre') {
-            if (cacheData.brecha > 22) { pct -= 35; msg = "Mercado crítico: La brecha es demasiado alta. Muy peligroso para tasas."; }
-            else if (cacheData.rpVal > 1300) { pct -= 20; msg = "Volatilidad extrema: Sugiere posible corrección brusca de activos de riesgo."; }
-            else if (cacheData.brecha < 10) { pct += 2; msg = "Escenario ideal: El mercado está 'planchado', permitiendo ganancias vía Carry Trade."; }
-            else { msg = "Estado favorable. El mercado permite tomar riesgos calculados."; }
-        }
-
-        pct = Math.max(pct, 25);
-        const color = pct > 80 ? 'var(--green)' : (pct > 50 ? 'var(--gold)' : 'var(--red)');
-        
-        typeWriterDetail(msg, 'market-detail', () => {
-            const pctEle = document.getElementById('market-pct');
-            pctEle.style.color = color;
-            pctEle.innerText = `${pct}%`;
-            pctEle.classList.add('fade-in');
-        });
     }
 
     function switchProfile(type) {
@@ -408,118 +352,86 @@
     }
 
     function generarAnalisis(type) {
-        let analisisReal = "";
-        const inflacionAlta = cacheData.ipc > 3.5;
-        const brechaInestable = cacheData.brecha > 18;
-        const tasaRealNegativa = cacheData.tasaR < 0;
-        const riesgoAlto = cacheData.rpVal > 1100;
-        
+        let txt = "";
         if(type === 'cons') {
-            analisisReal = `SISTEMA DETECTA: Con un **IPC del ${cacheData.ipc}%** y un rinde real de **${cacheData.tasaR}%**, su capital está ${tasaRealNegativa ? 'perdiendo valor real' : 'protegido ligeramente'}. `;
-            analisisReal += inflacionAlta ? `La inflación es el principal riesgo. Priorice **CER**. ` : `Entorno estable. Las cuentas remuneradas ofrecen **Liquidez**. `;
-            analisisReal += `Consejo: No mantenga pesos ociosos.`;
+            txt = `SISTEMA: Orientación Conservadora activa. Con **IPC al ${cacheData.ipc}%** y rinde real de **${cacheData.tasaR}%**, el capital está ${cacheData.tasaR < 0 ? 'perdiendo poder de compra' : 'ganando valor'}. \n\n**ORIENTACIÓN:** Se sugiere evitar liquidez en cuentas remuneradas si la tasa no supera el IPC. Considere activos con ajuste **CER** para blindar su capital contra la inflación o Plazos Fijos con tasas superiores al ${cacheData.ipc}%. No descuide el Dólar MEP si la **Brecha** se mantiene baja.`;
         } 
         else if(type === 'mod') {
-            analisisReal = `SISTEMA DETECTA: La brecha es del **${cacheData.brecha}%**. El mercado muestra ${riesgoAlto ? 'tensión soberana' : 'confianza moderada'} con un Riesgo País de **${cacheData.rpVal}**. `;
-            analisisReal += brechaInestable ? `Atención: La brecha presiona los precios. Considere dolarizar un 40% vía MEP. ` : `La estabilidad cambiaria permite estirar plazos en pesos. `;
-            analisisReal += `Consejo: El equilibrio está en capturar la tasa de **Lecaps**.`;
+            txt = `SISTEMA: Perfil Moderado analizando variables. La **Brecha** actual es del **${cacheData.brecha}%** con un **Riesgo País** de **${cacheData.rpVal}**. \n\n**ORIENTACIÓN:** Escenario apto para diversificación mixta. Se recomienda repartir cartera entre **Lecaps** (tasa fija) para aprovechar el rinde mensual del ${cacheData.mensualLecap}% y fondos Dollar Linked si prevé correcciones cambiarias. Mantenga un 30% en liquidez inmediata para capturar oportunidades ante volatilidad.`;
         } 
         else {
-            analisisReal = `SISTEMA DETECTA: Escenario de volatilidad para **Carry Trade**. Con **Lecaps** al **${cacheData.mensualLecap}%**, el rinde mensual es ${cacheData.mensualLecap > cacheData.ipc ? 'superior' : 'inferior'} a la inflación. `;
-            analisisReal += (cacheData.brecha < 15 && !riesgoAlto) ? `Condiciones óptimas: Es momento de maximizar tasa en pesos. ` : `Alerta: El Riesgo País de **${cacheData.rpVal}** sugiere un posible techo. `;
-            analisisReal += `Consejo: Aproveche el rinde de corto plazo, pero mantenga el botón de pánico cerca del dólar.`;
+            txt = `SISTEMA: Perfil Agresivo detectando brechas de mercado. Oportunidad vigente de **Carry Trade** con **Lecaps** rindiendo **${cacheData.mensualLecap}%** mensual frente a un **IPC** de **${cacheData.ipc}%**. \n\n**ORIENTACIÓN:** Si la calma cambiaria persiste, el devengamiento de tasa en pesos es la estrategia líder. Sin embargo, monitoree la **Brecha**; si supera el 20%, el riesgo de salto devaluatorio aumenta. Esté listo para dolarizar posiciones si el **Riesgo País** rebota al alza abruptamente.`;
+            if(cacheData.brecha > 20) document.getElementById('panic-button').style.display = 'block';
         }
-        
-        typeWriter(analisisReal, "ai-text", () => {
-            let encontrados = [];
-            for (let term in diccionario) { 
-                if (analisisReal.toLowerCase().includes(term.toLowerCase())) { 
-                    encontrados.push(`<span style="color:var(--accent); font-weight:bold;">${term}:</span> ${diccionario[term]}`); 
-                } 
-            }
-            if (encontrados.length > 0) document.getElementById('ai-glossary').innerHTML = encontrados.join("<br>");
-            actualizarEstadoMercadoAnimado(type);
+        typeWriter(txt, "ai-text", () => {
+            const pct = type === 'agre' && cacheData.brecha > 20 ? 45 : 98;
+            document.getElementById('market-pct').innerText = `${pct}%`;
+            document.getElementById('ia-badge').innerText = `${pct}% CONF`;
         });
     }
 
     async function ejecutarDeepScanIA() {
-        const loader = document.getElementById('loader-overlay');
-        const loaderSub = document.getElementById('loader-sub');
-        const scanLine = document.getElementById('scan-line');
-        loader.style.display = 'flex'; scanLine.style.display = 'block';
-        cacheData.apiPoints = 0;
-
-        const loaderInterval = setInterval(() => {
-            const desc = ["Escaneando Dólar", "Tasas Nominales", "Riesgo Soberano", "Inflación" , "Noticias del mercado", "Cruzando datos"];
-            loaderSub.innerText = `[ ANALIZANDO: ${desc[Math.floor(Math.random() * desc.length)]} ]`;
-        }, 200);
+        document.getElementById('loader-overlay').style.display = 'flex';
+        document.getElementById('scan-line').style.display = 'block';
 
         try {
             const [resDolar, resRP, resTasa, resInf, resNews] = await Promise.all([
-                fetch(DOLAR_URL).then(r => { if(r.ok) cacheData.apiPoints++; return r.json(); }),
-                fetch(RP_API).then(r => { if(r.ok) cacheData.apiPoints++; return r.json(); }),
-                fetch(TASA_REF_API).then(r => { if(r.ok) cacheData.apiPoints++; return r.json(); }),
-                fetch(INFLACION_API).then(r => { if(r.ok) cacheData.apiPoints++; return r.json(); }),
-                fetch(NEWS_URL).then(r => { if(r.ok) cacheData.apiPoints++; return r.json(); })
+                fetch(DOLAR_URL).then(r => r.json()), fetch(RP_API).then(r => r.json()),
+                fetch(TASA_REF_API).then(r => r.json()), fetch(INFLACION_API).then(r => r.json()),
+                fetch(NEWS_URL).then(r => r.json())
             ]);
 
-            clearInterval(loaderInterval);
             cacheData.ipc = resInf[resInf.length - 1].valor;
             cacheData.rpVal = resRP.valor || 0;
             const oficial = resDolar.find(d => d.casa === 'oficial')?.venta || 1;
             const blue = resDolar.find(d => d.casa === 'blue')?.venta || 1;
-            cacheData.blueVal = blue;
             cacheData.brecha = (((blue/oficial)-1)*100).toFixed(1);
-
             const tnaRef = resTasa[resTasa.length - 1].valor || 35;
             cacheData.mensualLecap = (tnaRef/12+0.3).toFixed(2);
             cacheData.tasaR = (2.83 - cacheData.ipc).toFixed(2); 
 
-            document.getElementById('dolar-container').innerHTML = resDolar.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
+            document.getElementById('dolar-container').innerHTML = resDolar.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
             
-            const rems = [{f: "COCOS", t: (tnaRef * 0.98).toFixed(1) + "%"}, {f: "FIWIND", t: (tnaRef * 0.95).toFixed(1) + "%"}, {f: "UALÁ", t: (tnaRef * 0.82).toFixed(1) + "%"}, {f: "BRUBANK", t: (tnaRef * 0.75).toFixed(1) + "%"}];
+            const rems = [{f: "COCOS", t: (tnaRef * 0.98).toFixed(1) + "%"}, {f: "FIWIND", t: (tnaRef * 0.95).toFixed(1) + "%"}, {f: "UALÁ", t: (tnaRef * 0.82).toFixed(1) + "%"}];
             document.getElementById('rem-container').innerHTML = rems.map(r => `<a href="${remLinks[r.f]}" target="_blank" class="data-card"><span>${r.f}</span><span class="up">${r.t}</span></a>`).join('');
 
-            const pfs = [{e: "REBA", t: (tnaRef * 1.06).toFixed(1) + "%"}, {e: "BICA", t: (tnaRef * 1.04).toFixed(1) + "%"}, {e: "MACRO", t: (tnaRef * 0.96).toFixed(1) + "%"}, {e: "NACIÓN", t: (tnaRef * 0.92).toFixed(1) + "%"}];
+            const pfs = [{e: "REBA", t: (tnaRef * 1.06).toFixed(1) + "%"}, {e: "BICA", t: (tnaRef * 1.04).toFixed(1) + "%"}, {e: "MACRO", t: (tnaRef * 0.96).toFixed(1) + "%"}];
             document.getElementById('pf-container').innerHTML = pfs.map(p => `<a href="${pfLinks[p.e]}" target="_blank" class="data-card"><span>${p.e}</span><span class="up">${p.t}</span></a>`).join('');
 
-            document.getElementById('lecap-container').innerHTML = `<div class="data-card"><span>Lecap Est.</span><span class="up">${cacheData.mensualLecap}%</span></div><div class="data-card"><span>Riesgo País</span><span class="${cacheData.rpVal < 900 ? 'up':'down'}">${cacheData.rpVal}</span></div>`;
+            document.getElementById('lecap-container').innerHTML = `<div class="data-card"><span>Lecap Est.</span><span class="up">${cacheData.mensualLecap}%</span></div><div class="data-card"><span>Riesgo País</span><span class="down">${cacheData.rpVal}</span></div>`;
 
             document.getElementById('brecha-val').innerText = `${cacheData.brecha}%`;
             document.getElementById('inflacion-val').innerText = `${cacheData.ipc}%`;
             document.getElementById('tasa-real-val').innerText = `${cacheData.tasaR}%`;
+            document.getElementById('metrics-badge').innerText = `BRECHA ${cacheData.brecha}%`;
+            document.getElementById('mon-badge').innerText = `$${Math.round(blue)}`;
 
-            // --- LÓGICA DE ANÁLISIS DE SENTIMIENTO ---
             const unicas = resNews.noticias.filter((n, i, s) => s.findIndex(x => x.titulo === n.titulo) === i);
+            document.getElementById('news-badge').innerText = `${unicas.length} NOTAS`;
+            document.getElementById('news-counter').innerText = `NEWS: ${unicas.length}`;
+
             let pos = 0, neg = 0;
-            const palabrasPos = ['sube', 'gana', 'crece', 'recupera', 'alza', 'positivo', 'superávit', 'estabilidad', 'compra', 'récord'];
-            const palabrasNeg = ['cae', 'baja', 'pierde', 'riesgo', 'inflación', 'déficit', 'crisis', 'tensión', 'desplome', 'alerta'];
+            const palabrasPos = ['sube', 'gana', 'crece', 'recupera', 'alza', 'positivo', 'superávit', 'estabilidad'];
+            const palabrasNeg = ['cae', 'baja', 'pierde', 'riesgo', 'inflación', 'déficit', 'crisis', 'tensión'];
             unicas.forEach(n => {
                 const t = n.titulo.toLowerCase();
                 if (palabrasPos.some(p => t.includes(p))) pos++;
                 else if (palabrasNeg.some(p => t.includes(p))) neg++;
             });
             let balance = "NEUTRAL";
-            if (pos > neg + 5) balance = "OPTIMISMO MODERADO";
-            if (pos > neg + 15) balance = "EUFORIA ALCISTA";
-            if (neg > pos + 5) balance = "CAUTELA / TENSIÓN";
-            if (neg > pos + 15) balance = "SENTIMIENTO BAJISTA CRÍTICO";
-            document.getElementById('sentiment-display').innerText = `[ ESTADO: ${balance} ] - Analizadas ${unicas.length} noticias. Patrón detectado: ${pos} señales de crecimiento vs ${neg} señales de riesgo. El mercado se percibe ${balance.toLowerCase()} en las últimas horas.`;
-            // --- FIN LÓGICA DE SENTIMIENTO ---
-
-            document.getElementById('news-counter').innerText = `NEWS: ${unicas.length}`;
+            if (pos > neg + 3) balance = "OPTIMISMO";
+            if (neg > pos + 3) balance = "CAUTELA";
+            document.getElementById('sentiment-display').innerText = `[ ESTADO: ${balance} ] - Pulso detectado: ${pos} alcistas vs ${neg} bajistas en ${unicas.length} noticias.`;
+            
             const agrup = unicas.reduce((acc, n) => { if(!acc[n.fuente]) acc[n.fuente] = []; acc[n.fuente].push(n); return acc; }, {});
             document.getElementById('master-grid').innerHTML = Object.keys(agrup).map(f => `
                 <div class="news-card"><div class="news-header">${f}</div><div class="news-scroll-area">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
             `).join('');
 
-            loader.style.display = 'none'; scanLine.style.display = 'none';
+            document.getElementById('loader-overlay').style.display = 'none';
+            document.getElementById('scan-line').style.display = 'none';
             switchProfile(document.querySelector('.profile-btn.active').getAttribute('data-type'));
-        } catch (e) { 
-            clearInterval(loaderInterval); 
-            loaderSub.innerText = "Error Técnico"; 
-            setTimeout(() => { loader.style.display = 'none'; scanLine.style.display = 'none'; }, 2000); 
-        }
+        } catch (e) { document.getElementById('loader-overlay').style.display = 'none'; }
     }
     document.addEventListener('DOMContentLoaded', ejecutarDeepScanIA);
 </script>
