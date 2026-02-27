@@ -3,7 +3,8 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CENTINELA DEL MERCADO v15.8</title>
+    <title>CENTINELA DEL MERCADO v15.9</title>
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
         :root {
@@ -21,11 +22,11 @@
 
         html, body { 
             margin: 0; padding: 0; width: 100%; min-height: 100vh;
-            /* Se quita fixed para manejarlo por JS y asegurar compatibilidad móvil */
             background-image: url('https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/Fondo%20centinela.jpg');
             background-position: center 0px; 
             background-repeat: no-repeat; 
             background-size: cover;
+            background-attachment: scroll; /* Asegura suavidad para el parallax de JS */
             font-family: 'Segoe UI', sans-serif; color: var(--txt); 
             font-size: 13px;
             background-color: #000;
@@ -196,7 +197,7 @@
             <div class="stat-item"><span class="stat-label">TASA REAL</span><b id="tasa-real-val" class="stat-value">--</b><span class="stat-desc">Rinde vs IPC</span></div>
         </div>
 
-        <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v15.8</button>
+        <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v15.9</button>
     </div>
 
     <div id="master-grid" class="news-grid"></div>
@@ -212,7 +213,6 @@
     /* EFECTO PARALLAX DINÁMICO */
     window.addEventListener('scroll', () => {
         const scrollValue = window.scrollY;
-        // Ajusta la posición del fondo un 20% de la velocidad del scroll
         document.body.style.backgroundPosition = `center ${scrollValue * 0.2}px`;
     });
 
