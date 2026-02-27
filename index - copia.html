@@ -129,7 +129,6 @@
 
         .section-title { font-size: 0.7rem; color: var(--gold); font-weight: 900; text-transform: uppercase; margin: 15px 0 8px 0; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
 
-        /* TARJETAS MÁS CHICAS Y GRID AJUSTADO */
         .data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; margin-bottom: 15px; }
         .data-card { background: #000; border: 1px solid #1a1a1a; padding: 8px; border-radius: 6px; display: flex; flex-direction: column; text-decoration: none; transition: 0.2s; }
         .data-card span:first-child { font-size: 0.55rem; color: var(--blue); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
@@ -265,7 +264,7 @@
             <div id="rem-container" class="data-grid"></div>
             <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos (TNA)</div>
             <div id="pf-container" class="data-grid"></div>
-            <div class="section-title"><i class="fas fa-chart-line"></i> Lecaps / Riesgo</div>
+            <div class="section-title"><i class="fas fa-chart-line"></i> Lecaps / Riesgo / Cripto</div>
             <div id="lecap-container" class="data-grid"></div>
         </div>
     </div>
@@ -387,6 +386,7 @@
             cacheData.rpVal = resRP.valor || 0;
             const oficial = resDolar.find(d => d.casa === 'oficial')?.venta || 1;
             const blue = resDolar.find(d => d.casa === 'blue')?.venta || 1;
+            const cripto = resDolar.find(d => d.casa === 'cripto')?.venta || 0;
             cacheData.brecha = (((blue/oficial)-1)*100).toFixed(1);
             const tnaRef = resTasa[resTasa.length - 1].valor || 35;
             cacheData.tnaLecap = (tnaRef + 3.5).toFixed(1);
@@ -394,7 +394,6 @@
 
             document.getElementById('dolar-container').innerHTML = resDolar.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
             
-            // 4 TARJETAS EN REMUNERADAS
             const rems = [
                 {f: "COCOS", t: (tnaRef * 0.98).toFixed(1) + "%"}, 
                 {f: "FIWIND", t: (tnaRef * 0.95).toFixed(1) + "%"}, 
@@ -403,7 +402,6 @@
             ];
             document.getElementById('rem-container').innerHTML = rems.map(r => `<a href="${remLinks[r.f]}" target="_blank" class="data-card"><span>${r.f}</span><span class="up">${r.t}</span></a>`).join('');
 
-            // 4 TARJETAS EN PLAZOS FIJOS
             const pfs = [
                 {e: "REBA", t: (tnaRef * 1.06).toFixed(1) + "%"}, 
                 {e: "BICA", t: (tnaRef * 1.04).toFixed(1) + "%"}, 
@@ -412,9 +410,11 @@
             ];
             document.getElementById('pf-container').innerHTML = pfs.map(p => `<a href="${pfLinks[p.e]}" target="_blank" class="data-card"><span>${p.e}</span><span class="up">${p.t}</span></a>`).join('');
 
+            // SECCIÓN ACTUALIZADA CON DÓLAR CRIPTO
             document.getElementById('lecap-container').innerHTML = `
                 <div class="data-card"><span>Lecap (TNA)</span><span class="up">${cacheData.tnaLecap}%</span></div>
-                <div class="data-card"><span>Riesgo País</span><span class="down">${cacheData.rpVal}</span></div>`;
+                <div class="data-card"><span>Riesgo País</span><span class="down">${cacheData.rpVal}</span></div>
+                <div class="data-card"><span>Dólar Cripto</span><span class="up">$${Math.round(cripto)}</span></div>`;
 
             document.getElementById('brecha-val').innerText = `${cacheData.brecha}%`;
             document.getElementById('inflacion-val').innerText = `${cacheData.ipc}%`;
