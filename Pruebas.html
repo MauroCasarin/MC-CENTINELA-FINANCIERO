@@ -42,7 +42,6 @@
             z-index: 1;
         }
 
-        /* RESTAURADO: LÍNEA DE ESCANEO CON EFECTO DE RESALTE */
         #scan-line {
             display: none; 
             position: fixed; 
@@ -378,7 +377,6 @@
     }
 
     async function ejecutarDeepScanIA() {
-        // RESTAURADA LÓGICA DE TEXTOS ALEATORIOS EN CARGA
         const loader = document.getElementById('loader-overlay');
         const loaderSub = document.getElementById('loader-sub');
         const scanLine = document.getElementById('scan-line');
@@ -389,79 +387,92 @@
             loaderSub.innerText = `[ ANALIZANDO: ${desc[Math.floor(Math.random() * desc.length)]} ]`;
         }, 200);
 
+        const safeFetch = async (url) => {
+            try { return await fetch(url).then(r => r.json()); }
+            catch (e) { console.error("Error en API:", url); return null; }
+        };
+
         try {
             const [resDolar, resRP, resTasa, resInf, resNews] = await Promise.all([
-                fetch(DOLAR_URL).then(r => r.json()), fetch(RP_API).then(r => r.json()),
-                fetch(TASA_REF_API).then(r => r.json()), fetch(INFLACION_API).then(r => r.json()),
-                fetch(NEWS_URL).then(r => r.json())
+                safeFetch(DOLAR_URL), safeFetch(RP_API),
+                safeFetch(TASA_REF_API), safeFetch(INFLACION_API),
+                safeFetch(NEWS_URL)
             ]);
 
             clearInterval(loaderInterval);
 
-            cacheData.ipc = resInf[resInf.length - 1].valor;
-            cacheData.rpVal = resRP.valor || 0;
-            const oficial = resDolar.find(d => d.casa === 'oficial')?.venta || 1;
-            cacheData.blueVal = resDolar.find(d => d.casa === 'blue')?.venta || 1;
-            cacheData.criptoVal = resDolar.find(d => d.casa === 'cripto')?.venta || 0;
-            cacheData.brecha = (((cacheData.blueVal/oficial)-1)*100).toFixed(1);
-            cacheData.tnaRef = resTasa[resTasa.length - 1].valor || 35;
-            cacheData.tnaLecap = (cacheData.tnaRef + 3.5).toFixed(1);
-            cacheData.tasaR = (2.83 - cacheData.ipc).toFixed(2); 
+            if(resInf) cacheData.ipc = resInf[resInf.length - 1].valor;
+            if(resRP) cacheData.rpVal = resRP.valor || 0;
 
-            document.getElementById('dolar-container').innerHTML = resDolar.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
-            
-            const rems = [
-                {f: "COCOS", t: (cacheData.tnaRef * 0.98).toFixed(1) + "%"}, 
-                {f: "FIWIND", t: (cacheData.tnaRef * 0.95).toFixed(1) + "%"}, 
-                {f: "UALÁ", t: (cacheData.tnaRef * 0.82).toFixed(1) + "%"},
-                {f: "BRUBANK", t: (cacheData.tnaRef * 0.78).toFixed(1) + "%"}
-            ];
-            document.getElementById('rem-container').innerHTML = rems.map(r => `<a href="${remLinks[r.f]}" target="_blank" class="data-card"><span>${r.f}</span><span class="up">${r.t}</span></a>`).join('');
+            if(resDolar) {
+                const oficial = resDolar.find(d => d.casa === 'oficial')?.venta || 1;
+                cacheData.blueVal = resDolar.find(d => d.casa === 'blue')?.venta || 1;
+                cacheData.criptoVal = resDolar.find(d => d.casa === 'cripto')?.venta || 0;
+                cacheData.brecha = (((cacheData.blueVal/oficial)-1)*100).toFixed(1);
+                document.getElementById('dolar-container').innerHTML = resDolar.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
+                document.getElementById('mon-badge').innerText = `$${Math.round(cacheData.blueVal)}`;
+                document.getElementById('brecha-val').innerText = `${cacheData.brecha}%`;
+                document.getElementById('metrics-badge').innerText = `BRECHA ${cacheData.brecha}%`;
+            }
 
-            const pfs = [
-                {e: "REBA", t: (cacheData.tnaRef * 1.06).toFixed(1) + "%"}, 
-                {e: "BICA", t: (cacheData.tnaRef * 1.04).toFixed(1) + "%"}, 
-                {e: "MACRO", t: (cacheData.tnaRef * 0.96).toFixed(1) + "%"},
-                {e: "NACIÓN", t: (cacheData.tnaRef * 0.94).toFixed(1) + "%"}
-            ];
-            document.getElementById('pf-container').innerHTML = pfs.map(p => `<a href="${pfLinks[p.e]}" target="_blank" class="data-card"><span>${p.e}</span><span class="up">${p.t}</span></a>`).join('');
+            if(resTasa) {
+                cacheData.tnaRef = resTasa[resTasa.length - 1].valor || 35;
+                cacheData.tnaLecap = (cacheData.tnaRef + 3.5).toFixed(1);
+                cacheData.tasaR = (2.83 - cacheData.ipc).toFixed(2); 
+                document.getElementById('tasa-real-val').innerText = `${cacheData.tasaR}%`;
+
+                const rems = [
+                    {f: "COCOS", t: (cacheData.tnaRef * 0.98).toFixed(1) + "%"}, 
+                    {f: "FIWIND", t: (cacheData.tnaRef * 0.95).toFixed(1) + "%"}, 
+                    {f: "UALÁ", t: (cacheData.tnaRef * 0.82).toFixed(1) + "%"},
+                    {f: "BRUBANK", t: (cacheData.tnaRef * 0.78).toFixed(1) + "%"}
+                ];
+                document.getElementById('rem-container').innerHTML = rems.map(r => `<a href="${remLinks[r.f]}" target="_blank" class="data-card"><span>${r.f}</span><span class="up">${r.t}</span></a>`).join('');
+
+                const pfs = [
+                    {e: "REBA", t: (cacheData.tnaRef * 1.06).toFixed(1) + "%"}, 
+                    {e: "BICA", t: (cacheData.tnaRef * 1.04).toFixed(1) + "%"}, 
+                    {e: "MACRO", t: (cacheData.tnaRef * 0.96).toFixed(1) + "%"},
+                    {e: "NACIÓN", t: (cacheData.tnaRef * 0.94).toFixed(1) + "%"}
+                ];
+                document.getElementById('pf-container').innerHTML = pfs.map(p => `<a href="${pfLinks[p.e]}" target="_blank" class="data-card"><span>${p.e}</span><span class="up">${p.t}</span></a>`).join('');
+            }
+
+            document.getElementById('inflacion-val').innerText = `${cacheData.ipc}%`;
 
             document.getElementById('lecap-container').innerHTML = `
                 <div class="data-card"><span>Lecap (TNA)</span><span class="up">${cacheData.tnaLecap}%</span></div>
                 <div class="data-card"><span>Riesgo País</span><span class="down">${cacheData.rpVal}</span></div>
                 <div class="data-card"><span>Dólar Cripto</span><span class="up">$${Math.round(cacheData.criptoVal)}</span></div>`;
 
-            document.getElementById('brecha-val').innerText = `${cacheData.brecha}%`;
-            document.getElementById('inflacion-val').innerText = `${cacheData.ipc}%`;
-            document.getElementById('tasa-real-val').innerText = `${cacheData.tasaR}%`;
-            document.getElementById('metrics-badge').innerText = `BRECHA ${cacheData.brecha}%`;
-            document.getElementById('mon-badge').innerText = `$${Math.round(cacheData.blueVal)}`;
+            if(resNews && resNews.noticias) {
+                const unicas = resNews.noticias.filter((n, i, s) => s.findIndex(x => x.titulo === n.titulo) === i);
+                document.getElementById('news-badge').innerText = `${unicas.length} NOTAS`;
+                document.getElementById('news-counter').innerText = `NEWS: ${unicas.length}`;
 
-            const unicas = resNews.noticias.filter((n, i, s) => s.findIndex(x => x.titulo === n.titulo) === i);
-            document.getElementById('news-badge').innerText = `${unicas.length} NOTAS`;
-            document.getElementById('news-counter').innerText = `NEWS: ${unicas.length}`;
-
-            let pos = 0, neg = 0;
-            const palabrasPos = ['sube', 'gana', 'crece', 'recupera', 'alza', 'positivo', 'superávit', 'estabilidad'];
-            const palabrasNeg = ['cae', 'baja', 'pierde', 'riesgo', 'inflación', 'déficit', 'crisis', 'tensión'];
-            unicas.forEach(n => {
-                const t = n.titulo.toLowerCase();
-                if (palabrasPos.some(p => t.includes(p))) pos++;
-                else if (palabrasNeg.some(p => t.includes(p))) neg++;
-            });
-            let balance = "NEUTRAL";
-            if (pos > neg + 3) balance = "OPTIMISMO";
-            if (neg > pos + 3) balance = "CAUTELA";
-            document.getElementById('sentiment-display').innerText = `[ ESTADO: ${balance} ] - Pulso detectado: ${pos} alcistas vs ${neg} bajistas en ${unicas.length} noticias.`;
-            
-            const agrup = unicas.reduce((acc, n) => { if(!acc[n.fuente]) acc[n.fuente] = []; acc[n.fuente].push(n); return acc; }, {});
-            document.getElementById('master-grid').innerHTML = Object.keys(agrup).map(f => `
-                <div class="news-card"><div class="news-header">${f}</div><div class="news-scroll-area">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
-            `).join('');
+                let pos = 0, neg = 0;
+                const palabrasPos = ['sube', 'gana', 'crece', 'recupera', 'alza', 'positivo', 'superávit', 'estabilidad'];
+                const palabrasNeg = ['cae', 'baja', 'pierde', 'riesgo', 'inflación', 'déficit', 'crisis', 'tensión'];
+                unicas.forEach(n => {
+                    const t = n.titulo.toLowerCase();
+                    if (palabrasPos.some(p => t.includes(p))) pos++;
+                    else if (palabrasNeg.some(p => t.includes(p))) neg++;
+                });
+                let balance = "NEUTRAL";
+                if (pos > neg + 3) balance = "OPTIMISMO";
+                if (neg > pos + 3) balance = "CAUTELA";
+                document.getElementById('sentiment-display').innerText = `[ ESTADO: ${balance} ] - Pulso detectado: ${pos} alcistas vs ${neg} bajistas en ${unicas.length} noticias.`;
+                
+                const agrup = unicas.reduce((acc, n) => { if(!acc[n.fuente]) acc[n.fuente] = []; acc[n.fuente].push(n); return acc; }, {});
+                document.getElementById('master-grid').innerHTML = Object.keys(agrup).map(f => `
+                    <div class="news-card"><div class="news-header">${f}</div><div class="news-scroll-area">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
+                `).join('');
+            }
 
             loader.style.display = 'none'; scanLine.style.display = 'none';
             switchProfile(document.querySelector('.profile-btn.active').getAttribute('data-type'));
         } catch (e) { 
+            console.error(e);
             clearInterval(loaderInterval);
             loader.style.display = 'none'; scanLine.style.display = 'none';
         }
