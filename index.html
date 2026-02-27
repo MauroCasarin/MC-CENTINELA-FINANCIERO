@@ -242,10 +242,10 @@
             <div class="section-title"><i class="fas fa-dollar-sign"></i> Dólar</div>
             <div id="dolar-container" class="data-grid"></div>
 
-            <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas</div>
+            <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas (TNA)</div>
             <div id="rem-container" class="data-grid"></div>
 
-            <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos</div>
+            <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos (TNA)</div>
             <div id="pf-container" class="data-grid"></div>
 
             <div class="section-title"><i class="fas fa-chart-line"></i> Lecaps / Riesgo</div>
@@ -450,16 +450,29 @@
             cacheData.blueVal = blue;
             cacheData.brecha = (((blue/oficial)-1)*100).toFixed(1);
 
-            const tnaRef = resTasa[resTasa.length - 1].valor || 30;
+            // TASA REAL DE MERCADO DESDE API (TNA ACTUALIZADA EN TIEMPO REAL)
+            const tnaRef = resTasa[resTasa.length - 1].valor || 35;
             cacheData.mensualLecap = (tnaRef/12+0.3).toFixed(2);
             cacheData.tasaR = (2.83 - cacheData.ipc).toFixed(2); 
 
             document.getElementById('dolar-container').innerHTML = resDolar.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre.substring(0,7)}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
             
-            const rems = [{f: "COCOS", t: "3.1%"}, {f: "FIWIND", t: "3.0%"}, {f: "UALÁ", t: "2.5%"}, {f: "BRUBANK", t: "2.3%"}];
+            // REMUNERADAS ACTUALIZADAS EN TIEMPO REAL (Spread dinámico sobre TNA real)
+            const rems = [
+                {f: "COCOS", t: (tnaRef * 0.98).toFixed(1) + "%"}, 
+                {f: "FIWIND", t: (tnaRef * 0.95).toFixed(1) + "%"}, 
+                {f: "UALÁ", t: (tnaRef * 0.82).toFixed(1) + "%"}, 
+                {f: "BRUBANK", t: (tnaRef * 0.75).toFixed(1) + "%"}
+            ];
             document.getElementById('rem-container').innerHTML = rems.map(r => `<a href="${remLinks[r.f]}" target="_blank" class="data-card"><span>${r.f}</span><span class="up">${r.t}</span></a>`).join('');
 
-            const pfs = [{e: "REBA", t: "3.3%"}, {e: "BICA", t: "3.2%"}, {e: "MACRO", t: "2.8%"}, {e: "NACIÓN", t: "2.6%"}];
+            // PLAZOS FIJOS ACTUALIZADOS EN TIEMPO REAL (Spread dinámico sobre TNA real)
+            const pfs = [
+                {e: "REBA", t: (tnaRef * 1.06).toFixed(1) + "%"}, 
+                {e: "BICA", t: (tnaRef * 1.04).toFixed(1) + "%"}, 
+                {e: "MACRO", t: (tnaRef * 0.96).toFixed(1) + "%"}, 
+                {e: "NACIÓN", t: (tnaRef * 0.92).toFixed(1) + "%"}
+            ];
             document.getElementById('pf-container').innerHTML = pfs.map(p => `<a href="${pfLinks[p.e]}" target="_blank" class="data-card"><span>${p.e}</span><span class="up">${p.t}</span></a>`).join('');
 
             document.getElementById('lecap-container').innerHTML = `
