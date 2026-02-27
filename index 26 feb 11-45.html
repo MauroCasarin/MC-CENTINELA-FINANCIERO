@@ -42,12 +42,28 @@
             z-index: 1;
         }
 
+        /* MODIFICADO: LÍNEA DE ESCANEO CON EFECTO DE RESALTE */
         #scan-line {
-            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 2px;
-            background: var(--blue); box-shadow: 0 0 15px var(--blue); z-index: 100;
-            animation: scanMove 2s linear infinite;
+            display: none; 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            width: 100%; 
+            height: 4px; /* Un poco más gruesa para que se note */
+            background: var(--blue); 
+            box-shadow: 0 0 20px var(--blue), 0 0 40px var(--blue); 
+            z-index: 300; /* Por encima de todo incluso del loader */
+            animation: scanMove 3s linear infinite;
+            backdrop-filter: brightness(2) contrast(1.5); /* Resalta lo que hay debajo */
+            pointer-events: none; /* No interfiere con clics */
         }
-        @keyframes scanMove { 0% { top: 0; } 100% { top: 100%; } }
+        
+        @keyframes scanMove { 
+            0% { top: -10%; opacity: 0; } 
+            10% { opacity: 1; }
+            90% { opacity: 1; }
+            100% { top: 110%; opacity: 0; } 
+        }
 
         .header {
             display: flex; align-items: center; justify-content: space-between;
@@ -78,8 +94,8 @@
         .ai-terminal { position: relative; }
 
         #loader-overlay {
-            display: none; position: absolute; top: 0; left: 0; width: 100%; height: 100%;
-            background: rgba(0,0,0,0.96); z-index: 50; border-radius: 12px;
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.8); z-index: 200;
             flex-direction: column; align-items: center; justify-content: center;
         }
 
@@ -163,20 +179,20 @@
         <div id="news-counter" style="color:var(--blue); font-size: 11px; font-weight: bold; font-family: monospace;">NEWS: --</div>
     </div>
 
+    <div id="loader-overlay">
+        <div style="width:35px; height:35px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
+        <div style="margin-top:15px; text-align:center; font-family:monospace;">
+            <div id="loader-main-text" style="color:var(--txt); font-size:12px; font-weight:bold; text-transform:uppercase; margin-bottom:6px;">Escaneando...</div>
+            <div id="loader-sub" style="color:var(--blue); font-size:10px; text-transform:uppercase; opacity:0.8;">Iniciando scan...</div>
+        </div>
+    </div>
+
     <div class="collapsible-container" id="container-ia">
         <div class="container-header" onclick="toggleContainer('container-ia')">
             <h2><i class="fas fa-brain"></i> Inteligencia</h2>
             <i class="fas fa-chevron-down toggle-icon"></i>
         </div>
         <div class="container-content ai-terminal">
-            <div id="loader-overlay">
-                <div style="width:35px; height:35px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
-                <div style="margin-top:15px; text-align:center; font-family:monospace;">
-                    <div id="loader-main-text" style="color:var(--txt); font-size:12px; font-weight:bold; text-transform:uppercase; margin-bottom:6px;">Escaneando...</div>
-                    <div id="loader-sub" style="color:var(--blue); font-size:10px; text-transform:uppercase; opacity:0.8;">Iniciando scan...</div>
-                </div>
-            </div>
-
             <div class="profile-selector">
                 <button class="profile-btn active" data-type="cons" onclick="switchProfile('cons')">
                     <i class="fas fa-shield-alt"></i> Conservador
@@ -255,12 +271,10 @@
 </div>
 
 <script>
-    /* FUNCIÓN PARA MINIMIZAR CONTENEDORES */
     function toggleContainer(id) {
         document.getElementById(id).classList.toggle('collapsed');
     }
 
-    /* EFECTO PARALLAX DINÁMICO */
     window.addEventListener('scroll', () => {
         const scrollValue = window.scrollY;
         document.body.style.backgroundPosition = `center ${scrollValue * 0.2}px`;
@@ -372,7 +386,6 @@
     }
 
     function generarAnalisis(type) {
-        // MOTOR DE IA EN TIEMPO REAL: CRUCE DINÁMICO DE DATOS
         let analisisReal = "";
         const inflacionAlta = cacheData.ipc > 3.5;
         const brechaInestable = cacheData.brecha > 18;
