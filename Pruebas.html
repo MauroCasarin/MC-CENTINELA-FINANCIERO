@@ -42,6 +42,7 @@
             z-index: 1;
         }
 
+        /* RESTAURADO: LÍNEA DE ESCANEO CON EFECTO DE RESALTE */
         #scan-line {
             display: none; 
             position: fixed; 
@@ -53,6 +54,7 @@
             box-shadow: 0 0 20px var(--blue), 0 0 40px var(--blue); 
             z-index: 300; 
             animation: scanMove 3s linear infinite;
+            backdrop-filter: brightness(2) contrast(1.5); 
             pointer-events: none; 
         }
         
@@ -313,7 +315,7 @@
         "Riesgo País": "Costo de deuda de un país."
     };
 
-    let cacheData = { ipc: 0, brecha: 0, tasaR: 0, tnaLecap: 0, rpVal: 0, blueVal: 0 };
+    let cacheData = { ipc: 0, brecha: 0, tasaR: 0, tnaLecap: 0, rpVal: 0, blueVal: 0, criptoVal: 0, tnaRef: 0 };
     let typingTimer = null;
 
     function resetAnálisis() {
@@ -354,26 +356,38 @@
     function generarAnalisis(type) {
         let txt = "";
         const mensualLecap = (cacheData.tnaLecap / 12).toFixed(2);
+        const mensualPF = (cacheData.tnaRef / 12).toFixed(2);
+        const brechaCriptoBlue = (((cacheData.criptoVal / cacheData.blueVal) - 1) * 100).toFixed(1);
+
         if(type === 'cons') {
-            txt = `SISTEMA: Orientación Conservadora activa. Con **IPC al ${cacheData.ipc}%** y rinde real de **${cacheData.tasaR}%**, el capital está ${cacheData.tasaR < 0 ? 'perdiendo poder de compra' : 'ganando valor'}. \n\n**ORIENTACIÓN:** Se sugiere evitar liquidez en cuentas remuneradas si la tasa no supera el IPC. Considere activos con ajuste **CER** para blindar su capital contra la inflación o Plazos Fijos con tasas superiores al ${cacheData.ipc}%. No descuide el Dólar MEP si la **Brecha** se mantiene baja.`;
+            txt = `SISTEMA: Análisis Conservador. Con un **IPC del ${cacheData.ipc}%** mensual, los Plazos Fijos rinden **${mensualPF}%**. \n\n**DIAGNÓSTICO:** ${mensualPF < cacheData.ipc ? 'SUS PESOS ESTÁN PERDIENDO VALOR.' : 'Sus pesos mantienen valor.'} No conviene dejar dinero en cuentas remuneradas que paguen menos del ${cacheData.ipc}%. \n\n**CONSEJO:** Para protegerse sin riesgo, rote a activos con ajuste **CER**. Si busca dolarizarse, el Dólar MEP es su mejor opción actual por estabilidad.`;
         } 
         else if(type === 'mod') {
-            txt = `SISTEMA: Perfil Moderado analizando variables. La **Brecha** actual es del **${cacheData.brecha}%** con un **Riesgo País** de **${cacheData.rpVal}**. \n\n**ORIENTACIÓN:** Escenario apto para diversificación mixta. Se recomienda repartir cartera entre **Lecaps** (tasa fija) para aprovechar el rinde mensual del ${mensualLecap}% y fondos Dollar Linked si prevé correcciones cambiarias. Mantenga un 30% en liquidez inmediata para capturar oportunidades ante volatilidad.`;
+            txt = `SISTEMA: Evaluación de Cartera Moderada. Detecto una **Brecha** del **${cacheData.brecha}%**. El Dólar Cripto está a $${Math.round(cacheData.criptoVal)}. \n\n**ESTRATEGIA:** ${brechaCriptoBlue < 0 ? 'Oportunidad de Dólar Cripto: está más barato que el Blue.' : 'Dólar Cripto con sobreprecio frente al Blue.'} \n\n**CONSEJO:** Divida posiciones: 40% en **Lecaps** para capturar el ${mensualLecap}% mensual y 60% en activos dolarizados (MEP/Cripto). Evite fondos de liquidez inmediata si el **Riesgo País** supera los 1200 puntos.`;
         } 
         else {
-            txt = `SISTEMA: Perfil Agresivo detectando brechas de mercado. Oportunidad vigente de **Carry Trade** con **Lecaps** rindiendo **${mensualLecap}%** mensual frente a un **IPC** de **${cacheData.ipc}%**. \n\n**ORIENTACIÓN:** Si la calma cambiaria persiste, el devengamiento de tasa en pesos es la estrategia líder. Sin embargo, monitoree la **Brecha**; si supera el 20%, el riesgo de salto devaluatorio aumenta. Esté listo para dolarizar posiciones si el **Riesgo País** rebota al alza abruptamente.`;
-            if(cacheData.brecha > 20) document.getElementById('panic-button').style.display = 'block';
+            txt = `SISTEMA: Protocolo Agresivo activado. La **Lecap** ofrece un spread de **${(mensualLecap - cacheData.ipc).toFixed(2)}%** real sobre el IPC. \n\n**OPERATIVA:** Máximo **Carry Trade** recomendado mientras la **Brecha** siga bajo el 20%. \n\n**CONSEJO DE INVERSIÓN:** El mejor rendimiento hoy está en **Lecaps** cortas. Sin embargo, si detecta un salto en el Dólar Cripto de más del 2% en un día, CIERRE POSICIONES EN PESOS. No conviene quedar atrapado en pesos con un **Riesgo País** volátil.`;
+            if(cacheData.brecha > 20 || cacheData.rpVal > 1500) document.getElementById('panic-button').style.display = 'block';
         }
+        
         typeWriter(txt, "ai-text", () => {
-            const pct = type === 'agre' && cacheData.brecha > 20 ? 45 : 98;
+            const pct = (type === 'agre' && cacheData.brecha > 20) ? 45 : 98;
             document.getElementById('market-pct').innerText = `${pct}%`;
             document.getElementById('ia-badge').innerText = `${pct}% CONF`;
         });
     }
 
     async function ejecutarDeepScanIA() {
-        document.getElementById('loader-overlay').style.display = 'flex';
-        document.getElementById('scan-line').style.display = 'block';
+        // RESTAURADA LÓGICA DE TEXTOS ALEATORIOS EN CARGA
+        const loader = document.getElementById('loader-overlay');
+        const loaderSub = document.getElementById('loader-sub');
+        const scanLine = document.getElementById('scan-line');
+        loader.style.display = 'flex'; scanLine.style.display = 'block';
+
+        const loaderInterval = setInterval(() => {
+            const desc = ["Escaneando Dólar", "Tasas Nominales", "Riesgo Soberano", "Inflación" , "Noticias del mercado " , "Remuneradas " , "Cruzando datos" , "Oficial-Blue" , "Sincronizando datos" , "IPC-Liquidez-CER" ];
+            loaderSub.innerText = `[ ANALIZANDO: ${desc[Math.floor(Math.random() * desc.length)]} ]`;
+        }, 200);
 
         try {
             const [resDolar, resRP, resTasa, resInf, resNews] = await Promise.all([
@@ -382,45 +396,46 @@
                 fetch(NEWS_URL).then(r => r.json())
             ]);
 
+            clearInterval(loaderInterval);
+
             cacheData.ipc = resInf[resInf.length - 1].valor;
             cacheData.rpVal = resRP.valor || 0;
             const oficial = resDolar.find(d => d.casa === 'oficial')?.venta || 1;
-            const blue = resDolar.find(d => d.casa === 'blue')?.venta || 1;
-            const cripto = resDolar.find(d => d.casa === 'cripto')?.venta || 0;
-            cacheData.brecha = (((blue/oficial)-1)*100).toFixed(1);
-            const tnaRef = resTasa[resTasa.length - 1].valor || 35;
-            cacheData.tnaLecap = (tnaRef + 3.5).toFixed(1);
+            cacheData.blueVal = resDolar.find(d => d.casa === 'blue')?.venta || 1;
+            cacheData.criptoVal = resDolar.find(d => d.casa === 'cripto')?.venta || 0;
+            cacheData.brecha = (((cacheData.blueVal/oficial)-1)*100).toFixed(1);
+            cacheData.tnaRef = resTasa[resTasa.length - 1].valor || 35;
+            cacheData.tnaLecap = (cacheData.tnaRef + 3.5).toFixed(1);
             cacheData.tasaR = (2.83 - cacheData.ipc).toFixed(2); 
 
             document.getElementById('dolar-container').innerHTML = resDolar.slice(0,4).map(d => `<div class="data-card"><span>${d.nombre}</span><span>$${Math.round(d.venta)}</span></div>`).join('');
             
             const rems = [
-                {f: "COCOS", t: (tnaRef * 0.98).toFixed(1) + "%"}, 
-                {f: "FIWIND", t: (tnaRef * 0.95).toFixed(1) + "%"}, 
-                {f: "UALÁ", t: (tnaRef * 0.82).toFixed(1) + "%"},
-                {f: "BRUBANK", t: (tnaRef * 0.78).toFixed(1) + "%"}
+                {f: "COCOS", t: (cacheData.tnaRef * 0.98).toFixed(1) + "%"}, 
+                {f: "FIWIND", t: (cacheData.tnaRef * 0.95).toFixed(1) + "%"}, 
+                {f: "UALÁ", t: (cacheData.tnaRef * 0.82).toFixed(1) + "%"},
+                {f: "BRUBANK", t: (cacheData.tnaRef * 0.78).toFixed(1) + "%"}
             ];
             document.getElementById('rem-container').innerHTML = rems.map(r => `<a href="${remLinks[r.f]}" target="_blank" class="data-card"><span>${r.f}</span><span class="up">${r.t}</span></a>`).join('');
 
             const pfs = [
-                {e: "REBA", t: (tnaRef * 1.06).toFixed(1) + "%"}, 
-                {e: "BICA", t: (tnaRef * 1.04).toFixed(1) + "%"}, 
-                {e: "MACRO", t: (tnaRef * 0.96).toFixed(1) + "%"},
-                {e: "NACIÓN", t: (tnaRef * 0.94).toFixed(1) + "%"}
+                {e: "REBA", t: (cacheData.tnaRef * 1.06).toFixed(1) + "%"}, 
+                {e: "BICA", t: (cacheData.tnaRef * 1.04).toFixed(1) + "%"}, 
+                {e: "MACRO", t: (cacheData.tnaRef * 0.96).toFixed(1) + "%"},
+                {e: "NACIÓN", t: (cacheData.tnaRef * 0.94).toFixed(1) + "%"}
             ];
             document.getElementById('pf-container').innerHTML = pfs.map(p => `<a href="${pfLinks[p.e]}" target="_blank" class="data-card"><span>${p.e}</span><span class="up">${p.t}</span></a>`).join('');
 
-            // SECCIÓN ACTUALIZADA CON DÓLAR CRIPTO
             document.getElementById('lecap-container').innerHTML = `
                 <div class="data-card"><span>Lecap (TNA)</span><span class="up">${cacheData.tnaLecap}%</span></div>
                 <div class="data-card"><span>Riesgo País</span><span class="down">${cacheData.rpVal}</span></div>
-                <div class="data-card"><span>Dólar Cripto</span><span class="up">$${Math.round(cripto)}</span></div>`;
+                <div class="data-card"><span>Dólar Cripto</span><span class="up">$${Math.round(cacheData.criptoVal)}</span></div>`;
 
             document.getElementById('brecha-val').innerText = `${cacheData.brecha}%`;
             document.getElementById('inflacion-val').innerText = `${cacheData.ipc}%`;
             document.getElementById('tasa-real-val').innerText = `${cacheData.tasaR}%`;
             document.getElementById('metrics-badge').innerText = `BRECHA ${cacheData.brecha}%`;
-            document.getElementById('mon-badge').innerText = `$${Math.round(blue)}`;
+            document.getElementById('mon-badge').innerText = `$${Math.round(cacheData.blueVal)}`;
 
             const unicas = resNews.noticias.filter((n, i, s) => s.findIndex(x => x.titulo === n.titulo) === i);
             document.getElementById('news-badge').innerText = `${unicas.length} NOTAS`;
@@ -444,10 +459,12 @@
                 <div class="news-card"><div class="news-header">${f}</div><div class="news-scroll-area">${agrup[f].map(n => `<div class="news-item"><a href="${n.link}" target="_blank">${n.titulo}</a></div>`).join('')}</div></div>
             `).join('');
 
-            document.getElementById('loader-overlay').style.display = 'none';
-            document.getElementById('scan-line').style.display = 'none';
+            loader.style.display = 'none'; scanLine.style.display = 'none';
             switchProfile(document.querySelector('.profile-btn.active').getAttribute('data-type'));
-        } catch (e) { document.getElementById('loader-overlay').style.display = 'none'; }
+        } catch (e) { 
+            clearInterval(loaderInterval);
+            loader.style.display = 'none'; scanLine.style.display = 'none';
+        }
     }
     document.addEventListener('DOMContentLoaded', ejecutarDeepScanIA);
 </script>
