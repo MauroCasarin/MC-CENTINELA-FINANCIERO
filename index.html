@@ -6,120 +6,228 @@
     <title>CENTINELA DEL MERCADO v15.9</title>
     <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/favicon.ico">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="style.css">
+    <style>
+        :root {
+            --bg: #000000;
+            --surface: rgba(10, 10, 10, 0.9);
+            --blue: #00d2ff;
+            --txt: #e0e0e0;
+            --accent: #8b5cf6;
+            --border: #1a1a1a;
+            --green: #00ff88;
+            --red: #ff3366;
+            --gold: #fbbf24;
+            --orange: #f97316;
+        }
+
+        html, body { 
+            margin: 0; padding: 0; width: 100%; min-height: 100vh;
+            background-color: var(--bg);
+            color: var(--txt);
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Scan Line Animation */
+        #scan-line {
+            position: fixed; top: 0; left: 0; width: 100%; height: 2px;
+            background: rgba(0, 210, 255, 0.5);
+            box-shadow: 0 0 15px var(--blue);
+            z-index: 1000; display: none;
+            animation: scan 3s linear infinite;
+        }
+        @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
+
+        /* Loader */
+        #loader-overlay {
+            position: fixed; inset: 0; background: var(--bg);
+            display: flex; flex-direction: column; align-items: center; justify-content: center;
+            z-index: 9999;
+        }
+        .matrix-loader {
+            width: 60px; height: 60px; border: 2px solid var(--blue);
+            border-top: 2px solid transparent; border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin { 100% { transform: rotate(360deg); } }
+
+        /* Layout Principal */
+        .app-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        
+        header {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 10px 20px; border: 1px solid var(--border);
+            background: var(--surface); margin-bottom: 20px; border-radius: 4px;
+        }
+
+        .main-grid {
+            display: grid; grid-template-columns: 1fr 350px; gap: 20px;
+        }
+
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+        }
+
+        /* Secciones Estilo Terminal */
+        .section-box {
+            background: var(--surface); border: 1px solid var(--border);
+            margin-bottom: 20px; border-radius: 4px; overflow: hidden;
+        }
+        .section-header {
+            background: rgba(255,255,255,0.03); padding: 10px 15px;
+            display: flex; justify-content: space-between; align-items: center;
+            border-bottom: 1px solid var(--border); font-weight: bold; font-size: 0.9em;
+        }
+
+        /* Widgets de Datos */
+        .data-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px; padding: 15px;
+        }
+        .data-card {
+            background: rgba(255,255,255,0.02); padding: 10px;
+            border: 1px solid var(--border); border-radius: 3px;
+            display: flex; flex-direction: column; transition: 0.3s;
+            cursor: pointer; text-decoration: none; color: inherit;
+        }
+        .data-card:hover { border-color: var(--blue); background: rgba(0, 210, 255, 0.05); }
+        .data-card span:first-child { font-size: 0.75em; color: #888; margin-bottom: 5px; }
+        .data-card span:last-child { font-size: 1.1em; font-weight: bold; }
+
+        .up { color: var(--green); }
+        .down { color: var(--red); }
+
+        /* Inteligencia AI Section */
+        .ai-console { padding: 20px; min-height: 120px; position: relative; }
+        #ai-text { font-family: 'Courier New', monospace; line-height: 1.6; color: #ccc; white-space: pre-wrap; }
+        .term-tooltip { border-bottom: 1px dashed var(--gold); cursor: help; color: var(--gold); }
+        
+        .profile-selector { display: flex; gap: 10px; margin-bottom: 15px; }
+        .profile-btn {
+            background: none; border: 1px solid var(--border); color: #888;
+            padding: 5px 15px; cursor: pointer; font-size: 0.8em; border-radius: 3px;
+        }
+        .profile-btn.active { border-color: var(--blue); color: var(--blue); background: rgba(0,210,255,0.1); }
+
+        /* Noticias Grid */
+        .master-grid {
+            display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 15px; padding: 15px;
+        }
+        .news-card { background: rgba(0,0,0,0.3); border: 1px solid var(--border); height: 250px; display: flex; flex-direction: column; }
+        .news-header { padding: 8px 12px; background: rgba(255,255,255,0.05); font-size: 0.8em; color: var(--blue); }
+        .news-scroll-area { flex: 1; overflow-y: auto; padding: 10px; font-size: 0.85em; }
+        .news-item { margin-bottom: 10px; border-bottom: 1px solid rgba(255,255,255,0.02); padding-bottom: 5px; }
+        .news-item a { color: #aaa; text-decoration: none; transition: 0.2s; }
+        .news-item a:hover { color: #fff; }
+
+        /* Collapsed logic */
+        .collapsed .section-content { display: none; }
+    </style>
 </head>
 <body>
-
-<div id="root">
     <div id="scan-line"></div>
-
-    <div class="header">
-        <div style="display:flex; align-items:center; gap:10px;">
-            <a href="https://www.instagram.com/3d_mc_3d/" target="_blank">
-                <img src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" style="width:26px; height:26px; border-radius:50%; border:1px solid var(--accent);">
-            </a>
-            <span style="font-weight:900; letter-spacing:1px; font-size: 12px;">CENTINELA <span style="color:var(--accent)">FINANCIERO</span></span>
-        </div>
-        <div id="news-counter" style="color:var(--blue); font-size: 11px; font-weight: bold; font-family: monospace;">NEWS: --</div>
-    </div>
-
+    
     <div id="loader-overlay">
-        <div style="width:35px; height:35px; border:3px solid var(--accent); border-top-color:transparent; border-radius:50%; animation: spin 0.8s linear infinite;"></div>
-        <div style="margin-top:15px; text-align:center; font-family:monospace;">
-            <div id="loader-main-text" style="color:var(--txt); font-size:12px; font-weight:bold; text-transform:uppercase; margin-bottom:6px;">Escaneando...</div>
-            <div id="loader-sub" style="color:var(--blue); font-size:10px; text-transform:uppercase; opacity:0.8;">Iniciando scan...</div>
-        </div>
+        <div class="matrix-loader"></div>
+        <div id="loader-status" style="margin-top:20px; font-family:monospace; color:var(--blue); font-size:0.8em;">INICIALIZANDO PROTOCOLO...</div>
+        <div id="loader-sub" style="margin-top:5px; color:#555; font-size:0.7em;">ESTABLECIENDO CONEXIÓN CON APIS FINANCIERAS</div>
     </div>
 
-    <div class="collapsible-container" id="container-ia">
-        <div class="container-header" onclick="toggleContainer('container-ia')">
-            <h2><i class="fas fa-brain"></i> Inteligencia</h2>
-            <span id="ia-badge" class="header-badge">SYNC</span>
-            <i class="fas fa-chevron-down toggle-icon"></i>
-        </div>
-        <div class="container-content ai-terminal">
-            <div class="profile-selector">
-                <button class="profile-btn active" data-type="cons" onclick="switchProfile('cons')">
-                    <i class="fas fa-shield-alt"></i> Conservador
-                </button>
-                <button class="profile-btn" data-type="mod" onclick="switchProfile('mod')">
-                    <i class="fas fa-balance-scale"></i> Moderado
-                </button>
-                <button class="profile-btn" data-type="agre" onclick="switchProfile('agre')">
-                    <i class="fas fa-bolt"></i> Agresivo
-                </button>
+    <div class="app-container">
+        <header>
+            <div style="display:flex; align-items:center; gap:15px;">
+                <span style="color:var(--blue); font-weight:bold; letter-spacing:2px;">CENTINELA <span style="color:var(--gold)">v15.9</span></span>
+                <span id="news-counter" style="font-size:0.7em; background:rgba(0,210,255,0.1); padding:2px 8px; border-radius:10px; color:var(--blue);">Cargando...</span>
             </div>
-            <div id="analysis-container" class="strat-box">
-                <div id="ai-text" class="strat-text"></div>
-                <button id="panic-button" onclick="alert('ALERTA: Escenario crítico. Proteja su capital.')">
-                    <i class="fas fa-exclamation-triangle"></i> Orden de Pánico: Dolarizar
-                </button>
-                <div id="market-status-info" class="market-status-box">
-                    <span class="status-label">ESTADO DEL MERCADO PARA ESTE PERFIL:</span>
-                    <span id="market-pct" class="status-val"></span>
-                    <span id="market-detail" class="status-detail" style="display:block; font-size:0.7rem; color:#666; font-style:italic; margin-top:4px;"></span>
+            <div id="mon-badge" style="font-family:monospace; color:var(--green); font-weight:bold;">---</div>
+        </header>
+
+        <div class="main-grid">
+            <div class="left-col">
+                <div class="section-box" id="sec-ia">
+                    <div class="section-header">
+                        <span><i class="fa-solid fa-brain" style="margin-right:8px;"></i>INTELIGENCIA ESTRATÉGICA</span>
+                        <div style="display:flex; align-items:center; gap:10px;">
+                            <span id="ia-badge" style="color:var(--gold); font-size:0.8em;">CALIBRANDO...</span>
+                            <i class="fa-solid fa-chevron-up" onclick="toggleContainer('sec-ia')" style="cursor:pointer;"></i>
+                        </div>
+                    </div>
+                    <div class="section-content ai-console">
+                        <div class="profile-selector">
+                            <button class="profile-btn active" data-type="cons" onclick="switchProfile('cons')">CONSERVADOR</button>
+                            <button class="profile-btn" data-type="mod" onclick="switchProfile('mod')">MODERADO</button>
+                            <button class="profile-btn" data-type="agre" onclick="switchProfile('agre')">AGRESIVO</button>
+                        </div>
+                        <div id="ai-text">Iniciando terminal...</div>
+                        <div id="panic-button" style="display:none; margin-top:20px; padding:10px; border:1px solid var(--red); color:var(--red); font-size:0.8em; text-align:center;">
+                            <i class="fa-solid fa-triangle-exclamation"></i> ALERTA DE VOLATILIDAD DETECTADA
+                        </div>
+                    </div>
+                </div>
+
+                <div class="section-box" id="sec-mon">
+                    <div class="section-header">
+                        <span><i class="fa-solid fa-microchip" style="margin-right:8px;"></i>MONITOREO TÉCNICO</span>
+                        <i class="fa-solid fa-chevron-up" onclick="toggleContainer('sec-mon')" style="cursor:pointer;"></i>
+                    </div>
+                    <div class="section-content">
+                        <div class="data-grid" id="lecap-container">
+                            </div>
+                    </div>
+                </div>
+
+                <div class="section-box" id="sec-news">
+                    <div class="section-header">
+                        <span><i class="fa-solid fa-rss" style="margin-right:8px;"></i>CENTRAL DE NOTICIAS</span>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <span id="news-badge" style="font-size:0.8em; color:var(--blue);">0 NOTAS</span>
+                            <i class="fa-solid fa-chevron-up" onclick="toggleContainer('sec-news')" style="cursor:pointer;"></i>
+                        </div>
+                    </div>
+                    <div class="section-content">
+                        <div id="sentiment-display" style="padding:10px 15px; font-size:0.75em; border-bottom:1px solid var(--border); color:var(--gold); font-family:monospace;">
+                            Analizando pulso del mercado...
+                        </div>
+                        <div class="master-grid" id="master-grid">
+                            </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="right-col">
+                <div class="section-box">
+                    <div class="section-header"><span>MÉTRICAS</span><span id="metrics-badge" style="color:var(--blue); font-size:0.8em;">...</span></div>
+                    <div class="data-grid" style="grid-template-columns: 1fr 1fr;">
+                        <div class="data-card"><span>INFLACIÓN</span><span id="inflacion-val">--%</span></div>
+                        <div class="data-card"><span>BRECHA</span><span id="brecha-val">--%</span></div>
+                        <div class="data-card"><span>TASA REAL</span><span id="tasa-real-val">--%</span></div>
+                        <div class="data-card"><span>SCORE</span><span id="market-pct">--%</span></div>
+                    </div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-header"><span>COTIZACIONES</span></div>
+                    <div class="data-grid" id="dolar-container" style="grid-template-columns: 1fr;">
+                        </div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-header"><span>PLAZOS FIJOS</span></div>
+                    <div class="data-grid" id="pf-container" style="grid-template-columns: 1fr;">
+                        </div>
+                </div>
+
+                <div class="section-box">
+                    <div class="section-header"><span>REMUNERADAS / CRYPTO</span></div>
+                    <div class="data-grid" id="rem-container" style="grid-template-columns: 1fr;">
+                        </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <div class="collapsible-container" id="container-metrics">
-        <div class="container-header" onclick="toggleContainer('container-metrics')">
-            <h2><i class="fas fa-chart-pie"></i> Métricas</h2>
-            <span id="metrics-badge" class="header-badge">--%</span>
-            <i class="fas fa-chevron-down toggle-icon"></i>
-        </div>
-        <div class="container-content">
-            <div class="stats-bar">
-                <div class="stat-item"><span class="stat-label">BRECHA</span><b id="brecha-val" class="stat-value">--</b><span class="stat-desc">Blue vs Oficial</span></div>
-                <div class="stat-item"><span class="stat-label">IPC</span><b id="inflacion-val" class="stat-value" style="color:var(--blue)">--</b><span class="stat-desc">Última Inflación</span></div>
-                <div class="stat-item"><span class="stat-label">TASA REAL</span><b id="tasa-real-val" class="stat-value">--</b><span class="stat-desc">Poder adquisitivo</span></div>
-            </div>
-            <button class="update-btn" onclick="ejecutarDeepScanIA()">Sincronizar Protocolo v15.9</button>
-        </div>
-    </div>
-
-    <div class="collapsible-container" id="container-monitoring">
-        <div class="container-header" onclick="toggleContainer('container-monitoring')">
-            <h2><i class="fas fa-broadcast-tower"></i> Monitoreo</h2>
-            <span id="mon-badge" class="header-badge">LIVE</span>
-            <i class="fas fa-chevron-down toggle-icon"></i>
-        </div>
-        <div class="container-content">
-            <div class="section-title"><i class="fas fa-dollar-sign"></i> Dólar</div>
-            <div id="dolar-container" class="data-grid"></div>
-            <div class="section-title"><i class="fas fa-wallet"></i> Remuneradas (TNA)</div>
-            <div id="rem-container" class="data-grid"></div>
-            <div class="section-title"><i class="fas fa-university"></i> Plazos Fijos (TNA)</div>
-            <div id="pf-container" class="data-grid"></div>
-            <div class="section-title"><i class="fas fa-chart-line"></i> Lecaps / Riesgo / Cripto</div>
-            <div id="lecap-container" class="data-grid"></div>
-        </div>
-    </div>
-
-    <div class="collapsible-container" id="container-news">
-        <div class="container-header" onclick="toggleContainer('container-news')">
-            <h2><i class="fas fa-newspaper"></i> Noticias</h2>
-            <span id="news-badge" class="header-badge">IDLE</span>
-            <i class="fas fa-chevron-down toggle-icon"></i>
-        </div>
-        <div class="container-content">
-            <div class="sentiment-container">
-                <span class="sentiment-label">Análisis de Sensación:</span>
-                <div id="sentiment-display" class="sentiment-track">Sincronizando pulso del mercado...</div>
-            </div>
-            <div id="master-grid" class="news-grid"></div>
-        </div>
-    </div>
-
-    <div class="transparency-footer">
-        <div style="color: var(--blue); font-weight: bold; margin-bottom: 8px;">[ PROTOCOLO DE TRANSPARENCIA DE DATOS ]</div>
-        Sincronización activa con fuentes oficiales y mercados en tiempo real. Los valores de activos, tasas de interés e indicadores macroeconómicos son extraídos de APIs financieras verificadas. Este terminal actúa como procesador de datos vigentes, no como simulador.
-        <div style="margin-top: 12px; opacity: 0.4;">CENTINELA FINANCIERO © 2026 - IA STUDIO OPTIMIZED</div>
-    </div>
-</div>
-
-<script src="intelligence.js"></script>
+    <script src="intelligence.js"></script>
     <script src="metrics.js"></script>
     <script src="monitoring.js"></script>
     <script src="news.js"></script>
