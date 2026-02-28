@@ -44,17 +44,17 @@ function updateMonitoring(resTasa) {
                 </a>`).join('');
         }
 
-        // 3. Lecaps (OPORTUNIDADES Y RIESGO)
+// 3. Lecaps (OPORTUNIDADES Y RIESGO) - TEXTO ACHICADO
         const lecapCont = document.getElementById('lecap-container');
         if (lecapCont) {
             lecapCont.innerHTML = `
-                <div class="data-card" style="width: 100%; justify-content: space-between; display: flex;">
-                    <span>LECAP (ESTIMADA)</span>
-                    <b class="up">${window.cacheData.tnaLecap}% TNA</b>
+                <div class="data-card" style="width: 100%; justify-content: space-between; display: flex; padding: 10px 15px;">
+                    <span style="font-size: 0.75em; opacity: 0.8;">LECAP (ESTIMADA)</span>
+                    <b class="up" style="font-size: 0.9em;">${window.cacheData.tnaLecap}% TNA</b>
                 </div>
-                <div class="data-card" style="width: 100%; justify-content: space-between; display: flex; border-top: 1px solid var(--border);">
-                    <span>TEA LÍMITE</span>
-                    <b style="color: var(--gold)">${(parseFloat(window.cacheData.tnaLecap) * 1.1).toFixed(1)}%</b>
+                <div class="data-card" style="width: 100%; justify-content: space-between; display: flex; border-top: 1px solid var(--border); padding: 10px 15px;">
+                    <span style="font-size: 0.75em; opacity: 0.8;">TEA LÍMITE</span>
+                    <b style="color: var(--gold); font-size: 0.9em;">${(parseFloat(window.cacheData.tnaLecap) * 1.1).toFixed(1)}%</b>
                 </div>
             `;
         }
