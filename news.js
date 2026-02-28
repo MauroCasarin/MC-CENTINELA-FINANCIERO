@@ -1,10 +1,9 @@
-// news.js - Gestión de Noticias y Análisis de Sentimiento
+// news.js - Gestión de Noticias - VERSIÓN COMPACTA
 function updateNews(resNews) {
     const badge = document.getElementById('news-badge');
     const grid = document.getElementById('master-grid');
     const sentiment = document.getElementById('sentiment-display');
     
-    // Validar estructura de datos del Apps Script
     if (!resNews || !resNews.noticias) {
         console.error("Formato de noticias inválido");
         return;
@@ -17,31 +16,29 @@ function updateNews(resNews) {
     
     if(badge) badge.innerText = `${unicas.length} NOTAS`;
 
-    // 2. Renderizar Noticias agrupadas por Fuente
+    // 2. Renderizar Noticias en UN SOLO contenedor - ALTURA MÍNIMA (180px)
     if(grid) {
-        const agrupadas = unicas.reduce((acc, n) => { 
-            if(!acc[n.fuente]) acc[n.fuente] = []; 
-            acc[n.fuente].push(n); 
-            return acc; 
-        }, {});
-
-        grid.innerHTML = Object.keys(agrupadas).map(fuente => `
-            <div class="news-card">
-                <div class="news-header">${fuente.toUpperCase()}</div>
-                <div class="news-scroll-area">
-                    ${agrupadas[fuente].map(n => `
-                        <div class="news-item">
-                            <a href="${n.link}" target="_blank">
-                                <i class="fa-solid fa-chevron-right" style="font-size:0.6em; color:var(--blue)"></i> ${n.titulo}
+        grid.innerHTML = `
+            <div class="news-card" style="grid-column: 1 / -1; margin-bottom: 10px;">
+                <div class="news-header" style="padding: 5px 10px; font-size: 0.65rem;">DATOS EN TIEMPO REAL</div>
+                <div class="news-scroll-area" style="max-height: 180px; overflow-y: auto; padding: 0 10px;">
+                    ${unicas.map(n => `
+                        <div class="news-item" style="display: flex; justify-content: space-between; align-items: flex-start; padding: 6px 0; border-bottom: 1px solid rgba(0, 210, 255, 0.05);">
+                            <a href="${n.link}" target="_blank" style="flex: 1; text-decoration: none; color: var(--txt); font-size: 0.85em; line-height: 1.2; padding-right: 10px;">
+                                <i class="fa-solid fa-angle-right" style="color: var(--blue); margin-right: 5px; font-size: 0.8em;"></i>
+                                ${n.titulo}
                             </a>
+                            <span style="font-size: 0.6em; opacity: 0.5; color: var(--gold); white-space: nowrap; margin-top: 2px;">
+                                ${n.fuente.toUpperCase()}
+                            </span>
                         </div>
                     `).join('')}
                 </div>
             </div>
-        `).join('');
+        `;
     }
 
-    // 3. Análisis de Sentimiento Rápido
+    // 3. Análisis de Sentimiento
     if(sentiment) {
         let pos = 0, neg = 0;
         const palabrasPos = ['sube', 'gana', 'crece', 'recupera', 'alza', 'positivo', 'superávit', 'mejor'];
