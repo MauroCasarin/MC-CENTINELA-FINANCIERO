@@ -1,28 +1,6 @@
-:root {
-    --bg: #000000;
-    --surface: rgba(10, 10, 10, 0.9);
-    --blue: #00d2ff;
-    --txt: #e0e0e0;
-    --accent: #8b5cf6;
-    --border: #1a1a1a;
-    --green: #00ff88;
-    --red: #ff3366;
-    --gold: #fbbf24;
-    --orange: #f97316;
-}
+/* --- OPTIMIZACIÓN RESPONSIVE --- */
 
-html, body { 
-    margin: 0; padding: 0; width: 100%; min-height: 100vh;
-    background-image: url('https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/Fondo%20centinela.jpg');
-    background-position: center 0px; 
-    background-repeat: no-repeat; 
-    background-size: cover;
-    background-attachment: scroll;
-    font-family: 'Segoe UI', sans-serif; color: var(--txt); 
-    font-size: 13px;
-    background-color: #000;
-}
-
+/* 1. Contenedor Principal: En PC usaremos dos columnas, en móvil una */
 #root { 
     width: 100%; 
     min-height: 100vh; 
@@ -31,142 +9,48 @@ html, body {
     box-sizing: border-box; 
     position: relative;
     z-index: 1;
+    
+    /* Configuración para PC */
+    display: grid;
+    grid-template-columns: 1fr 380px; /* Columna izquierda flexible, derecha fija */
+    gap: 15px;
+    align-items: start;
 }
 
-#scan-line {
-    display: none; 
-    position: fixed; 
-    top: 0; 
-    left: 0; 
-    width: 100%; 
-    height: 4px; 
-    background: var(--blue); 
-    box-shadow: 0 0 20px var(--blue), 0 0 40px var(--blue); 
-    z-index: 300; 
-    animation: scanMove 3s linear infinite;
-    backdrop-filter: brightness(2) contrast(1.5); 
-    pointer-events: none; 
+/* 2. Ajuste para Móviles (Pantallas menores a 1024px) */
+@media (max-width: 1024px) {
+    #root {
+        display: block; /* Vuelve a una sola columna en celulares */
+        padding: 10px;
+    }
+    
+    .header {
+        flex-direction: column;
+        gap: 10px;
+        text-align: center;
+    }
+
+    .stats-bar {
+        grid-template-columns: 1fr; /* Las métricas se apilan en móvil */
+        gap: 20px;
+    }
+
+    /* Ajustamos los cuadritos de datos para que no queden muy pequeños en móvil */
+    .data-grid {
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+    }
 }
 
-@keyframes scanMove { 
-    0% { top: -10%; opacity: 0; } 
-    10% { opacity: 1; }
-    90% { opacity: 1; }
-    100% { top: 110%; opacity: 0; } 
+/* 3. Ajuste de las Cajas de Noticias para que se vean mejor en PC */
+.news-grid { 
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
+    gap: 12px; 
 }
 
-.header {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 14px; background: var(--surface); border-radius: 8px;
-    border: 1px solid var(--border); margin-bottom: 12px; backdrop-filter: blur(5px);
+/* 4. Aseguramos que las imágenes de fondo no se rompan */
+html, body {
+    background-attachment: fixed; /* Mejor rendimiento en móviles */
+    background-size: cover;
+    background-position: center;
 }
-
-.collapsible-container {
-    background: var(--surface); border: 1px solid var(--border);
-    border-radius: 12px; margin-bottom: 15px; overflow: hidden;
-    backdrop-filter: blur(10px); transition: 0.3s;
-}
-
-.container-header {
-    padding: 12px 18px; background: rgba(20,20,20,0.5);
-    display: flex; justify-content: space-between; align-items: center;
-    cursor: pointer; border-bottom: 1px solid var(--border);
-}
-.container-header h2 { 
-    margin: 0; font-size: 0.85rem; font-weight: 900; color: var(--blue); 
-    text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; gap: 8px;
-}
-.container-content { padding: 18px; transition: 0.3s; }
-.collapsed .container-content { display: none; }
-.toggle-icon { transition: 0.3s; font-size: 0.8rem; color: var(--accent); }
-.collapsed .toggle-icon { transform: rotate(-90deg); }
-
-.header-badge {
-    font-size: 0.6rem; padding: 2px 6px; border-radius: 4px;
-    background: rgba(0, 210, 255, 0.1); border: 1px solid var(--blue);
-    color: var(--blue); font-weight: bold; margin-left: auto; margin-right: 10px;
-}
-
-#loader-overlay {
-    display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-    background: rgba(0,0,0,0.8); z-index: 200;
-    flex-direction: column; align-items: center; justify-content: center;
-}
-
-.profile-selector { display: flex; gap: 8px; margin-bottom: 15px; }
-.profile-btn {
-    flex: 1; padding: 12px 6px; border: 1px solid #333; background: rgba(20,20,20,0.8);
-    color: #666; border-radius: 6px; cursor: pointer; font-weight: 900;
-    text-transform: uppercase; transition: 0.3s; font-size: 0.75rem;
-    display: flex; flex-direction: column; align-items: center; gap: 5px;
-}
-.profile-btn[data-type="cons"].active { border-color: var(--green); color: var(--green); background: rgba(0, 255, 136, 0.1); }
-.profile-btn[data-type="mod"].active { border-color: var(--gold); color: var(--gold); background: rgba(251, 191, 36, 0.1); }
-.profile-btn[data-type="agre"].active { border-color: var(--red); color: var(--red); background: rgba(255, 51, 102, 0.1); }
-
-.strat-box { 
-    background: rgba(5, 5, 5, 0.85); border: 1px solid #222; border-radius: 8px; 
-    padding: 18px; margin-bottom: 15px; border-left: 4px solid var(--accent);
-}
-.strat-text { font-size: 1.05rem; line-height: 1.6; color: #ddd; white-space: pre-wrap; }
-
-.term-tooltip {
-    color: var(--accent); border-bottom: 1px dotted var(--accent);
-    cursor: help; position: relative; display: inline-block;
-}
-
-.market-status-box { font-size: 0.75rem; color: #aaa; margin-top: 15px; border-top: 1px solid #222; padding-top: 12px; }
-.status-label { display: block; color: var(--blue); font-weight: 900; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-.status-val { font-size: 1.2rem; color: var(--txt); font-family: monospace; font-weight: 900; }
-
-.section-title { font-size: 0.7rem; color: var(--gold); font-weight: 900; text-transform: uppercase; margin: 15px 0 8px 0; letter-spacing: 1px; display: flex; align-items: center; gap: 6px; }
-
-.data-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(85px, 1fr)); gap: 8px; margin-bottom: 15px; }
-.data-card { background: #000; border: 1px solid #1a1a1a; padding: 8px; border-radius: 6px; display: flex; flex-direction: column; text-decoration: none; transition: 0.2s; }
-.data-card span:first-child { font-size: 0.55rem; color: var(--blue); font-weight: bold; text-transform: uppercase; margin-bottom: 4px; }
-.data-card span:last-child { font-size: 1.05rem; font-weight: 900; font-family: monospace; color: var(--txt); }
-
-.stats-bar { 
-    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; 
-    background: rgba(15, 15, 15, 0.9); padding: 15px; border-radius: 8px; 
-    border: 1px dashed #333; margin-bottom: 18px; 
-}
-.stat-item { text-align: center; }
-.stat-label { font-size: 0.75rem; color: #888; text-transform: uppercase; font-weight: 900; margin-bottom: 6px; display: block;}
-.stat-value { color: var(--txt); font-size: 1.3rem; font-family: monospace; display: block; margin-bottom: 4px; }
-.stat-desc { font-size: 0.65rem; color: #555; line-height: 1.2; display: block; font-style: italic; }
-
-.news-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 10px; }
-.news-card { background: rgba(10, 10, 10, 0.9); border: 1px solid #222; border-radius: 8px; padding: 12px; height: 130px; display: flex; flex-direction: column; }
-.news-header { color: var(--accent); font-size: 0.75rem; font-weight: 900; border-bottom: 1px solid #333; margin-bottom: 8px; padding-bottom: 4px; }
-.news-scroll-area { overflow-y: auto; flex-grow: 1; }
-.news-item a { color: #aaa; text-decoration: none; font-size: 0.85rem; display: block; margin-bottom: 8px; line-height: 1.3; border-bottom: 1px solid #1a1a1a; }
-
-.update-btn { background: #fff; color: #000; border: none; padding: 16px; border-radius: 8px; font-weight: 900; width: 100%; cursor: pointer; text-transform: uppercase; font-size: 0.9rem; }
-
-#panic-button {
-    display: none; background: var(--red); color: white; border: none; padding: 12px;
-    border-radius: 8px; font-weight: 900; width: 100%; margin-top: 15px;
-    text-transform: uppercase; font-size: 0.8rem; cursor: pointer;
-    animation: pulse-red 1.5s infinite;
-}
-@keyframes pulse-red { 0% { opacity: 1; } 50% { opacity: 0.6; } 100% { opacity: 1; } }
-
-.sentiment-container {
-    background: rgba(0, 0, 0, 0.5); border: 1px solid #222; padding: 5px 10px;
-    margin-bottom: 12px; border-radius: 4px; overflow: hidden;
-    white-space: nowrap; display: flex; align-items: center; gap: 10px;
-}
-.sentiment-label { color: var(--accent); font-weight: 900; font-size: 0.65rem; text-transform: uppercase; flex-shrink: 0; }
-.sentiment-track { display: inline-block; font-family: monospace; font-size: 0.75rem; color: var(--blue); animation: marquee 30s linear infinite; }
-@keyframes marquee { 0% { transform: translateX(100%); } 100% { transform: translateX(-100%); } }
-
-.transparency-footer {
-    margin-top: 35px; padding: 20px; border-top: 1px double #222; 
-    opacity: 0.6; font-size: 0.65rem; text-align: center; 
-    font-family: monospace; line-height: 1.5; color: #888;
-}
-
-.up { color: var(--green) !important; }
-.down { color: var(--red) !important; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
