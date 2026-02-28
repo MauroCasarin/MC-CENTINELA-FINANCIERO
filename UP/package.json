@@ -1,0 +1,18 @@
+{
+  "name": "centinela-financiero",
+  "version": "15.9.0",
+  "description": "Terminal de inteligencia financiera para monitoreo de mercados en tiempo real.",
+  "main": "index.html",
+  "author": "Mauro Casarin",
+  "license": "MIT",
+  "dependencies": {
+    "font-awesome": "^6.4.0"
+  },
+  "keywords": [
+    "finanzas",
+    "argentina",
+    "ia",
+    "dolar",
+    "market-monitor"
+  ]
+}
