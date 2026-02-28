@@ -123,6 +123,19 @@
 
         /* Collapsed logic */
         .collapsed .section-content { display: none; }
+
+        /* Estilo para la etiqueta de desarrollo */
+        .dev-badge {
+            color: var(--orange);
+            font-size: 10px;
+            font-weight: 900;
+            font-family: monospace;
+            border: 1px solid var(--orange);
+            padding: 2px 8px;
+            border-radius: 4px;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
     </style>
 </head>
 <body>
@@ -140,7 +153,7 @@
                 <span style="color:var(--blue); font-weight:bold; letter-spacing:2px;">CENTINELA <span style="color:var(--gold)">v15.9</span></span>
                 <span id="news-counter" style="font-size:0.7em; background:rgba(0,210,255,0.1); padding:2px 8px; border-radius:10px; color:var(--blue);">Cargando...</span>
             </div>
-            <div id="mon-badge" style="font-family:monospace; color:var(--green); font-weight:bold;">---</div>
+            <div class="dev-badge">VERSION EN DESARROLLO</div>
         </header>
 
         <div class="main-grid">

@@ -20,7 +20,9 @@ async function updateMetrics(resDolar, resRP, resInf) {
             `<div class="data-card"><span>${d.nombre}</span><span>$${Math.round(d.venta)}</span></div>`
         ).join('');
         
-        document.getElementById('mon-badge').innerText = `$${Math.round(cacheData.blueVal)}`;
+        // CAMBIO: Se comenta la siguiente línea porque el ID 'mon-badge' ya no existe en el index.html
+        // document.getElementById('mon-badge').innerText = `$${Math.round(cacheData.blueVal)}`;
+        
         document.getElementById('brecha-val').innerText = `${cacheData.brecha}%`;
         document.getElementById('metrics-badge').innerText = `BRECHA ${cacheData.brecha}%`;
     }
