@@ -28,7 +28,6 @@
             overflow-x: hidden;
         }
 
-        /* Scan Line Animation */
         #scan-line {
             position: fixed; top: 0; left: 0; width: 100%; height: 2px;
             background: rgba(0, 210, 255, 0.5);
@@ -38,7 +37,6 @@
         }
         @keyframes scan { 0% { top: 0; } 100% { top: 100%; } }
 
-        /* Loader */
         #loader-overlay {
             position: fixed; inset: 0; background: var(--bg);
             display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -51,7 +49,6 @@
         }
         @keyframes spin { 100% { transform: rotate(360deg); } }
 
-        /* Layout Principal */
         .app-container { max-width: 1400px; margin: 0 auto; padding: 20px; }
         
         header {
@@ -68,7 +65,6 @@
             .main-grid { grid-template-columns: 1fr; }
         }
 
-        /* Secciones Estilo Terminal */
         .section-box {
             background: var(--surface); border: 1px solid var(--border);
             margin-bottom: 20px; border-radius: 4px; overflow: hidden;
@@ -79,7 +75,6 @@
             border-bottom: 1px solid var(--border); font-weight: bold; font-size: 0.9em;
         }
 
-        /* Widgets de Datos */
         .data-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
             gap: 10px; padding: 15px;
@@ -97,7 +92,6 @@
         .up { color: var(--green); }
         .down { color: var(--red); }
 
-        /* Inteligencia AI Section */
         .ai-console { padding: 20px; min-height: 120px; position: relative; }
         #ai-text { font-family: 'Courier New', monospace; line-height: 1.6; color: #ccc; white-space: pre-wrap; }
         .term-tooltip { border-bottom: 1px dashed var(--gold); cursor: help; color: var(--gold); }
@@ -109,7 +103,6 @@
         }
         .profile-btn.active { border-color: var(--blue); color: var(--blue); background: rgba(0,210,255,0.1); }
 
-        /* Noticias Grid */
         .master-grid {
             display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
             gap: 15px; padding: 15px;
@@ -121,21 +114,22 @@
         .news-item a { color: #aaa; text-decoration: none; transition: 0.2s; }
         .news-item a:hover { color: #fff; }
 
-        /* Collapsed logic */
         .collapsed .section-content { display: none; }
 
-        /* Estilo para la etiqueta de desarrollo */
         .dev-badge {
-            color: var(--orange);
-            font-size: 10px;
-            font-weight: 900;
-            font-family: monospace;
-            border: 1px solid var(--orange);
-            padding: 2px 8px;
-            border-radius: 4px;
-            letter-spacing: 1px;
-            text-transform: uppercase;
+            color: var(--orange); font-size: 10px; font-weight: 900; font-family: monospace;
+            border: 1px solid var(--orange); padding: 2px 8px; border-radius: 4px;
+            letter-spacing: 1px; text-transform: uppercase;
         }
+
+        /* Estilo Botón Actualizar */
+        .update-btn {
+            background: rgba(255,255,255,0.05); color: var(--txt); border: 1px solid var(--border);
+            padding: 12px; border-radius: 4px; font-weight: 900; width: 100%;
+            cursor: pointer; text-transform: uppercase; font-size: 0.8rem;
+            transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 10px;
+        }
+        .update-btn:hover { background: var(--blue); color: #000; border-color: var(--blue); }
     </style>
 </head>
 <body>
@@ -144,7 +138,6 @@
     <div id="loader-overlay">
         <div class="matrix-loader"></div>
         <div id="loader-status" style="margin-top:20px; font-family:monospace; color:var(--blue); font-size:0.8em;">INICIALIZANDO PROTOCOLO...</div>
-        <div id="loader-sub" style="margin-top:5px; color:#555; font-size:0.7em;">ESTABLECIENDO CONEXIÓN CON APIS FINANCIERAS</div>
     </div>
 
     <div class="app-container">
@@ -160,11 +153,8 @@
             <div class="left-col">
                 <div class="section-box" id="sec-ia">
                     <div class="section-header">
-                        <span><i class="fa-solid fa-brain" style="margin-right:8px;"></i>INTELIGENCIA ESTRATÉGICA</span>
-                        <div style="display:flex; align-items:center; gap:10px;">
-                            <span id="ia-badge" style="color:var(--gold); font-size:0.8em;">CALIBRANDO...</span>
-                            <i class="fa-solid fa-chevron-up" onclick="toggleContainer('sec-ia')" style="cursor:pointer;"></i>
-                        </div>
+                        <span><i class="fa-solid fa-brain" style="margin-right:8px;"></i>INTELIGENCIA</span>
+                        <i class="fa-solid fa-chevron-up" onclick="toggleContainer('sec-ia')"></i>
                     </div>
                     <div class="section-content ai-console">
                         <div class="profile-selector">
@@ -173,44 +163,34 @@
                             <button class="profile-btn" data-type="agre" onclick="switchProfile('agre')">AGRESIVO</button>
                         </div>
                         <div id="ai-text">Iniciando terminal...</div>
-                        <div id="panic-button" style="display:none; margin-top:20px; padding:10px; border:1px solid var(--red); color:var(--red); font-size:0.8em; text-align:center;">
-                            <i class="fa-solid fa-triangle-exclamation"></i> ALERTA DE VOLATILIDAD DETECTADA
-                        </div>
                     </div>
                 </div>
 
                 <div class="section-box" id="sec-mon">
                     <div class="section-header">
                         <span><i class="fa-solid fa-microchip" style="margin-right:8px;"></i>MONITOREO TÉCNICO</span>
-                        <i class="fa-solid fa-chevron-up" onclick="toggleContainer('sec-mon')" style="cursor:pointer;"></i>
+                        <i class="fa-solid fa-chevron-up" onclick="toggleContainer('sec-mon')"></i>
                     </div>
                     <div class="section-content">
-                        <div class="data-grid" id="lecap-container">
-                            </div>
+                        <div class="data-grid" id="lecap-container"></div>
                     </div>
                 </div>
 
                 <div class="section-box" id="sec-news">
                     <div class="section-header">
                         <span><i class="fa-solid fa-rss" style="margin-right:8px;"></i>CENTRAL DE NOTICIAS</span>
-                        <div style="display:flex; gap:10px; align-items:center;">
-                            <span id="news-badge" style="font-size:0.8em; color:var(--blue);">0 NOTAS</span>
-                            <i class="fa-solid fa-chevron-up" onclick="toggleContainer('sec-news')" style="cursor:pointer;"></i>
-                        </div>
+                        <i class="fa-solid fa-chevron-up" onclick="toggleContainer('sec-news')"></i>
                     </div>
                     <div class="section-content">
-                        <div id="sentiment-display" style="padding:10px 15px; font-size:0.75em; border-bottom:1px solid var(--border); color:var(--gold); font-family:monospace;">
-                            Analizando pulso del mercado...
-                        </div>
-                        <div class="master-grid" id="master-grid">
-                            </div>
+                        <div id="sentiment-display" style="padding:10px 15px; font-size:0.75em; border-bottom:1px solid var(--border); color:var(--gold); font-family:monospace;"></div>
+                        <div class="master-grid" id="master-grid"></div>
                     </div>
                 </div>
             </div>
 
             <div class="right-col">
                 <div class="section-box">
-                    <div class="section-header"><span>MÉTRICAS</span><span id="metrics-badge" style="color:var(--blue); font-size:0.8em;">...</span></div>
+                    <div class="section-header"><span>MÉTRICAS</span></div>
                     <div class="data-grid" style="grid-template-columns: 1fr 1fr;">
                         <div class="data-card"><span>INFLACIÓN</span><span id="inflacion-val">--%</span></div>
                         <div class="data-card"><span>BRECHA</span><span id="brecha-val">--%</span></div>
@@ -219,22 +199,14 @@
                     </div>
                 </div>
 
-                <div class="section-box">
-                    <div class="section-header"><span>COTIZACIONES</span></div>
-                    <div class="data-grid" id="dolar-container" style="grid-template-columns: 1fr;">
-                        </div>
-                </div>
+                <div class="section-box"><div class="section-header"><span>COTIZACIONES</span></div><div class="data-grid" id="dolar-container" style="grid-template-columns: 1fr;"></div></div>
+                <div class="section-box"><div class="section-header"><span>PLAZOS FIJOS</span></div><div class="data-grid" id="pf-container" style="grid-template-columns: 1fr;"></div></div>
+                <div class="section-box"><div class="section-header"><span>REMUNERADAS / CRYPTO</span></div><div class="data-grid" id="rem-container" style="grid-template-columns: 1fr;"></div></div>
 
-                <div class="section-box">
-                    <div class="section-header"><span>PLAZOS FIJOS</span></div>
-                    <div class="data-grid" id="pf-container" style="grid-template-columns: 1fr;">
-                        </div>
-                </div>
-
-                <div class="section-box">
-                    <div class="section-header"><span>REMUNERADAS / CRYPTO</span></div>
-                    <div class="data-grid" id="rem-container" style="grid-template-columns: 1fr;">
-                        </div>
+                <div style="margin-top: 10px;">
+                    <button class="update-btn" onclick="rescanearMercado()">
+                        <i class="fa-solid fa-rotate"></i> REESCANEAR MERCADO
+                    </button>
                 </div>
             </div>
         </div>
