@@ -1,56 +1,182 @@
-/* --- OPTIMIZACIÓN RESPONSIVE --- */
-
-/* 1. Contenedor Principal: En PC usaremos dos columnas, en móvil una */
-#root { 
-    width: 100%; 
-    min-height: 100vh; 
-    background-color: rgba(0, 0, 0, 0.7); 
-    padding: 12px; 
-    box-sizing: border-box; 
-    position: relative;
-    z-index: 1;
-    
-    /* Configuración para PC */
-    display: grid;
-    grid-template-columns: 1fr 380px; /* Columna izquierda flexible, derecha fija */
-    gap: 15px;
-    align-items: start;
+/* style.css - Terminal Centinela */
+:root {
+    --blue: #00d2ff;
+    --surface: rgba(10, 15, 25, 0.85);
+    --border: rgba(0, 210, 255, 0.2);
+    --txt: #e0e0e0;
+    --gold: #fbbf24;
+    --green: #00ff88;
+    --red: #ff3366;
 }
 
-/* 2. Ajuste para Móviles (Pantallas menores a 1024px) */
-@media (max-width: 1024px) {
-    #root {
-        display: block; /* Vuelve a una sola columna en celulares */
-        padding: 10px;
-    }
-    
-    .header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-
-    .stats-bar {
-        grid-template-columns: 1fr; /* Las métricas se apilan en móvil */
-        gap: 20px;
-    }
-
-    /* Ajustamos los cuadritos de datos para que no queden muy pequeños en móvil */
-    .data-grid {
-        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
-    }
-}
-
-/* 3. Ajuste de las Cajas de Noticias para que se vean mejor en PC */
-.news-grid { 
-    display: grid; 
-    grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); 
-    gap: 12px; 
-}
-
-/* 4. Aseguramos que las imágenes de fondo no se rompan */
-html, body {
-    background-attachment: fixed; /* Mejor rendimiento en móviles */
+body {
+    background-image: url('https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/Fondo%20centinela.jpg');
     background-size: cover;
+    background-attachment: fixed;
     background-position: center;
+    background-color: #000;
+    margin: 0;
+    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    color: white;
+    overflow-x: hidden;
+}
+
+.app-container {
+    display: grid;
+    grid-template-columns: 1fr 380px;
+    gap: 15px;
+    padding: 15px;
+    min-height: 100vh;
+    box-sizing: border-box;
+}
+
+/* Responsividad para móviles */
+@media (max-width: 900px) {
+    .app-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+.section-box {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    margin-bottom: 15px;
+    backdrop-filter: blur(10px);
+}
+
+.section-header {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    font-size: 0.75rem;
+    font-weight: bold;
+    color: var(--blue);
+    display: flex;
+    justify-content: space-between;
+    border-bottom: 1px solid var(--border);
+}
+
+/* Terminal IA */
+.ia-terminal {
+    padding: 15px;
+    min-height: 120px;
+    font-family: 'Courier New', Courier, monospace;
+    font-size: 0.95rem;
+    line-height: 1.4;
+    color: var(--txt);
+}
+
+.profile-selector {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    border-top: 1px solid var(--border);
+}
+
+.profile-btn {
+    padding: 10px;
+    background: none;
+    border: none;
+    color: var(--txt);
+    cursor: pointer;
+    font-size: 0.7rem;
+    opacity: 0.6;
+    transition: 0.3s;
+}
+
+.profile-btn.active {
+    opacity: 1;
+    background: rgba(0, 210, 255, 0.1);
+    color: var(--blue);
+    font-weight: bold;
+}
+
+/* Grillas y Tarjetas */
+.data-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1px;
+    background: var(--border);
+}
+
+.data-card {
+    background: var(--surface);
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+}
+
+.data-card span:first-child { font-size: 0.7rem; opacity: 0.7; margin-bottom: 5px; }
+.data-card b, .data-card .up { color: var(--green); font-size: 1.1rem; }
+.data-card .down { color: var(--red); }
+
+/* Noticias */
+.news-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 15px;
+}
+
+.news-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+}
+
+.news-header {
+    padding: 8px 12px;
+    background: rgba(255, 255, 255, 0.03);
+    font-size: 0.7rem;
+    border-bottom: 1px solid var(--border);
+    color: var(--gold);
+}
+
+.news-scroll-area {
+    max-height: 180px;
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.news-item {
+    margin-bottom: 8px;
+    font-size: 0.85rem;
+    border-bottom: 1px solid rgba(255,255,255,0.05);
+    padding-bottom: 5px;
+}
+
+.news-item a { color: var(--txt); text-decoration: none; transition: 0.2s; }
+.news-item a:hover { color: var(--blue); }
+
+/* Botones */
+.update-btn {
+    width: 100%;
+    padding: 15px;
+    background: var(--blue);
+    color: #000;
+    border: none;
+    font-weight: bold;
+    cursor: pointer;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+.badge {
+    padding: 2px 8px;
+    background: var(--blue);
+    color: #000;
+    font-size: 0.6rem;
+    font-weight: bold;
+    border-radius: 2px;
+}
+
+/* Efectos */
+#loader-overlay {
+    position: fixed;
+    top: 0; left: 0; width: 100%; height: 100%;
+    background: #000;
+    z-index: 9999;
+    display: none;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
 }

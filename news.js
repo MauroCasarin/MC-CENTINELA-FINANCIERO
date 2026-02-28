@@ -1,49 +1,62 @@
-// Lógica de Noticias y Sentimiento
+// news.js - Gestión de Noticias y Análisis de Sentimiento
 function updateNews(resNews) {
-    if(!resNews) return;
-
-    // Actualizar contador en el header
-    const newsCounter = document.getElementById('news-counter');
-    if(newsCounter) {
-        newsCounter.innerText = `${resNews.length} NOTICIAS`;
+    const badge = document.getElementById('news-badge');
+    const grid = document.getElementById('master-grid');
+    const sentiment = document.getElementById('sentiment-display');
+    
+    // Validar estructura de datos del Apps Script
+    if (!resNews || !resNews.noticias) {
+        console.error("Formato de noticias inválido");
+        return;
     }
 
-    const masterGrid = document.getElementById('master-grid');
-    if(masterGrid) {
-        masterGrid.innerHTML = "";
-        
-        // Agrupar por categorías básicas
-        const categorias = ["ECONOMÍA", "MERCADOS", "POLÍTICA", "CRYPTO"];
-        
-        categorias.forEach(cat => {
-            const newsCard = document.createElement('div');
-            newsCard.className = 'news-card';
-            
-            const filteredNews = resNews.filter(n => n.categoria === cat || !n.categoria).slice(0, 5);
-            
-            newsCard.innerHTML = `
-                <div class="news-header">${cat}</div>
+    // 1. Limpiar duplicados por título
+    const unicas = resNews.noticias.filter((n, i, s) => 
+        s.findIndex(x => x.titulo === n.titulo) === i
+    );
+    
+    if(badge) badge.innerText = `${unicas.length} NOTAS`;
+
+    // 2. Renderizar Noticias agrupadas por Fuente
+    if(grid) {
+        const agrupadas = unicas.reduce((acc, n) => { 
+            if(!acc[n.fuente]) acc[n.fuente] = []; 
+            acc[n.fuente].push(n); 
+            return acc; 
+        }, {});
+
+        grid.innerHTML = Object.keys(agrupadas).map(fuente => `
+            <div class="news-card">
+                <div class="news-header">${fuente.toUpperCase()}</div>
                 <div class="news-scroll-area">
-                    ${filteredNews.map(n => `
+                    ${agrupadas[fuente].map(n => `
                         <div class="news-item">
-                            <a href="${n.url}" target="_blank">• ${n.titulo}</a>
+                            <a href="${n.link}" target="_blank">
+                                <i class="fa-solid fa-chevron-right" style="font-size:0.6em; color:var(--blue)"></i> ${n.titulo}
+                            </a>
                         </div>
                     `).join('')}
                 </div>
-            `;
-            masterGrid.appendChild(newsCard);
+            </div>
+        `).join('');
+    }
+
+    // 3. Análisis de Sentimiento Rápido
+    if(sentiment) {
+        let pos = 0, neg = 0;
+        const palabrasPos = ['sube', 'gana', 'crece', 'recupera', 'alza', 'positivo', 'superávit', 'mejor'];
+        const palabrasNeg = ['cae', 'baja', 'pierde', 'riesgo', 'inflación', 'déficit', 'crisis', 'deuda'];
+        
+        unicas.forEach(n => {
+            const t = n.titulo.toLowerCase();
+            if (palabrasPos.some(p => t.includes(p))) pos++;
+            if (palabrasNeg.some(p => t.includes(p))) neg++;
         });
-    }
 
-    // Actualizar badge de noticias si existe
-    const newsBadge = document.getElementById('news-badge');
-    if(newsBadge) {
-        newsBadge.innerText = `${resNews.length} NOTAS`;
-    }
+        let estado = "NEUTRAL";
+        if (pos > neg + 2) estado = "OPTIMISMO";
+        if (neg > pos + 2) estado = "CAUTELA";
 
-    // Sentimiento del mercado (Marquee)
-    const sentimentDisp = document.getElementById('sentiment-display');
-    if(sentimentDisp) {
-        sentimentDisp.innerText = "PULSO: " + resNews.slice(0, 8).map(n => n.titulo.toUpperCase()).join("  ///  ");
+        sentiment.innerHTML = `<span style="color:var(--blue)">[ ${estado} ]</span> ${pos} alcistas / ${neg} bajistas`;
     }
 }
