@@ -3,6 +3,7 @@ const NEWS_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCg
 const DOLAR_URL = "https://dolarapi.com/v1/dolares";
 const INFLACION_API = "https://api.argentinadatos.com/v1/finanzas/indices/inflacion";
 const RP_API = "https://api.argentinadatos.com/v1/finanzas/indices/riesgo-pais/ultimo";
+// Se elimina '/ultimo' para evitar el 404; bajamos el historial completo
 const MERVAL_API = "https://api.argentinadatos.com/v1/finanzas/indices/merval"; 
 const TASAS_API = "https://api.argentinadatos.com/v1/finanzas/tasas/plazoFijo";
 
@@ -18,34 +19,33 @@ async function ejecutarDeepScanIA() {
         const fetchJson = async (url) => {
             try {
                 const r = await fetch(url);
-                return r.ok ? await r.json() : null;
+                if (!r.ok) return null;
+                return await r.json();
             } catch (err) { return null; }
         };
 
-        // Pedimos todo en paralelo para máxima velocidad en móviles
         const [resDolar, resRP, resInf, resNews, resMerval, resTasas] = await Promise.all([
             fetchJson(DOLAR_URL), fetchJson(RP_API), fetchJson(INFLACION_API),
             fetchJson(NEWS_URL), fetchJson(MERVAL_API), fetchJson(TASAS_API)
         ]);
 
-        // MERVAL: Solución al 404 (tomamos el último registro del historial)
-        if(resMerval && Array.isArray(resMerval)) {
+        // FIX MERVAL: Tomar el último valor del array histórico
+        if(resMerval && Array.isArray(resMerval) && resMerval.length > 0) {
             window.cacheData.merval = resMerval[resMerval.length - 1].valor;
         }
 
         window.cacheData.datosBancos = resTasas || [];
 
-        // Actualización de componentes
+        // Actualizar módulos verificando existencia de funciones
         if(typeof updateMetrics === 'function') updateMetrics(resDolar, resRP, resInf, window.cacheData.merval, window.cacheData.oro);
         if(typeof updateMonitoring === 'function') updateMonitoring(resTasas);
         if(typeof updateNews === 'function') updateNews(resNews || {noticias: []});
         
-        // Mantener perfil activo
         const activeBtn = document.querySelector('.profile-btn.active');
         if(typeof switchProfile === 'function') switchProfile(activeBtn ? activeBtn.getAttribute('data-type') : 'cons');
 
     } catch (e) { 
-        console.warn("Centinela: Error en sincronización parcial."); 
+        console.warn("Error en sincronización parcial de datos."); 
     } finally { 
         if(loader) loader.style.display = 'none'; 
     }
