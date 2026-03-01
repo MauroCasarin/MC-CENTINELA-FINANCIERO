@@ -1,198 +1,102 @@
-/* style.css - CENTINELA TERMINAL v15.9 */
-
 :root {
-    --bg: #000000;
-    --surface: rgba(10, 15, 25, 0.85);
+    --bg: #050505;
+    --border: #1a1a1a;
     --blue: #00d2ff;
+    --gold: #ffc107;
     --txt: #e0e0e0;
-    --border: rgba(0, 210, 255, 0.2);
-    --green: #00ff88;
-    --red: #ff3366;
-    --gold: #fbbf24;
+    --up: #00ff88;
 }
 
 body {
-    background-image: url('https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/Fondo%20centinela.jpg');
-    background-size: cover;
-    background-attachment: fixed;
-    background-position: center;
-    background-color: var(--bg);
-    margin: 0;
-    font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
     color: var(--txt);
-    overflow-x: hidden;
+    font-family: 'Segoe UI', monospace;
+    margin: 0;
+    padding: 10px;
+    -webkit-font-smoothing: antialiased;
 }
 
-.app-container {
-    display: grid;
-    grid-template-columns: 1fr 380px;
-    gap: 15px;
-    padding: 15px;
-    max-width: 1400px;
-    margin: 0 auto;
-}
+.terminal-container { max-width: 1200px; margin: 0 auto; }
 
-/* --- SECCIONES Y CONTENEDORES --- */
-.section-box {
-    background: var(--surface);
-    border: 1px solid var(--border);
-    border-radius: 8px;
+/* Metrics Bar */
+.top-metrics-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
     margin-bottom: 15px;
-    overflow: hidden;
-    backdrop-filter: blur(10px);
 }
 
-.section-header {
-    background: rgba(0, 210, 255, 0.1);
-    padding: 10px 15px;
-    font-size: 0.75em;
-    font-weight: bold;
-    letter-spacing: 2px;
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    color: var(--blue);
-}
-
-/* --- CORRECCIÓN: INSTRUMENTOS EN PESOS (HORIZONTAL Y CHICO) --- */
-#pf-container, #rem-container {
-    display: flex !important;
-    flex-wrap: wrap !important;
-    flex-direction: row !important;
-    gap: 8px;
-    padding: 12px;
-}
-
-#pf-container .data-card, #rem-container .data-card {
+.metric-item {
     flex: 1;
-    min-width: 85px; /* Tamaño mínimo para que entren varios en una fila */
-    padding: 8px 5px !important;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
+    min-width: 120px;
+    background: #0a0a0a;
+    border: 1px solid var(--border);
+    padding: 10px;
     text-align: center;
 }
 
-#pf-container .data-card span:first-child, 
-#rem-container .data-card span:first-child {
-    font-size: 0.65em !important; /* Texto de banco más chico */
-    opacity: 0.7;
-    margin-bottom: 3px;
-    text-transform: uppercase;
-}
+.metric-item span { font-size: 0.6rem; color: var(--blue); display: block; }
+.metric-value { font-size: 1.1rem; font-weight: bold; margin-top: 5px; }
 
-#pf-container .data-card span.up, 
-#rem-container .data-card span.up {
-    font-size: 0.9em !important; /* Porcentaje más chico */
-    font-weight: bold;
-}
-
-/* --- TARJETAS DE DATOS GENERALES --- */
-.data-grid {
+/* Grid */
+.grid-layout {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-    gap: 1px;
-    background: var(--border);
+    gap: 15px;
+    grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
 }
 
-.data-card {
-    background: var(--surface);
+.section-box {
+    background: #0a0a0a;
+    border: 1px solid var(--border);
     padding: 15px;
+}
+
+.section-header {
+    color: var(--blue);
+    font-size: 0.7rem;
+    letter-spacing: 2px;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(0,210,255,0.1);
+}
+
+/* Billeteras y Bancos */
+.data-card {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    text-decoration: none;
-    color: inherit;
-    transition: 0.3s;
-}
-
-.data-card:hover {
-    background: rgba(0, 210, 255, 0.1);
-}
-
-.data-card b { font-size: 1.2em; }
-.up { color: var(--green); }
-.down { color: var(--red); }
-
-/* --- BOTONES DE PERFIL --- */
-.profile-selector {
-    display: flex;
-    background: rgba(0,0,0,0.3);
-}
-
-.profile-btn {
-    flex: 1;
-    padding: 12px;
-    border: none;
-    background: transparent;
-    color: var(--txt);
-    font-size: 0.7em;
-    font-weight: bold;
-    cursor: pointer;
-    transition: 0.3s;
-    border-top: 2px solid transparent;
-}
-
-.profile-btn.active {
-    background: rgba(0, 210, 255, 0.1);
-    color: var(--blue);
-    border-top: 2px solid var(--blue);
-}
-
-/* --- TERMINAL IA --- */
-.ia-terminal {
-    padding: 15px;
-    font-family: 'Courier New', monospace;
-    min-height: 80px;
-}
-
-#ai-text {
-    font-size: 0.95em;
-    line-height: 1.6;
-}
-
-/* --- NOTICIAS --- */
-.news-item {
-    padding: 8px 15px;
+    padding: 8px 0;
     border-bottom: 1px solid rgba(255,255,255,0.05);
 }
 
-.news-item a {
-    text-decoration: none;
+.up { color: var(--up); }
+
+/* Botones de Perfil */
+.profile-selector { display: flex; gap: 5px; margin-bottom: 15px; }
+.profile-btn {
+    flex: 1;
+    background: transparent;
+    border: 1px solid var(--border);
     color: var(--txt);
-    font-size: 0.85em;
-    transition: 0.2s;
+    padding: 8px;
+    cursor: pointer;
+    font-size: 0.7rem;
+}
+.profile-btn.active { background: var(--blue); color: #000; border-color: var(--blue); }
+
+.strategy-display {
+    font-size: 0.9rem;
+    line-height: 1.5;
+    padding: 10px;
+    background: rgba(255,255,255,0.02);
 }
 
-.news-item a:hover { color: var(--blue); }
-
-/* --- RESPONSIVO MÓVIL --- */
-@media (max-width: 850px) {
-    .app-container {
-        grid-template-columns: 1fr;
-        padding: 10px;
-    }
-
-    .header {
-        flex-direction: column;
-        gap: 10px;
-        text-align: center;
-    }
-
-    #pf-container .data-card, #rem-container .data-card {
-        min-width: 70px; /* Aún más chico en móviles para que entren 3 o 4 por fila */
-    }
+/* Loader */
+#loader-overlay {
+    position: fixed; top:0; left:0; width:100%; height:100%;
+    background: #000; z-index: 999;
+    display: flex; flex-direction: column; justify-content: center; align-items: center;
 }
 
-/* --- ANIMACIONES DE CARGA (Para el Loader y Scanline) --- */
-@keyframes loadMove {
-    0% { left: -100%; }
-    100% { left: 100%; }
-}
-
-@keyframes scanMove {
-    0% { top: 0%; }
-    100% { top: 100%; }
+@media (max-width: 600px) {
+    .grid-layout { grid-template-columns: 1fr; }
+    .metric-item { min-width: 45%; }
 }
