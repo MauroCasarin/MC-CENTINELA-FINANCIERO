@@ -1,16 +1,18 @@
-// news.js - Versión con protección de errores
+// news.js - Versión optimizada para GitHub Pages con Anti-CORS
 function updateNews(resNews) {
     const grid = document.getElementById('master-grid');
     if(!grid) return;
 
-    // Si no hay noticias, mostrar aviso amigable
+    // Validación de datos con fallback amigable
     if (!resNews || !resNews.noticias || !Array.isArray(resNews.noticias)) {
-        grid.innerHTML = `<div class="news-card" style="grid-column: 1/-1; opacity: 0.5; text-align: center; padding: 20px;">
-            <i class="fa-solid fa-triangle-exclamation"></i> Servidor de noticias temporalmente fuera de línea.
-        </div>`;
+        grid.innerHTML = `
+            <div class="news-card" style="grid-column: 1/-1; opacity: 0.5; text-align: center; padding: 20px;">
+                <i class="fa-solid fa-satellite-dish"></i> Sincronizando flujo de noticias...
+            </div>`;
         return;
     }
 
+    // Filtrar duplicados por título
     const unicas = resNews.noticias.filter((n, i, s) => s.findIndex(x => x.titulo === n.titulo) === i);
 
     grid.innerHTML = `
@@ -29,14 +31,14 @@ function updateNews(resNews) {
         </div>
     `;
 
-    // Análisis de sentimiento
+    // Análisis de sentimiento avanzado
     const sentiment = document.getElementById('sentiment-display');
     if(sentiment) {
         let pos = 0, neg = 0;
         unicas.forEach(n => {
             const t = n.titulo.toLowerCase();
-            if (['sube', 'gana', 'alza', 'crece'].some(p => t.includes(p))) pos++;
-            if (['cae', 'baja', 'pierde', 'crisis'].some(p => t.includes(p))) neg++;
+            if (['sube', 'gana', 'alza', 'crece', 'récord', 'positivo'].some(p => t.includes(p))) pos++;
+            if (['cae', 'baja', 'pierde', 'crisis', 'deuda', 'inflación'].some(p => t.includes(p))) neg++;
         });
         let estado = pos > neg ? "OPTIMISTA" : (neg > pos ? "CAUTELA" : "NEUTRAL");
         sentiment.innerText = `[ MERCADO: ${estado} ]`;
