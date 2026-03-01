@@ -1,65 +1,54 @@
-// monitoring.js - Gestión de Tasas y Enlaces (Compatible con Diseño Horizontal)
-function updateMonitoring(resTasa) {
-    const remLinks = { "COCOS": "https://www.cocos.capital/", "FIWIND": "https://www.fiwind.io/", "UALÁ": "https://www.uala.com.ar/", "BRUBANK": "https://www.brubank.com/" };
-    const pfLinks = { "REBA": "https://www.reba.com.ar/", "BICA": "https://www.bancobica.com.ar/", "MACRO": "https://www.macro.com.ar/", "NACIÓN": "https://www.bna.com.ar/" };
+// monitoring.js - Sincronización basada en Comparatasas.ar
+function updateMonitoring(datos) {
+    const pfCont = document.getElementById('pf-container');
+    const remCont = document.getElementById('rem-container');
+    const lecapCont = document.getElementById('lecap-container');
 
-    try {
-        if (!resTasa) return;
+    if (!datos || !Array.isArray(datos)) return;
 
-        const tnaRef = resTasa[resTasa.length - 1].valor || 35;
-        window.cacheData.tnaRef = tnaRef;
-        window.cacheData.tnaLecap = (tnaRef + 3.5).toFixed(1);
-        
-        // 1. Cuentas Remuneradas (INSTRUMENTOS EN PESOS)
-        const rems = [
-            {f: "COCOS", t: (tnaRef * 0.98).toFixed(1) + "%"},
-            {f: "FIWIND", t: (tnaRef * 0.95).toFixed(1) + "%"},
-            {f: "UALÁ", t: (tnaRef * 0.88).toFixed(1) + "%"},
-            {f: "BRUBANK", t: (tnaRef * 0.85).toFixed(1) + "%"}
-        ];
-        
-        const remCont = document.getElementById('rem-container');
-        if(remCont) {
-            remCont.innerHTML = rems.map(r => `
-                <a href="${remLinks[r.f]}" target="_blank" class="data-card">
-                    <span>${r.f}</span>
-                    <span class="up">${r.t}</span>
-                </a>`).join('');
-        }
+    // Procesar datos (TNA de clientes o no clientes, evitando NaN)
+    const items = datos.map(i => ({
+        entidad: i.entidad.toUpperCase(),
+        tna: (i.tnaClientes || i.tnaNoClientes || 0) * 100 
+    })).sort((a, b) => b.tna - a.tna);
 
-        // 2. Plazos Fijos (INSTRUMENTOS EN PESOS)
-        const pfs = [
-            {e: "REBA", t: (tnaRef * 1.06).toFixed(1) + "%"}, 
-            {e: "BICA", t: (tnaRef * 1.04).toFixed(1) + "%"}, 
-            {e: "MACRO", t: (tnaRef * 0.96).toFixed(1) + "%"},
-            {e: "NACIÓN", t: (tnaRef * 0.94).toFixed(1) + "%"}
-        ];
-        
-        const pfCont = document.getElementById('pf-container');
-        if(pfCont) {
-            pfCont.innerHTML = pfs.map(p => `
-                <a href="${pfLinks[p.e]}" target="_blank" class="data-card">
-                    <span>${p.e}</span>
-                    <span class="up">${p.t}</span>
-                </a>`).join('');
-        }
+    // 1. BANCOS SELECCIONADOS
+    const bancosInteres = [
+        { id: "NACION", label: "NACIÓN" },
+        { id: "GALICIA", label: "GALICIA" },
+        { id: "PROVINCIA", label: "PROVINCIA" }
+    ];
 
-// 3. Lecaps (OPORTUNIDADES Y RIESGO) - TEXTO ACHICADO
-        const lecapCont = document.getElementById('lecap-container');
-        if (lecapCont) {
-            lecapCont.innerHTML = `
-                <div class="data-card" style="width: 100%; justify-content: space-between; display: flex; padding: 10px 15px;">
-                    <span style="font-size: 0.75em; opacity: 0.8;">LECAP (ESTIMADA)</span>
-                    <b class="up" style="font-size: 0.9em;">${window.cacheData.tnaLecap}% TNA</b>
-                </div>
-                <div class="data-card" style="width: 100%; justify-content: space-between; display: flex; border-top: 1px solid var(--border); padding: 10px 15px;">
-                    <span style="font-size: 0.75em; opacity: 0.8;">TEA LÍMITE</span>
-                    <b style="color: var(--gold); font-size: 0.9em;">${(parseFloat(window.cacheData.tnaLecap) * 1.1).toFixed(1)}%</b>
-                </div>
-            `;
-        }
+    if(pfCont) {
+        pfCont.innerHTML = bancosInteres.map(b => {
+            const match = items.find(i => i.entidad.includes(b.id));
+            return `<div class="data-card"><span>${b.label}</span><b class="up">${match ? match.tna.toFixed(1) : "0.0"}%</b></div>`;
+        }).join('');
+    }
 
-    } catch (e) {
-        console.error("Error en monitoring.js:", e);
+    // 2. BILLETERAS REALES
+    const billeterasInteres = [
+        { id: "MERCADO PAGO", label: "M. PAGO" },
+        { id: "NARANJA X", label: "NARANJA X" },
+        { id: "UALA", label: "Ualá" }
+    ];
+
+    if(remCont) {
+        remCont.innerHTML = billeterasInteres.map(w => {
+            const match = items.find(i => i.entidad.includes(w.id));
+            return `<div class="data-card"><span>${w.label}</span><b class="up">${match ? match.tna.toFixed(1) : "0.0"}%</b></div>`;
+        }).join('');
+    }
+
+    // 3. ACTUALIZACIÓN DE REFERENCIAS
+    const tnaMax = items.length > 0 ? items[0].tna : 35;
+    window.cacheData.tnaRef = tnaMax;
+    window.cacheData.tnaLecap = (tnaMax + 3.5).toFixed(1);
+
+    if(lecapCont) {
+        lecapCont.innerHTML = `
+            <div class="data-card" style="width:100%; justify-content:space-between; display:flex; padding:10px 15px;">
+                <span>LECAP (ESTIMADA)</span><b class="up">${window.cacheData.tnaLecap}% TNA</b>
+            </div>`;
     }
 }
