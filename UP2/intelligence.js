@@ -1,62 +1,71 @@
-// intelligence.js - Sistema de Recomendación Inteligente CENTINELA
-function switchProfile(type) {
-    // 1. Gestionar estados visuales de los botones
-    document.querySelectorAll('.profile-btn').forEach(btn => {
-        btn.classList.remove('active');
-        if(btn.getAttribute('data-type') === type) btn.classList.add('active');
-    });
+// intelligence.js - Lógica de Perfiles e IA
+const diccionarioIA = {
+    "IPC": "Inflación mensual medida por el INDEC.",
+    "Brecha": "Diferencia entre dólar oficial y libres.",
+    "Lecaps": "Letras con tasa fija mensual.",
+    "Riesgo País": "Costo de deuda de un país."
+};
 
-    const display = document.getElementById('ai-strategy-text');
-    if(!display) return;
+let typingTimer = null;
 
-    // 2. Obtener datos actuales del mercado desde el cache global
-    const ipc = window.cacheData.ipc || 0;
-    const tna = window.cacheData.tnaRef || 35;
-    const brecha = window.cacheData.brecha || 0;
-
-    let strategy = "";
-    let color = "var(--blue)";
-
-    // 3. Lógica de recomendación según Perfil y Datos Reales
-    switch(type) {
-        case 'cons':
-            strategy = `Priorizar liquidez inmediata. Con una inflación del ${ipc}%, se recomienda: 
-                        • 60% en Cuentas Remuneradas (nombres detectados: M. Pago/Naranja X) para disponibilidad 24/7. 
-                        • 40% en Plazo Fijo Tradicional aprovechando la TNA del ${tna}%. 
-                        Objetivo: Mantener poder de compra con riesgo nulo.`;
-            color = "var(--up)";
-            break;
-
-        case 'mod':
-            strategy = `Búsqueda de retorno real positivo. 
-                        • 50% en LECAPS estimadas al ${window.cacheData.tnaLecap}% (superan al Plazo Fijo). 
-                        • 30% en Fondos MM. 
-                        • 20% en Dólar MEP si la brecha es menor al 20% (Actual: ${brecha}%). 
-                        Estrategia equilibrada frente a la volatilidad.`;
-            color = "var(--gold)";
-            break;
-
-        case 'agr':
-            strategy = `Maximización de capital en escenario de brecha del ${brecha}%. 
-                        • Cobertura en activos dolarizados o CEDEARS. 
-                        • Exposición a Merval (actualmente en ${window.cacheData.merval} pts) buscando rebote técnico. 
-                        • Solo 10% en pesos para gastos operativos. 
-                        Alerta: El riesgo de volatilidad es alto, monitorear noticias en tiempo real.`;
-            color = "#ff4444";
-            break;
+// Función para el efecto de escritura con soporte para HTML y Diccionario
+function typeWriterIA(text, elementId) {
+    const ele = document.getElementById(elementId);
+    if(!ele) return;
+    
+    let i = 0;
+    let processedText = text;
+    
+    // 1. Aplicar términos del diccionario con tooltips
+    for (let term in diccionarioIA) {
+        const regex = new RegExp(`\\\\b${term}\\\\b`, 'gi');
+        processedText = processedText.replace(regex, `<span class=\"term-tooltip\" title=\"${diccionarioIA[term]}\">${term}</span>`);
     }
+    
+    // 2. Convertir negritas de Markdown a HTML
+    processedText = processedText.replace(/\*\*(.*?)\*\*/g, '<b style="color:var(--gold)">$1</b>');
 
-    // 4. Inyectar el texto con efecto de "escritura" de terminal
-    display.style.color = color;
-    display.innerHTML = `<i class="fa-solid fa-microchip"></i> ANÁLISIS FINAL: <br><br>${strategy}`;
+    ele.innerHTML = "";
+    clearTimeout(typingTimer);
+
+    function type() {
+        if (i < processedText.length) {
+            // Saltar etiquetas HTML para que no se vean mientras se escribe
+            if (processedText[i] === '<') {
+                i = processedText.indexOf('>', i) + 1;
+            } else {
+                i++;
+            }
+            ele.innerHTML = processedText.substring(0, i);
+            typingTimer = setTimeout(type, 5);
+        }
+    }
+    type();
 }
 
-// Inicialización por defecto
-document.addEventListener('DOMContentLoaded', () => {
-    // Escuchar clicks en los botones de perfil
-    document.querySelectorAll('.profile-btn').forEach(btn => {
-        btn.addEventListener('click', () => {
-            switchProfile(btn.getAttribute('data-type'));
-        });
-    });
-});
+async function switchProfile(type) {
+    // 1. Cambiar estado visual de botones
+    document.querySelectorAll('.profile-btn').forEach(b => b.classList.remove('active'));
+    const btn = document.querySelector(`[data-type="${type}"]`);
+    if(btn) btn.classList.add('active');
+
+    // 2. Obtener datos actuales de la memoria global (cacheData de main.js/metrics.js)
+    const data = window.cacheData || { ipc: 0, brecha: 0, tnaLecap: 0, tnaRef: 0, rpVal: 0 };
+    
+    // Cálculos de inteligencia extraídos del index
+    const mensualLecap = (data.tnaLecap / 12).toFixed(2);
+    const mensualPF = (data.tnaRef / 12).toFixed(2);
+    
+    let txt = "";
+
+    if(type === 'cons') {
+        txt = `SISTEMA: Perfil **Conservador**. Con un **IPC del ${data.ipc}%**, los Plazos Fijos rinden **${mensualPF}%**. \n\n**DIAGNÓSTICO:** ${mensualPF < data.ipc ? 'SUS PESOS PIERDEN PODER COMPRA.' : 'Mantiene valor relativo.'} \n\n**CONSEJO:** Priorice liquidez inmediata o activos con ajuste **CER** para cobertura directa.`;
+    } else if(type === 'mod') {
+        txt = `SISTEMA: Perfil **Moderado**. **Brecha** detectada: **${data.brecha}%**. \n\n**ESTRATEGIA:** Sugerido 40% en **Lecaps** (${mensualLecap}% mensual) y 60% en activos dolarizados (MEP/Cripto) para capturar tasa sin descuidar capital.`;
+    } else {
+        txt = `SISTEMA: Protocolo **Agresivo**. La **Lecap** ofrece un spread real de **${(mensualLecap - data.ipc).toFixed(2)}%** sobre inflación. \n\n**OPERATIVA:** Máximo Carry Trade mientras la **Brecha** se mantenga estable. Alerta de salida si el Riesgo País supera los 1500 puntos.`;
+    }
+
+    // 3. Ejecutar el efecto de escritura
+    typeWriterIA(txt, 'ai-text');
+}
