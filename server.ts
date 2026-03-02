@@ -15,41 +15,53 @@ async function startServer() {
   app.post("/api/analyze", async (req, res) => {
     const { prompt } = req.body;
     
-    // Priorizar Key-Cent si existe, ya que es donde el usuario puso su clave manual
-    const apiKey = process.env['Key-Cent'] || 
-                   process.env.KeyCent || 
-                   process.env.GEMINI_API_KEY || 
-                   process.env.API_KEY;
+    // Recolectar todas las posibles claves configuradas (buscamos hasta 10 variaciones)
+    const potentialKeys: string[] = [];
     
-    console.log("Estado de claves:", {
-      'Key-Cent': !!process.env['Key-Cent'],
-      KeyCent: !!process.env.KeyCent,
-      GEMINI: !!process.env.GEMINI_API_KEY,
-      Usando: process.env['Key-Cent'] ? "Key-Cent" : (process.env.KeyCent ? "KeyCent" : "GEMINI_API_KEY")
-    });
+    // Añadir claves específicas y genéricas
+    const keysToTry = [
+      'Key-Cent', 'Key-Cent-2', 'Key-Cent-3', 'Key-Cent-4', 'Key-Cent-5',
+      'GEMINI_API_KEY', 'API_KEY', 'KeyCent', 'KeyCent2'
+    ];
 
-    if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.length < 10) {
+    for (const keyName of keysToTry) {
+      const val = process.env[keyName];
+      if (val && val !== "MY_GEMINI_API_KEY" && val.length > 10) {
+        potentialKeys.push(val);
+      }
+    }
+
+    if (potentialKeys.length === 0) {
       return res.status(500).json({ 
-        error: "¡Casi listo! La aplicación aún no detecta tu clave.\n\n" +
-               "PASO FINAL OBLIGATORIO:\n" +
-               "En el panel de la LLAVE (🔑) donde pegaste la clave, debes hacer clic en el botón de abajo que dice:\n" +
-               "👉 'APPLY CHANGES' (Aplicar cambios) 👈\n\n" +
-               "Si ya lo hiciste y sigue fallando, asegúrate de que el nombre sea exactamente GEMINI_API_KEY."
+        error: "No se encontraron claves de API configuradas.\n\n" +
+               "Asegúrate de haber pulsado 'Apply changes' en el panel de Secrets (🔑) y que los nombres coincidan (ej: Key-Cent, Key-Cent-2)."
       });
     }
 
-    try {
-      const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [{ parts: [{ text: prompt }] }],
-      });
+    // Intentar con cada clave hasta que una funcione (Fallback)
+    let lastError = null;
+    for (const apiKey of potentialKeys) {
+      try {
+        const ai = new GoogleGenAI({ apiKey });
+        const response = await ai.models.generateContent({
+          model: "gemini-3-flash-preview",
+          contents: [{ parts: [{ text: prompt }] }],
+        });
 
-      res.json({ text: response.text });
-    } catch (error: any) {
-      console.error("Gemini Error:", error);
-      res.status(500).json({ error: "Error de la IA: " + (error.message || "Error desconocido") });
+        if (response.text) {
+          return res.json({ text: response.text });
+        }
+      } catch (error: any) {
+        console.error(`Error con una de las claves:`, error.message);
+        lastError = error;
+        // Continuar al siguiente ciclo para probar la siguiente clave
+      }
     }
+
+    // Si llegamos aquí, todas las claves fallaron
+    res.status(500).json({ 
+      error: "Todas las claves de API fallaron o están agotadas. Detalle: " + (lastError?.message || "Error desconocido") 
+    });
   });
 
   // Vite middleware for development
