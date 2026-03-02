@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { NewsItem } from '../types';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCgq6dfLzp7R6-xO0zvComD3gg1CJbODXaZdqUe5GX9zi0lP4A/exec";
@@ -36,13 +35,8 @@ export default function NewsFeed() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const generateAIAnalysis = async (currentData: any) => {
-    if (!process.env.GEMINI_API_KEY) return;
-    
     setIsAnalyzing(true);
     try {
-      const genAI = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
-      const model = "gemini-3-flash-preview";
-      
       const prompt = `
         Actúa como un analista financiero experto en el mercado argentino. 
         Analiza los siguientes datos actuales y proporciona una estrategia de inversión concisa, 
@@ -71,15 +65,22 @@ export default function NewsFeed() {
         5. Máximo 200 palabras.
       `;
 
-      const result = await genAI.models.generateContent({
-        model: model,
-        contents: [{ parts: [{ text: prompt }] }],
+      const response = await fetch("/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ prompt }),
       });
 
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error en el servidor");
+      }
+
+      const result = await response.json();
       setAiAnalysis(result.text || "No se pudo generar el análisis en este momento.");
-    } catch (err) {
+    } catch (err: any) {
       console.error("AI Analysis Error:", err);
-      setAiAnalysis("Error al conectar con la inteligencia artificial. Por favor, intenta de nuevo más tarde.");
+      setAiAnalysis(`Error: ${err.message || "Error al conectar con el servidor."}`);
     } finally {
       setIsAnalyzing(false);
     }
