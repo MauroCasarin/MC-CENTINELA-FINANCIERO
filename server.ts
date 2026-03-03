@@ -7,87 +7,125 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-// API Route for Gemini Analysis
-app.post("/api/analyze", async (req, res) => {
-  const { prompt } = req.body;
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
+// Caché simple en memoria para evitar llamadas repetitivas
+const analysisCache = new Map<string, { text: string, timestamp: number }>();
+const CACHE_DURATION = 15 * 60 * 1000; // Aumentado a 15 minutos
+
+// Registro de enfriamiento para claves que fallan por cuota
+const keyCooldowns = new Map<string, number>();
+const COOLDOWN_DURATION = 45 * 1000; // 45 segundos de enfriamiento
+
+// Función genérica para procesar el análisis con rotación de claves
+async function processAnalysis(prompt: string) {
+  // Normalizar prompt para mejor caché
+  const normalizedPrompt = prompt.trim().toLowerCase();
   
-  // Recolectar todas las posibles claves configuradas (buscamos variaciones con guion y guion bajo)
+  // Verificar caché
+  const cached = analysisCache.get(normalizedPrompt);
+  if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
+    console.log(">>> Devolviendo análisis desde caché");
+    return { text: cached.text };
+  }
+
   const potentialKeys: string[] = [];
   const foundNames: string[] = [];
-  
-  // Añadir claves específicas y genéricas
-  const keysToTry = [
-    'Key_Cent', 'Key_Cent_2', 'Key_Cent_3', 'Key_Cent_4', 'Key_Cent_5',
-    'Key-Cent', 'Key-Cent-2', 'Key-Cent-3', 'Key-Cent-4', 'Key-Cent-5',
-    'KeyCent', 'KeyCent2', 'KeyCent3',
-    'GEMINI_API_KEY', 'NEXT_PUBLIC_GEMINI_API_KEY', 'API_KEY'
-  ];
+  const keysToTry = ['cent', 'cent2', 'GEMINI_API_KEY'];
 
   for (const keyName of keysToTry) {
     const val = process.env[keyName];
-    if (val && val !== "MY_GEMINI_API_KEY" && val.length > 10) {
+    if (val && val.length > 10 && val !== "AI Studio Free Tier") {
+      // Verificar si la clave está en enfriamiento
+      const cooldownUntil = keyCooldowns.get(keyName) || 0;
+      if (Date.now() < cooldownUntil) {
+        console.log(`>>> [${keyName}] En enfriamiento. Saltando...`);
+        continue;
+      }
       potentialKeys.push(val);
       foundNames.push(keyName);
     }
   }
 
-  console.log("Claves detectadas en el servidor:", foundNames);
-
   if (potentialKeys.length === 0) {
-    // Debug: Ver qué hay en el proceso (solo nombres)
-    const allEnvKeys = Object.keys(process.env).filter(k => k.toLowerCase().includes('key') || k.toLowerCase().includes('gemini'));
-    
-    return res.status(500).json({ 
-      error: "No se encontraron claves de API configuradas.\n\n" +
-             "SISTEMA DETECTÓ ESTOS NOMBRES: " + (allEnvKeys.join(", ") || "Ninguno") + "\n\n" +
-             "PASO OBLIGATORIO:\n" +
-             "1. Ve al panel de la LLAVE (🔑).\n" +
-             "2. Asegúrate de que el nombre sea exactamente Key_Cent o Key-Cent.\n" +
-             "3. ¡HAZ CLIC EN EL BOTÓN NEGRO 'APPLY CHANGES' ABAJO! Si no le das, la web no se entera."
-    });
+    // Si todas están en enfriamiento, intentar con la menos "caliente" o simplemente fallar
+    throw new Error("Todas las claves están agotadas o en enfriamiento. Por favor, espera 30 segundos.");
   }
 
-  // Intentar con cada clave hasta que una funcione (Fallback)
-  let lastError = null;
-  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+  const indices = Array.from({ length: potentialKeys.length }, (_, i) => i);
+  for (let i = indices.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [indices[i], indices[j]] = [indices[j], indices[i]];
+  }
 
-  for (const apiKey of potentialKeys) {
+  const startTime = Date.now();
+  const MAX_REQUEST_TIME = 55000;
+  let lastError = null;
+
+  for (const idx of indices) {
+    const apiKey = potentialKeys[idx];
+    const keyName = foundNames[idx];
+    
     try {
+      if (Date.now() - startTime > MAX_REQUEST_TIME) break;
+      console.log(`>>> Intentando con clave: ${keyName}`);
       const ai = new GoogleGenAI({ apiKey });
       
-      // Implementación de reintentos para error 503 (High Demand)
       let response = null;
-      let retries = 3;
-      for (let i = 0; i < retries; i++) {
+      for (let j = 0; j < 2; j++) { // 2 intentos para 503
+        if (Date.now() - startTime > MAX_REQUEST_TIME) break;
         try {
           response = await ai.models.generateContent({
             model: "gemini-3-flash-preview",
             contents: [{ parts: [{ text: prompt }] }],
           });
-          break; // Éxito, salir del bucle de reintentos
+          break; 
         } catch (error: any) {
-          const isUnavailable = error.message?.includes("503") || error.message?.includes("UNAVAILABLE");
-          if (isUnavailable && i < retries - 1) {
-            console.log(`Modelo saturado (503). Reintentando en ${Math.pow(2, i)}s...`);
-            await sleep(Math.pow(2, i) * 1000);
+          const errorMsg = error.message || "";
+          
+          if (errorMsg.includes("429") || errorMsg.includes("RESOURCE_EXHAUSTED")) {
+            console.log(`[${keyName}] Cuota agotada (429). Iniciando enfriamiento.`);
+            keyCooldowns.set(keyName, Date.now() + COOLDOWN_DURATION);
+            throw error; 
+          }
+          
+          if (errorMsg.includes("400") || errorMsg.includes("API_KEY_INVALID")) {
+            console.log(`[${keyName}] Clave inválida. Saltando...`);
+            throw error;
+          }
+
+          if ((errorMsg.includes("503") || errorMsg.includes("UNAVAILABLE")) && j === 0) {
+            console.log(`[${keyName}] Modelo saturado (503). Reintentando en 2s...`);
+            await sleep(2000);
             continue;
           }
-          throw error; // Si no es 503 o ya no hay reintentos, lanzar error
+          throw error; 
         }
       }
 
       if (response && response.text) {
-        return res.json({ text: response.text });
+        analysisCache.set(normalizedPrompt, { text: response.text, timestamp: Date.now() });
+        return { text: response.text };
       }
     } catch (error: any) {
-      console.error(`Error con una de las claves:`, error.message);
+      console.error(`[${keyName}] Error:`, error.message?.slice(0, 100));
       lastError = error;
     }
   }
+  throw lastError || new Error("Todas las claves fallaron");
+}
 
-  res.status(500).json({ 
-    error: "Todas las claves de API fallaron o están agotadas. Detalle: " + (lastError?.message || "Error desconocido") 
-  });
+// Ruta unificada para análisis
+app.post(["/api/analyze", "/api/analyze-news"], async (req, res) => {
+  const { prompt } = req.body;
+  if (!prompt) return res.status(400).json({ error: "Prompt is required" });
+
+  try {
+    const result = await processAnalysis(prompt);
+    res.json(result);
+  } catch (error: any) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 async function startServer() {

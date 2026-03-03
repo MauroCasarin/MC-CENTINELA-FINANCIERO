@@ -16,6 +16,9 @@ const PLAZO_FIJO_API_URL = "https://api.argentinadatos.com/v1/finanzas/tasas/pla
 const BILLETERAS_FCI_ULTIMO = "https://api.argentinadatos.com/v1/finanzas/fci/mercadoDinero/ultimo";
 const BILLETERAS_FCI_PENULTIMO = "https://api.argentinadatos.com/v1/finanzas/fci/mercadoDinero/penultimo";
 const BILLETERAS_RENDIMIENTOS = "https://api.argentinadatos.com/v1/finanzas/rendimientos";
+const MERVAL_API_URL = "https://api.argentinadatos.com/v1/finanzas/indices/merval";
+const LECAPS_API_URL = "https://api.argentinadatos.com/v1/finanzas/tasas/lecap";
+const ORO_API_URL = "https://api.gold-api.com/price/XAU";
 
 export default function NewsFeed() {
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -29,6 +32,9 @@ export default function NewsFeed() {
   const [inflacion, setInflacion] = useState<{valor: number, fecha: string} | null>(null);
   const [plazosFijos, setPlazosFijos] = useState<any[]>([]);
   const [billeteras, setBilleteras] = useState<any[]>([]);
+  const [merval, setMerval] = useState<{valor: number, fecha: string} | null>(null);
+  const [lecap, setLecap] = useState<{valor: number, fecha: string} | null>(null);
+  const [oro, setOro] = useState<{valor: number} | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
@@ -72,8 +78,20 @@ export default function NewsFeed() {
       });
 
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error en el servidor");
+        const contentType = response.headers.get("content-type");
+        if (contentType && contentType.includes("application/json")) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Error en el servidor");
+        } else {
+          const textError = await response.text();
+          console.error("Server returned non-JSON error:", textError.slice(0, 100));
+          throw new Error("El servidor está saturado o tardó demasiado en responder. Por favor, intenta de nuevo en unos segundos.");
+        }
+      }
+
+      const contentType = response.headers.get("content-type");
+      if (!contentType || !contentType.includes("application/json")) {
+        throw new Error("Respuesta inesperada del servidor. Intenta de nuevo.");
       }
 
       const result = await response.json();
@@ -233,7 +251,7 @@ export default function NewsFeed() {
         };
 
         try {
-            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos] = await Promise.all([
+            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, mervalData, lecapData, oroData] = await Promise.all([
                 fetchJsonSafe(DOLAR_API_URL),
                 fetchJsonSafe(DOLAR_BLUE_API_URL),
                 fetchJsonSafe(DOLAR_MEP_API_URL),
@@ -245,7 +263,10 @@ export default function NewsFeed() {
                 fetchJsonSafe(PLAZO_FIJO_API_URL),
                 fetchJsonSafe(BILLETERAS_FCI_ULTIMO),
                 fetchJsonSafe(BILLETERAS_FCI_PENULTIMO),
-                fetchJsonSafe(BILLETERAS_RENDIMIENTOS)
+                fetchJsonSafe(BILLETERAS_RENDIMIENTOS),
+                fetchJsonSafe(MERVAL_API_URL),
+                fetchJsonSafe(LECAPS_API_URL),
+                fetchJsonSafe(ORO_API_URL)
             ]);
 
             if (oficial) setDolar(oficial);
@@ -255,6 +276,22 @@ export default function NewsFeed() {
             if (mayorista) setDolarMayorista(mayorista);
             if (cripto) setDolarCripto(cripto);
             
+            if (mervalData) {
+                const lastValue = Array.isArray(mervalData) ? mervalData[mervalData.length - 1] : null;
+                setMerval(lastValue);
+            }
+
+            if (lecapData) {
+                const lastValue = Array.isArray(lecapData) ? lecapData[lecapData.length - 1] : null;
+                setLecap(lastValue);
+            }
+
+            if (oroData && blue) {
+                // Convert global gold price (oz) to local gram price: (Price * Blue) / 31.1035
+                const pricePerGram = (oroData.price * blue.venta) / 31.1035;
+                setOro({ valor: pricePerGram });
+            }
+
             if (riesgo) {
                 const lastValue = Array.isArray(riesgo) ? riesgo[riesgo.length - 1] : null;
                 setRiesgoPais(lastValue);
@@ -564,6 +601,31 @@ export default function NewsFeed() {
         </div>
         
         <div className="p-4 grid grid-cols-3 gap-4">
+            {/* Fila 0: MERVAL - LECAPS - ORO */}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                <span className="text-blue-700">MERVAL</span>
+                <span>{merval ? merval.valor.toLocaleString('es-AR') : 'Cargando...'}</span>
+              </div>
+              <span className="text-[10px] text-gray-400 mt-0.5">Índice líder bolsa ARG</span>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                <span className="text-indigo-600">LECAPS</span>
+                <span>{lecap ? `${lecap.valor}%` : '4.2%'}</span>
+              </div>
+              <span className="text-[10px] text-gray-400 mt-0.5">Tasas Letras del Tesoro</span>
+            </div>
+
+            <div className="flex flex-col">
+              <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                <span className="text-yellow-700">ORO</span>
+                <span>{oro ? `$${oro.valor.toLocaleString('es-AR', { maximumFractionDigits: 0 })}` : 'Cargando...'}</span>
+              </div>
+              <span className="text-[10px] text-gray-400 mt-0.5">Cotización local gramo</span>
+            </div>
+
             {/* Fila 1: OFICIAL - BLUE - BRECHA */}
             {dolar && (
                <div className="flex flex-col">
