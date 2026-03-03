@@ -1,0 +1,5 @@
+{
+  "name": "GEMINI 3.3 CENTINELA FINANCIERO",
+  "description": "A news reader application fetching data from a Google Apps Script endpoint.",
+  "requestFramePermissions": []
+}
