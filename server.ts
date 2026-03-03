@@ -70,7 +70,8 @@ app.get("/api/health", (req, res) => {
 async function startServer() {
   const PORT = 3000;
 
-  // Vite middleware for development
+  // En Vercel, no necesitamos que Express sirva los archivos estáticos, 
+  // Vercel lo hace automáticamente desde la carpeta 'dist'.
   if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
@@ -78,19 +79,16 @@ async function startServer() {
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
-    // Serve static files in production
-    app.use(express.static("dist"));
-  }
-
-  // Solo escuchar si no estamos en Vercel
-  if (!process.env.VERCEL) {
+    
     app.listen(PORT, "0.0.0.0", () => {
       console.log(`Servidor corriendo en http://localhost:${PORT}`);
     });
   }
 }
 
-startServer();
+// Ejecutar inicio solo si no es Vercel
+if (!process.env.VERCEL) {
+  startServer();
+}
 
 export default app;
