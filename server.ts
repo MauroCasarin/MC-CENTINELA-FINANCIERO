@@ -7,8 +7,6 @@ dotenv.config();
 const app = express();
 app.use(express.json());
 
-const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
 // Caché simple en memoria para evitar llamadas repetitivas
 const analysisCache = new Map<string, { text: string, timestamp: number }>();
 const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos
@@ -27,7 +25,7 @@ const analyzeHandler = async (req: any, res: any) => {
   try {
     const apiKey = process.env.GROQ_API_KEY;
     if (!apiKey || apiKey === "MY_GROQ_API_KEY" || !apiKey.trim()) {
-      return res.status(500).json({ error: "GROQ_API_KEY no configurada en Vercel." });
+      return res.status(500).json({ error: "GROQ_API_KEY no configurada localmente." });
     }
 
     const groq = new Groq({ apiKey });
@@ -61,15 +59,10 @@ const analyzeHandler = async (req: any, res: any) => {
   }
 };
 
-// Registrar la ruta en múltiples paths para asegurar compatibilidad con Vercel
 app.post("/api/analyze", analyzeHandler);
-app.post("/analyze", analyzeHandler);
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", env: process.env.NODE_ENV });
-});
-app.get("/health", (req, res) => {
-  res.json({ status: "ok" });
+  res.json({ status: "ok", env: process.env.NODE_ENV, local: true });
 });
 
 async function startServer() {
