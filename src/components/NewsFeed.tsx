@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw } from 'lucide-react';
+import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity } from 'lucide-react';
 import { NewsItem } from '../types';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCgq6dfLzp7R6-xO0zvComD3gg1CJbODXaZdqUe5GX9zi0lP4A/exec";
@@ -384,6 +384,20 @@ export default function NewsFeed() {
     }
   };
 
+  const getMonthName = (dateStr: string) => {
+    if (!dateStr) return '';
+    try {
+      const date = new Date(dateStr);
+      return date.toLocaleString('es-AR', { month: 'long' }).toUpperCase();
+    } catch (e) {
+      return '';
+    }
+  };
+
+  const topPF = plazosFijos.length > 0 ? plazosFijos[0].tna : 0;
+  const ipcMensual = inflacion?.valor || 0;
+  const tasaReal = ipcMensual > 0 ? (((1 + (topPF / 12)) / (1 + (ipcMensual / 100))) - 1) * 100 : 0;
+
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-gray-500">
@@ -482,6 +496,66 @@ export default function NewsFeed() {
         </div>
       </motion.div>
 
+      {/* Metrics Container */}
+      <div className="w-full bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
+        <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center px-4 shrink-0">
+           <BarChart3 className="w-4 h-4 text-blue-600 mr-2" />
+           <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Metricas</h2>
+        </div>
+        
+        <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* IPC */}
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-rose-50 rounded-lg">
+                <Activity className="w-5 h-5 text-rose-600" />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-bold text-gray-900">{inflacion?.valor || '0'}%</span>
+                  <span className="text-xs font-bold text-rose-600 uppercase">IPC</span>
+                </div>
+                <span className="text-[10px] text-gray-500 uppercase font-medium">
+                  Inflación {getMonthName(inflacion?.fecha || '')}
+                </span>
+              </div>
+            </div>
+
+            {/* Riesgo Pais */}
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-orange-50 rounded-lg">
+                <TrendingUp className="w-5 h-5 text-orange-600" />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-2">
+                  <span className="text-xl font-bold text-gray-900">{riesgoPais?.valor || '0'}</span>
+                  <span className="text-xs font-bold text-orange-600 uppercase">RIESGO PAÍS</span>
+                </div>
+                <span className="text-[10px] text-gray-500 uppercase font-medium">
+                  Nivel de riesgo inversor
+                </span>
+              </div>
+            </div>
+
+            {/* Tasa Real */}
+            <div className="flex items-center gap-4">
+              <div className="p-2 bg-emerald-50 rounded-lg">
+                <Sparkles className="w-5 h-5 text-emerald-600" />
+              </div>
+              <div className="flex flex-col">
+                <div className="flex items-baseline gap-2">
+                  <span className={`text-xl font-bold ${tasaReal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                    {tasaReal.toFixed(2)}%
+                  </span>
+                  <span className="text-xs font-bold text-emerald-600 uppercase">Tasa Real</span>
+                </div>
+                <span className="text-[10px] text-gray-500 uppercase font-medium">
+                  Poder adquisitivo
+                </span>
+              </div>
+            </div>
+        </div>
+      </div>
+
       {/* Financial Indicators Container */}
       <div className="w-full bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
         <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center px-4 shrink-0">
@@ -489,57 +563,8 @@ export default function NewsFeed() {
            <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Mercado</h2>
         </div>
         
-        <div className="p-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {dolarMayorista && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                    <span className="text-gray-700">MAYORISTA</span>
-                    <span>${dolarMayorista.venta}</span>
-                 </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Comercio Exterior/Importación</span>
-               </div>
-            )}
-
-            {dolarCcl && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                    <span className="text-gray-700">CCL</span>
-                    <span>${dolarCcl.venta}</span>
-                 </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Contado con Liquidación</span>
-               </div>
-            )}
-
-            {dolarMep && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                    <span className="text-orange-500">MEP</span>
-                    <span>${dolarMep.venta}</span>
-                 </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Dólar Bolsa</span>
-               </div>
-            )}
-
-            {dolarCripto && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                    <span className="text-yellow-600">CRIPTO</span>
-                    <span>${dolarCripto.venta}</span>
-                 </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">USDT/USDC 24/7</span>
-               </div>
-            )}
-
-            {riesgoPais && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                    <span className="text-red-600">RIESGO PAÍS</span>
-                    <span>{riesgoPais.valor}</span>
-                 </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Puntos Básicos (JP Morgan)</span>
-               </div>
-            )}
-
+        <div className="p-4 grid grid-cols-3 gap-4">
+            {/* Fila 1: OFICIAL - BLUE - BRECHA */}
             {dolar && (
                <div className="flex flex-col">
                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
@@ -570,13 +595,34 @@ export default function NewsFeed() {
                </div>
             )}
 
-            {inflacion && (
+            {/* Fila 2: CRIPTO - MEP - MAYORISTA */}
+            {dolarCripto && (
                <div className="flex flex-col">
                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                    <span className="text-rose-600">IPC</span>
-                    <span>{inflacion.valor}%</span>
+                    <span className="text-yellow-600">CRIPTO</span>
+                    <span>${dolarCripto.venta}</span>
                  </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Última Inflación Mensual</span>
+                 <span className="text-[10px] text-gray-400 mt-0.5">USDT/USDC 24/7</span>
+               </div>
+            )}
+
+            {dolarMep && (
+               <div className="flex flex-col">
+                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                    <span className="text-orange-500">MEP</span>
+                    <span>${dolarMep.venta}</span>
+                 </div>
+                 <span className="text-[10px] text-gray-400 mt-0.5">Dólar Bolsa</span>
+               </div>
+            )}
+
+            {dolarMayorista && (
+               <div className="flex flex-col">
+                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                    <span className="text-gray-700">MAYORISTA</span>
+                    <span>${dolarMayorista.venta}</span>
+                 </div>
+                 <span className="text-[10px] text-gray-400 mt-0.5">Comercio Exterior</span>
                </div>
             )}
         </div>
