@@ -166,6 +166,7 @@ async function processAnalysis(prompt: string) {
   
   // --- INTENTO 3: SUPERVIVENCIA (Sintético) ---
   // Si todo falla, generamos un análisis sintético para no mostrar error
+  // IMPORTANTE: No lanzar error aquí, devolver el objeto directamente
   const syntheticText = generateSyntheticAnalysis(prompt);
   return { text: syntheticText, source: "synthetic" };
 }
