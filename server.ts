@@ -11,7 +11,7 @@ const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
 // Caché simple en memoria para evitar llamadas repetitivas
 const analysisCache = new Map<string, { text: string, timestamp: number }>();
-const CACHE_DURATION = 15 * 60 * 1000; // Aumentado a 15 minutos
+const CACHE_DURATION = 60 * 60 * 1000; // 1 hora de caché
 
 // Registro de enfriamiento para claves que fallan por cuota
 const keyCooldowns = new Map<string, number>();
@@ -76,7 +76,7 @@ async function processAnalysis(prompt: string) {
         if (Date.now() - startTime > MAX_REQUEST_TIME) break;
         try {
           response = await ai.models.generateContent({
-            model: "gemini-3-flash-preview",
+            model: "gemini-1.5-flash",
             contents: [{ parts: [{ text: prompt }] }],
           });
           break; 
@@ -84,9 +84,9 @@ async function processAnalysis(prompt: string) {
           const errorMsg = error.message || "";
           
           if (errorMsg.includes("429") || errorMsg.includes("RESOURCE_EXHAUSTED")) {
-            console.log(`[${keyName}] Cuota agotada (429). Iniciando enfriamiento.`);
-            keyCooldowns.set(keyName, Date.now() + COOLDOWN_DURATION);
-            throw error; 
+            console.log(`[${keyName}] Cuota agotada (429).`);
+            keyCooldowns.set(keyName, Date.now() + (COOLDOWN_DURATION * 10)); // Enfriamiento largo para 429
+            throw new Error("Límite de peticiones alcanzado. Por favor, intenta de nuevo en unos minutos.");
           }
           
           if (errorMsg.includes("400") || errorMsg.includes("API_KEY_INVALID")) {
@@ -115,6 +115,15 @@ async function processAnalysis(prompt: string) {
   throw lastError || new Error("Todas las claves fallaron");
 }
 
+// Ruta de salud para verificar que el servidor responde
+app.get("/api/health", (req, res) => {
+  res.json({ 
+    status: "ok", 
+    environment: process.env.VERCEL ? "vercel" : "local",
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Ruta unificada para análisis
 app.post(["/api/analyze", "/api/analyze-news"], async (req, res) => {
   const { prompt } = req.body;
@@ -128,30 +137,30 @@ app.post(["/api/analyze", "/api/analyze-news"], async (req, res) => {
   }
 });
 
-async function startServer() {
-  const PORT = 3000;
-
-  // Vite middleware for development
-  if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+// Configuración de middleware y rutas estáticas
+if (process.env.NODE_ENV !== "production" && !process.env.VERCEL) {
+  // Vite middleware for development - cargado dinámicamente solo en dev
+  const setupVite = async () => {
     const { createServer: createViteServer } = await import("vite");
     const vite = await createViteServer({
       server: { middlewareMode: true },
       appType: "spa",
     });
     app.use(vite.middlewares);
-  } else {
-    // Serve static files in production
-    app.use(express.static("dist"));
-  }
-
-  // Solo escuchar si no estamos en Vercel
-  if (!process.env.VERCEL) {
-    app.listen(PORT, "0.0.0.0", () => {
-      console.log(`Servidor corriendo en http://localhost:${PORT}`);
-    });
-  }
+  };
+  setupVite();
+} else if (!process.env.VERCEL) {
+  // Serve static files in production ONLY if not on Vercel
+  // Vercel handles static files via vercel.json rewrites
+  app.use(express.static("dist"));
 }
 
-startServer();
+// Solo escuchar si no estamos en Vercel
+if (!process.env.VERCEL) {
+  const PORT = process.env.PORT || 3000;
+  app.listen(PORT, () => {
+    console.log(`Servidor corriendo en http://localhost:${PORT}`);
+  });
+}
 
 export default app;

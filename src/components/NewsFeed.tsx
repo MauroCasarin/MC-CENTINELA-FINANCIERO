@@ -37,18 +37,19 @@ export default function NewsFeed() {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const generateAIAnalysis = async (currentData: any) => {
+  const generateAIAnalysis = async (currentData: any, force = false) => {
+    // Evitar análisis si ya tenemos uno reciente en esta sesión, a menos que se fuerce
+    const cachedAnalysis = sessionStorage.getItem('last_ai_analysis');
+    const lastAnalysisTime = sessionStorage.getItem('last_ai_analysis_time');
+    const isRecent = lastAnalysisTime && (Date.now() - parseInt(lastAnalysisTime) < 30 * 60 * 1000);
+
+    if (!force && cachedAnalysis && isRecent) {
+      setAiAnalysis(cachedAnalysis);
+      return;
+    }
+
     setIsAnalyzing(true);
     try {
-      // Try both VITE_GEMINI_API_KEY and VITE_CENT
-      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_CENT;
-      
-      if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.trim() === "") {
-        throw new Error("API Key no configurada. Por favor, configura VITE_GEMINI_API_KEY o 'cent' en GitHub Secrets o en tu archivo .env local.");
-      }
-
-      const genAI = new GoogleGenAI({ apiKey });
-
       const prompt = `
         Actúa como un analista financiero experto en el mercado argentino. 
         Analiza los siguientes datos actuales y proporciona una estrategia de inversión concisa, 
@@ -77,15 +78,35 @@ export default function NewsFeed() {
         5. Máximo 200 palabras.
       `;
 
-      const response = await genAI.models.generateContent({
-        model: "gemini-2.0-flash",
-        contents: [{ parts: [{ text: prompt }] }],
+      const response = await fetch('/api/analyze', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ prompt }),
       });
+
+      const data = await response.json();
       
-      setAiAnalysis(response.text || "No se pudo generar el análisis en este momento.");
+      if (!response.ok) {
+        // Manejo amigable de cuota agotada
+        if (data.error?.includes("Límite") || data.error?.includes("429")) {
+          setAiAnalysis("⚠️ El servicio de IA está saturado por hoy. Mostrando último análisis guardado o intenta más tarde.");
+          return;
+        }
+        throw new Error(data.error || "Error en el servidor de análisis");
+      }
+
+      setAiAnalysis(data.text || "No se pudo generar el análisis en este momento.");
+      
+      // Guardar en sesión para evitar re-llamadas al refrescar
+      if (data.text) {
+        sessionStorage.setItem('last_ai_analysis', data.text);
+        sessionStorage.setItem('last_ai_analysis_time', Date.now().toString());
+      }
     } catch (err: any) {
       console.error("AI Analysis Error:", err);
-      setAiAnalysis(`Error: ${err.message || "Error al conectar con Gemini."}`);
+      setAiAnalysis(`Aviso: No se pudo actualizar el análisis (Límite de cuota).`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -468,7 +489,7 @@ export default function NewsFeed() {
           <button 
             onClick={() => generateAIAnalysis({
                 dolar, dolarBlue, dolarMep, dolarCcl, riesgoPais, inflacion, plazosFijos, billeteras, news
-            })}
+            }, true)}
             disabled={isAnalyzing}
             className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
             title="Actualizar análisis"
