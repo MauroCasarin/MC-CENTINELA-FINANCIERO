@@ -17,6 +17,50 @@ const CACHE_DURATION = 60 * 60 * 1000; // 1 hora de caché
 // Desactivamos el enfriamiento persistente para permitir reintentos manuales
 const keyCooldowns = new Map<string, number>();
 
+// Función para llamar a Groq como respaldo
+async function callGroq(prompt: string) {
+  const apiKey = process.env.GROQ_API_KEY;
+  if (!apiKey) {
+    console.log(">>> Groq API Key no configurada. Saltando fallback.");
+    return null;
+  }
+
+  try {
+    console.log(">>> 🚀 Iniciando protocolo de emergencia: Cambiando a motor Groq (Llama 3)...");
+    const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Authorization": `Bearer ${apiKey}`,
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify({
+        messages: [{ role: "user", content: prompt }],
+        model: "llama3-8b-8192",
+        temperature: 0.5,
+        max_tokens: 1024
+      })
+    });
+
+    if (!response.ok) {
+      const errText = await response.text();
+      console.warn(`>>> Groq Error (${response.status}):`, errText);
+      return null;
+    }
+
+    const data: any = await response.json();
+    const text = data.choices?.[0]?.message?.content;
+    
+    if (text) {
+      console.log(">>> ✅ Éxito recuperando análisis vía Groq.");
+      return text;
+    }
+    return null;
+  } catch (e: any) {
+    console.error(">>> Error crítico conectando con Groq:", e.message);
+    return null;
+  }
+}
+
 // Función genérica para procesar el análisis con rotación de claves
 async function processAnalysis(prompt: string) {
   // Normalizar prompt para mejor caché
@@ -29,9 +73,10 @@ async function processAnalysis(prompt: string) {
     return { text: cached.text };
   }
 
+  // --- INTENTO 1: GEMINI (Google) ---
   const potentialKeys: string[] = [];
   const foundNames: string[] = [];
-  const keysToTry = ['cent'];
+  const keysToTry = ['cent', 'cent2'];
 
   for (const keyName of keysToTry) {
     const val = process.env[keyName];
@@ -41,77 +86,73 @@ async function processAnalysis(prompt: string) {
     }
   }
 
-  if (potentialKeys.length === 0) {
-    throw new Error("No se encontró ninguna API Key válida (variable 'cent').");
-  }
-
-  const indices = Array.from({ length: potentialKeys.length }, (_, i) => i);
-  // Shuffle simple
-  for (let i = indices.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [indices[i], indices[j]] = [indices[j], indices[i]];
-  }
-
-  const startTime = Date.now();
-  const MAX_REQUEST_TIME = 55000;
-  let lastError = null;
-
-  for (const idx of indices) {
-    const apiKey = potentialKeys[idx];
-    const keyName = foundNames[idx];
-    
-    try {
-      if (Date.now() - startTime > MAX_REQUEST_TIME) break;
-      console.log(`>>> Intentando con clave: ${keyName}`);
-      const ai = new GoogleGenAI({ apiKey });
-      
-      let response = null;
-      // Intentar con varios modelos en orden de preferencia
-      // gemini-2.0-flash es el único que ha confirmado existencia (aunque con cuota limitada)
-      const modelsToTry = [
-        "gemini-2.0-flash",
-        "gemini-2.0-flash-lite-preview-02-05",
-        "gemini-1.5-flash",
-        "gemini-1.5-pro",
-        "gemini-pro"
-      ];
-      
-      for (const model of modelsToTry) {
-        try {
-          console.log(`>>> Probando modelo: ${model}`);
-          response = await ai.models.generateContent({
-            model: model,
-            contents: [{ parts: [{ text: prompt }] }],
-          });
-          if (response && response.text) break; // Éxito
-        } catch (innerError: any) {
-          console.warn(`>>> Falló modelo ${model}:`, innerError.message);
-          
-          // Si es 404 (modelo no encontrado) o 429 (cuota), seguimos al siguiente modelo
-          // A veces diferentes modelos tienen diferentes cuotas o disponibilidades
-          continue;
-        }
-      }
-
-      if (response && response.text) {
-        analysisCache.set(normalizedPrompt, { text: response.text, timestamp: Date.now() });
-        return { text: response.text };
-      } else {
-        throw new Error("Ningún modelo pudo generar respuesta.");
-      }
-
-    } catch (error: any) {
-      console.error(`[${keyName}] Error crítico:`, error.message);
-      lastError = error;
+  // Si tenemos claves de Gemini, intentamos usarlas
+  if (potentialKeys.length > 0) {
+    const indices = Array.from({ length: potentialKeys.length }, (_, i) => i);
+    // Shuffle simple
+    for (let i = indices.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [indices[i], indices[j]] = [indices[j], indices[i]];
     }
+
+    const startTime = Date.now();
+    const MAX_REQUEST_TIME = 25000; // Reducimos tiempo para dar paso a Groq más rápido
+
+    for (const idx of indices) {
+      const apiKey = potentialKeys[idx];
+      const keyName = foundNames[idx];
+      
+      try {
+        if (Date.now() - startTime > MAX_REQUEST_TIME) break;
+        
+        const ai = new GoogleGenAI({ apiKey });
+        let response = null;
+        
+        // Lista de modelos Gemini
+        const modelsToTry = [
+          "gemini-2.0-flash",
+          "gemini-2.0-flash-lite-preview-02-05",
+          "gemini-1.5-flash",
+          "gemini-1.5-pro",
+          "gemini-pro"
+        ];
+        
+        for (const model of modelsToTry) {
+          try {
+            console.log(`>>> [${keyName}] Probando Gemini: ${model}`);
+            response = await ai.models.generateContent({
+              model: model,
+              contents: [{ parts: [{ text: prompt }] }],
+            });
+            
+            if (response && response.text) {
+               const text = response.text;
+               analysisCache.set(normalizedPrompt, { text, timestamp: Date.now() });
+               return { text };
+            }
+          } catch (innerError: any) {
+            console.warn(`>>> [${keyName}] Falló Gemini ${model}:`, innerError.message);
+            continue;
+          }
+        }
+      } catch (error: any) {
+        console.error(`[${keyName}] Error Gemini:`, error.message);
+      }
+    }
+  } else {
+    console.log(">>> No se encontraron claves válidas para Gemini. Pasando a Groq...");
+  }
+
+  // --- INTENTO 2: GROQ (Fallback) ---
+  // Si llegamos aquí es porque Gemini falló con todas las claves y modelos
+  const groqText = await callGroq(prompt);
+  if (groqText) {
+    analysisCache.set(normalizedPrompt, { text: groqText, timestamp: Date.now() });
+    return { text: groqText, source: "groq" };
   }
   
-  // Mensaje amigable para el usuario final
-  if (lastError?.message?.includes("429") || lastError?.message?.includes("RESOURCE")) {
-    throw new Error("⚠️ La IA está saturada momentáneamente. Intenta de nuevo en unos minutos.");
-  }
-  
-  throw lastError || new Error("Error desconocido al conectar con la IA.");
+  // Si todo falla
+  throw new Error("⚠️ Todos los servicios de IA (Gemini y Groq) están saturados. Intenta más tarde.");
 }
 
 // Ruta de salud para verificar que el servidor responde
