@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 import { NewsItem } from '../types';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCgq6dfLzp7R6-xO0zvComD3gg1CJbODXaZdqUe5GX9zi0lP4A/exec";
@@ -43,6 +44,15 @@ export default function NewsFeed() {
   const generateAIAnalysis = async (currentData: any) => {
     setIsAnalyzing(true);
     try {
+      // Try both VITE_GEMINI_API_KEY and VITE_CENT
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY || import.meta.env.VITE_CENT;
+      
+      if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey.trim() === "") {
+        throw new Error("API Key no configurada. Por favor, configura VITE_GEMINI_API_KEY o 'cent' en GitHub Secrets o en tu archivo .env local.");
+      }
+
+      const genAI = new GoogleGenAI({ apiKey });
+
       const prompt = `
         Actúa como un analista financiero experto en el mercado argentino. 
         Analiza los siguientes datos actuales y proporciona una estrategia de inversión concisa, 
@@ -71,34 +81,15 @@ export default function NewsFeed() {
         5. Máximo 200 palabras.
       `;
 
-      const response = await fetch("/api/analyze", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
+      const response = await genAI.models.generateContent({
+        model: "gemini-2.0-flash",
+        contents: [{ parts: [{ text: prompt }] }],
       });
-
-      if (!response.ok) {
-        const contentType = response.headers.get("content-type");
-        if (contentType && contentType.includes("application/json")) {
-          const errorData = await response.json();
-          throw new Error(errorData.error || "Error en el servidor");
-        } else {
-          const textError = await response.text();
-          console.error("Server returned non-JSON error:", textError.slice(0, 100));
-          throw new Error("El servidor está saturado o tardó demasiado en responder. Por favor, intenta de nuevo en unos segundos.");
-        }
-      }
-
-      const contentType = response.headers.get("content-type");
-      if (!contentType || !contentType.includes("application/json")) {
-        throw new Error("Respuesta inesperada del servidor. Intenta de nuevo.");
-      }
-
-      const result = await response.json();
-      setAiAnalysis(result.text || "No se pudo generar el análisis en este momento.");
+      
+      setAiAnalysis(response.text || "No se pudo generar el análisis en este momento.");
     } catch (err: any) {
       console.error("AI Analysis Error:", err);
-      setAiAnalysis(`Error: ${err.message || "Error al conectar con el servidor."}`);
+      setAiAnalysis(`Error: ${err.message || "Error al conectar con Gemini."}`);
     } finally {
       setIsAnalyzing(false);
     }

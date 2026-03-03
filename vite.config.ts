@@ -8,6 +8,14 @@ export default defineConfig(({mode}) => {
   return {
     base: process.env.NODE_ENV === 'production' ? '/MC-CENTINELA-FINANCIERO/' : '/',
     plugins: [react(), tailwindcss()],
+    define: {
+      'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(
+        [process.env.GEMINI_API_KEY, process.env.cent, env.VITE_GEMINI_API_KEY, env.VITE_CENT].find(k => k && k !== "MY_GEMINI_API_KEY" && k !== "") || ""
+      ),
+      'import.meta.env.VITE_CENT': JSON.stringify(
+        [process.env.cent, env.VITE_CENT].find(k => k && k !== "MY_GEMINI_API_KEY" && k !== "") || ""
+      ),
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
