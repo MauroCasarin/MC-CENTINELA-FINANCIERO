@@ -11,26 +11,39 @@ app.use(express.json());
 app.post("/api/analyze", async (req, res) => {
   const { prompt } = req.body;
   
-  // Recolectar todas las posibles claves configuradas (buscamos hasta 10 variaciones)
+  // Recolectar todas las posibles claves configuradas (buscamos variaciones con guion y guion bajo)
   const potentialKeys: string[] = [];
+  const foundNames: string[] = [];
   
   // Añadir claves específicas y genéricas
   const keysToTry = [
+    'Key_Cent', 'Key_Cent_2', 'Key_Cent_3', 'Key_Cent_4', 'Key_Cent_5',
     'Key-Cent', 'Key-Cent-2', 'Key-Cent-3', 'Key-Cent-4', 'Key-Cent-5',
-    'GEMINI_API_KEY', 'API_KEY', 'KeyCent', 'KeyCent2'
+    'KeyCent', 'KeyCent2', 'KeyCent3',
+    'GEMINI_API_KEY', 'NEXT_PUBLIC_GEMINI_API_KEY', 'API_KEY'
   ];
 
   for (const keyName of keysToTry) {
     const val = process.env[keyName];
     if (val && val !== "MY_GEMINI_API_KEY" && val.length > 10) {
       potentialKeys.push(val);
+      foundNames.push(keyName);
     }
   }
 
+  console.log("Claves detectadas en el servidor:", foundNames);
+
   if (potentialKeys.length === 0) {
+    // Debug: Ver qué hay en el proceso (solo nombres)
+    const allEnvKeys = Object.keys(process.env).filter(k => k.toLowerCase().includes('key') || k.toLowerCase().includes('gemini'));
+    
     return res.status(500).json({ 
       error: "No se encontraron claves de API configuradas.\n\n" +
-             "Asegúrate de haber pulsado 'Apply changes' en el panel de Secrets (🔑) y que los nombres coincidan (ej: Key-Cent, Key-Cent-2)."
+             "SISTEMA DETECTÓ ESTOS NOMBRES: " + (allEnvKeys.join(", ") || "Ninguno") + "\n\n" +
+             "PASO OBLIGATORIO:\n" +
+             "1. Ve al panel de la LLAVE (🔑).\n" +
+             "2. Asegúrate de que el nombre sea exactamente Key_Cent o Key-Cent.\n" +
+             "3. ¡HAZ CLIC EN EL BOTÓN NEGRO 'APPLY CHANGES' ABAJO! Si no le das, la web no se entera."
     });
   }
 
