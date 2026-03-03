@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { NewsItem } from '../types';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCgq6dfLzp7R6-xO0zvComD3gg1CJbODXaZdqUe5GX9zi0lP4A/exec";
@@ -37,17 +36,7 @@ export default function NewsFeed() {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const generateAIAnalysis = async (currentData: any, force = false) => {
-    // Evitar análisis si ya tenemos uno reciente en esta sesión, a menos que se fuerce
-    const cachedAnalysis = sessionStorage.getItem('last_ai_analysis');
-    const lastAnalysisTime = sessionStorage.getItem('last_ai_analysis_time');
-    const isRecent = lastAnalysisTime && (Date.now() - parseInt(lastAnalysisTime) < 30 * 60 * 1000);
-
-    if (!force && cachedAnalysis && isRecent) {
-      setAiAnalysis(cachedAnalysis);
-      return;
-    }
-
+  const generateAIAnalysis = async (currentData: any) => {
     setIsAnalyzing(true);
     try {
       const prompt = `
@@ -86,27 +75,16 @@ export default function NewsFeed() {
         body: JSON.stringify({ prompt }),
       });
 
-      const data = await response.json();
-      
       if (!response.ok) {
-        // Manejo amigable de cuota agotada
-        if (data.error?.includes("Límite") || data.error?.includes("429")) {
-          setAiAnalysis("⚠️ El servicio de IA está saturado por hoy. Mostrando último análisis guardado o intenta más tarde.");
-          return;
-        }
-        throw new Error(data.error || "Error en el servidor de análisis");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al conectar con el servidor de análisis.");
       }
 
+      const data = await response.json();
       setAiAnalysis(data.text || "No se pudo generar el análisis en este momento.");
-      
-      // Guardar en sesión para evitar re-llamadas al refrescar
-      if (data.text) {
-        sessionStorage.setItem('last_ai_analysis', data.text);
-        sessionStorage.setItem('last_ai_analysis_time', Date.now().toString());
-      }
     } catch (err: any) {
       console.error("AI Analysis Error:", err);
-      setAiAnalysis(`Aviso: No se pudo actualizar el análisis (Límite de cuota).`);
+      setAiAnalysis(`Error: ${err.message || "Error al procesar el análisis."}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -362,26 +340,21 @@ export default function NewsFeed() {
             const topWallets = walletRates.slice(0, 4);
             setBilleteras(topWallets);
 
-            // Trigger AI Analysis ONLY if we have critical data
-            if (oficial && blue && riesgo && inflacion && items.length > 0) {
-                generateAIAnalysis({
-                    dolar: oficial,
-                    dolarBlue: blue,
-                    dolarMep: mep,
-                    dolarCcl: ccl,
-                    riesgoPais: Array.isArray(riesgo) ? riesgo[riesgo.length - 1] : null,
-                    inflacion: Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null,
-                    plazosFijos: pf ? pf.filter((item: any) => item.tnaClientes > 0).sort((a: any, b: any) => b.tnaClientes - a.tnaClientes).slice(0, 4) : [],
-                    billeteras: topWallets,
-                    news: items
-                });
-            } else {
-                console.log("Skipping AI analysis: Missing critical data");
-            }
-
-        } catch (e) {
+            // Trigger AI Analysis
+            generateAIAnalysis({
+                dolar: oficial,
+                dolarBlue: blue,
+                dolarMep: mep,
+                dolarCcl: ccl,
+                riesgoPais: Array.isArray(riesgo) ? riesgo[riesgo.length - 1] : null,
+                inflacion: Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null,
+                plazosFijos: pf ? pf.filter((item: any) => item.tnaClientes > 0).sort((a: any, b: any) => b.tnaClientes - a.tnaClientes).slice(0, 4) : [],
+                billeteras: topWallets,
+                news: items
+            });
+          } catch (e) {
             console.error("Error fetching financial data:", e);
-        }
+          }
 
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -484,7 +457,7 @@ export default function NewsFeed() {
             </div>
             <div>
               <h2 className="font-bold text-lg tracking-tight flex items-center gap-2">
-                Estrategias IA
+                Estrategias IA (Llama 3)
                 <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
               </h2>
               <p className="text-xs text-blue-100/70 font-medium uppercase tracking-wider">Análisis Financiero en Tiempo Real</p>
@@ -493,7 +466,7 @@ export default function NewsFeed() {
           <button 
             onClick={() => generateAIAnalysis({
                 dolar, dolarBlue, dolarMep, dolarCcl, riesgoPais, inflacion, plazosFijos, billeteras, news
-            }, true)}
+            })}
             disabled={isAnalyzing}
             className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
             title="Actualizar análisis"
@@ -509,7 +482,7 @@ export default function NewsFeed() {
                 <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
                 <Brain className="w-6 h-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/50" />
               </div>
-              <p className="text-sm font-medium text-blue-100 animate-pulse">Cruzando datos y noticias...</p>
+              <p className="text-sm font-medium text-blue-100 animate-pulse">Cruzando datos y noticias con Llama 3...</p>
             </div>
           ) : aiAnalysis ? (
             <motion.div 
