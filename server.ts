@@ -14,22 +14,20 @@ const analysisCache = new Map<string, { text: string, timestamp: number }>();
 const CACHE_DURATION = 15 * 60 * 1000; // 15 minutos
 
 // Ruta para análisis con Groq
-app.post("/api/analyze", async (req, res) => {
+const analyzeHandler = async (req: any, res: any) => {
   const { prompt } = req.body;
   if (!prompt) return res.status(400).json({ error: "Prompt is required" });
 
-  // Verificar caché
   const normalizedPrompt = prompt.trim().toLowerCase();
   const cached = analysisCache.get(normalizedPrompt);
   if (cached && (Date.now() - cached.timestamp < CACHE_DURATION)) {
-    console.log(">>> Devolviendo análisis desde caché (Groq)");
     return res.json({ text: cached.text });
   }
 
   try {
     const apiKey = process.env.GROQ_API_KEY;
-    if (!apiKey || apiKey === "MY_GROQ_API_KEY" || apiKey.trim() === "") {
-      throw new Error("GROQ_API_KEY no configurada en los Secretos.");
+    if (!apiKey || apiKey === "MY_GROQ_API_KEY" || !apiKey.trim()) {
+      return res.status(500).json({ error: "GROQ_API_KEY no configurada en Vercel." });
     }
 
     const groq = new Groq({ apiKey });
@@ -58,12 +56,19 @@ app.post("/api/analyze", async (req, res) => {
 
     res.json({ text });
   } catch (error: any) {
-    console.error("Groq Error:", error.message);
-    res.status(500).json({ error: error.message });
+    console.error("Groq Error:", error);
+    res.status(500).json({ error: `Error de IA: ${error.message}` });
   }
-});
+};
+
+// Registrar la ruta en múltiples paths para asegurar compatibilidad con Vercel
+app.post("/api/analyze", analyzeHandler);
+app.post("/analyze", analyzeHandler);
 
 app.get("/api/health", (req, res) => {
+  res.json({ status: "ok", env: process.env.NODE_ENV });
+});
+app.get("/health", (req, res) => {
   res.json({ status: "ok" });
 });
 
