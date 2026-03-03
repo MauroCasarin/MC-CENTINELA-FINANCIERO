@@ -31,7 +31,7 @@ async function processAnalysis(prompt: string) {
 
   const potentialKeys: string[] = [];
   const foundNames: string[] = [];
-  const keysToTry = ['VITE_GEMINI_API_KEY', 'GEMINI_API_KEY', 'cent'];
+  const keysToTry = ['VITE_GEMINI_API_KEY'];
 
   for (const keyName of keysToTry) {
     const val = process.env[keyName];
