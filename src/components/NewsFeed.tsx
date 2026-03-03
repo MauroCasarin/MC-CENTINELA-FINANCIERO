@@ -362,18 +362,22 @@ export default function NewsFeed() {
             const topWallets = walletRates.slice(0, 4);
             setBilleteras(topWallets);
 
-            // Trigger AI Analysis
-            generateAIAnalysis({
-                dolar: oficial,
-                dolarBlue: blue,
-                dolarMep: mep,
-                dolarCcl: ccl,
-                riesgoPais: Array.isArray(riesgo) ? riesgo[riesgo.length - 1] : null,
-                inflacion: Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null,
-                plazosFijos: pf ? pf.filter((item: any) => item.tnaClientes > 0).sort((a: any, b: any) => b.tnaClientes - a.tnaClientes).slice(0, 4) : [],
-                billeteras: topWallets,
-                news: items
-            });
+            // Trigger AI Analysis ONLY if we have critical data
+            if (oficial && blue && riesgo && inflacion && items.length > 0) {
+                generateAIAnalysis({
+                    dolar: oficial,
+                    dolarBlue: blue,
+                    dolarMep: mep,
+                    dolarCcl: ccl,
+                    riesgoPais: Array.isArray(riesgo) ? riesgo[riesgo.length - 1] : null,
+                    inflacion: Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null,
+                    plazosFijos: pf ? pf.filter((item: any) => item.tnaClientes > 0).sort((a: any, b: any) => b.tnaClientes - a.tnaClientes).slice(0, 4) : [],
+                    billeteras: topWallets,
+                    news: items
+                });
+            } else {
+                console.log("Skipping AI analysis: Missing critical data");
+            }
 
         } catch (e) {
             console.error("Error fetching financial data:", e);

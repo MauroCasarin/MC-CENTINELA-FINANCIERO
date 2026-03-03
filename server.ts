@@ -71,13 +71,34 @@ function generateSyntheticAnalysis(prompt: string): string {
   const inflacion = parseFloat(prompt.match(/Inflación.*: ([\d\.]+)%/)?.[1] || "0");
   const brecha = dolarOficial > 0 ? ((dolarBlue - dolarOficial) / dolarOficial * 100).toFixed(1) : "0";
   
+  // Extraer las 5 primeras noticias
+  const newsMatches = prompt.match(/- .+/g) || [];
+  const topNews = newsMatches.slice(0, 5).map(n => n.replace('- ', '').trim());
+
+  // Análisis de sentimiento básico por palabras clave en los títulos
+  let sentiment = "Neutral/Expectante";
+  const lowerNews = topNews.join(" ").toLowerCase();
+  if (lowerNews.includes("récord") || lowerNews.includes("dispara") || lowerNews.includes("salta")) sentiment = "Alta Volatilidad";
+  if (lowerNews.includes("baja") || lowerNews.includes("cede") || lowerNews.includes("estable")) sentiment = "Tendencia a la Baja/Estabilidad";
+  if (lowerNews.includes("crisis") || lowerNews.includes("riesgo") || lowerNews.includes("deuda")) sentiment = "Aversión al Riesgo";
+
+  // Formatear lista de noticias
+  const newsList = topNews.length > 0 
+    ? topNews.map(n => `*   "${n}"`).join("\n")
+    : "*   Sin noticias destacadas en este momento.";
+
   return `**ANÁLISIS DE MERCADO (Modo Respaldo)**
 
-*   **Brecha Cambiaria:** La brecha del ${brecha}% sugiere ${parseFloat(brecha) > 20 ? "tensiones cambiarias. Precaución." : "estabilidad relativa. Buen momento para dolarizar carteras conservadoras."}
-*   **Inflación vs Tasas:** Con una inflación del ${inflacion}%, ${inflacion > 3 ? "las tasas en pesos podrían ser negativas en términos reales." : "los instrumentos en pesos (CER/UVA) son atractivos."}
-*   **Estrategia:** Diversificar. Mantener una porción en moneda dura (Dólar MEP/Cedears) y aprovechar oportunidades de corto plazo en pesos (FCI T+0 o T+1).
+**Contexto y Noticias Clave:**
+El mercado opera bajo un sentimiento de **${sentiment}**, influenciado por los siguientes titulares:
+${newsList}
 
-**Estrategia Sugerida:** Cautela. Priorizar liquidez y cobertura ante la volatilidad actual.`;
+**Diagnóstico Financiero:**
+*   **Brecha Cambiaria:** Se ubica en el **${brecha}%**. ${parseFloat(brecha) > 20 ? "Niveles que sugieren presión dolarizadora." : "Niveles comprimidos que favorecen el carry trade de corto plazo."}
+*   **Inflación vs Tasas:** Con un IPC mensual del ${inflacion}%, la tasa real sigue siendo el principal driver de decisión.
+
+**Estrategia Sugerida:**
+Ante este escenario, se recomienda cautela. ${parseFloat(brecha) > 30 ? "Priorizar cobertura en moneda dura (Cedears/MEP)." : "Aprovechar instrumentos en pesos (Lecaps/CER) mientras la brecha se mantenga estable."}`;
 }
 
 // Función genérica para procesar el análisis con rotación de claves
