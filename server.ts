@@ -14,8 +14,8 @@ const analysisCache = new Map<string, { text: string, timestamp: number }>();
 const CACHE_DURATION = 60 * 60 * 1000; // 1 hora de caché
 
 // Registro de enfriamiento para claves que fallan por cuota
+// Desactivamos el enfriamiento persistente para permitir reintentos manuales
 const keyCooldowns = new Map<string, number>();
-const COOLDOWN_DURATION = 45 * 1000; // 45 segundos de enfriamiento
 
 // Función genérica para procesar el análisis con rotación de claves
 async function processAnalysis(prompt: string) {
@@ -36,23 +36,17 @@ async function processAnalysis(prompt: string) {
   for (const keyName of keysToTry) {
     const val = process.env[keyName];
     if (val && val.length > 10 && val !== "AI Studio Free Tier" && val !== "MY_GEMINI_API_KEY") {
-      // Verificar si la clave está en enfriamiento
-      const cooldownUntil = keyCooldowns.get(keyName) || 0;
-      if (Date.now() < cooldownUntil) {
-        console.log(`>>> [${keyName}] En enfriamiento. Saltando...`);
-        continue;
-      }
       potentialKeys.push(val);
       foundNames.push(keyName);
     }
   }
 
   if (potentialKeys.length === 0) {
-    // Si todas están en enfriamiento, intentar con la menos "caliente" o simplemente fallar
-    throw new Error("Todas las claves están agotadas o en enfriamiento. Por favor, espera 30 segundos.");
+    throw new Error("No se encontró ninguna API Key válida (variable 'cent').");
   }
 
   const indices = Array.from({ length: potentialKeys.length }, (_, i) => i);
+  // Shuffle simple
   for (let i = indices.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [indices[i], indices[j]] = [indices[j], indices[i]];
@@ -72,47 +66,52 @@ async function processAnalysis(prompt: string) {
       const ai = new GoogleGenAI({ apiKey });
       
       let response = null;
-      for (let j = 0; j < 2; j++) { // 2 intentos para 503
-        if (Date.now() - startTime > MAX_REQUEST_TIME) break;
+      // Intentar con varios modelos en orden de preferencia
+      // gemini-2.0-flash es el único que ha confirmado existencia (aunque con cuota limitada)
+      const modelsToTry = [
+        "gemini-2.0-flash",
+        "gemini-2.0-flash-lite-preview-02-05",
+        "gemini-1.5-flash",
+        "gemini-1.5-pro",
+        "gemini-pro"
+      ];
+      
+      for (const model of modelsToTry) {
         try {
+          console.log(`>>> Probando modelo: ${model}`);
           response = await ai.models.generateContent({
-            model: "gemini-1.5-flash",
+            model: model,
             contents: [{ parts: [{ text: prompt }] }],
           });
-          break; 
-        } catch (error: any) {
-          const errorMsg = error.message || "";
+          if (response && response.text) break; // Éxito
+        } catch (innerError: any) {
+          console.warn(`>>> Falló modelo ${model}:`, innerError.message);
           
-          if (errorMsg.includes("429") || errorMsg.includes("RESOURCE_EXHAUSTED")) {
-            console.log(`[${keyName}] Cuota agotada (429).`);
-            keyCooldowns.set(keyName, Date.now() + (COOLDOWN_DURATION * 10)); // Enfriamiento largo para 429
-            throw new Error("Límite de peticiones alcanzado. Por favor, intenta de nuevo en unos minutos.");
-          }
-          
-          if (errorMsg.includes("400") || errorMsg.includes("API_KEY_INVALID")) {
-            console.log(`[${keyName}] Clave inválida. Saltando...`);
-            throw error;
-          }
-
-          if ((errorMsg.includes("503") || errorMsg.includes("UNAVAILABLE")) && j === 0) {
-            console.log(`[${keyName}] Modelo saturado (503). Reintentando en 2s...`);
-            await sleep(2000);
-            continue;
-          }
-          throw error; 
+          // Si es 404 (modelo no encontrado) o 429 (cuota), seguimos al siguiente modelo
+          // A veces diferentes modelos tienen diferentes cuotas o disponibilidades
+          continue;
         }
       }
 
       if (response && response.text) {
         analysisCache.set(normalizedPrompt, { text: response.text, timestamp: Date.now() });
         return { text: response.text };
+      } else {
+        throw new Error("Ningún modelo pudo generar respuesta.");
       }
+
     } catch (error: any) {
-      console.error(`[${keyName}] Error:`, error.message?.slice(0, 100));
+      console.error(`[${keyName}] Error crítico:`, error.message);
       lastError = error;
     }
   }
-  throw lastError || new Error("Todas las claves fallaron");
+  
+  // Mensaje amigable para el usuario final
+  if (lastError?.message?.includes("429") || lastError?.message?.includes("RESOURCE")) {
+    throw new Error("⚠️ La IA está saturada momentáneamente. Intenta de nuevo en unos minutos.");
+  }
+  
+  throw lastError || new Error("Error desconocido al conectar con la IA.");
 }
 
 // Ruta de salud para verificar que el servidor responde
