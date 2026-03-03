@@ -49,15 +49,34 @@ app.post("/api/analyze", async (req, res) => {
 
   // Intentar con cada clave hasta que una funcione (Fallback)
   let lastError = null;
+  const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
   for (const apiKey of potentialKeys) {
     try {
       const ai = new GoogleGenAI({ apiKey });
-      const response = await ai.models.generateContent({
-        model: "gemini-3-flash-preview",
-        contents: [{ parts: [{ text: prompt }] }],
-      });
+      
+      // Implementación de reintentos para error 503 (High Demand)
+      let response = null;
+      let retries = 3;
+      for (let i = 0; i < retries; i++) {
+        try {
+          response = await ai.models.generateContent({
+            model: "gemini-3-flash-preview",
+            contents: [{ parts: [{ text: prompt }] }],
+          });
+          break; // Éxito, salir del bucle de reintentos
+        } catch (error: any) {
+          const isUnavailable = error.message?.includes("503") || error.message?.includes("UNAVAILABLE");
+          if (isUnavailable && i < retries - 1) {
+            console.log(`Modelo saturado (503). Reintentando en ${Math.pow(2, i)}s...`);
+            await sleep(Math.pow(2, i) * 1000);
+            continue;
+          }
+          throw error; // Si no es 503 o ya no hay reintentos, lanzar error
+        }
+      }
 
-      if (response.text) {
+      if (response && response.text) {
         return res.json({ text: response.text });
       }
     } catch (error: any) {
