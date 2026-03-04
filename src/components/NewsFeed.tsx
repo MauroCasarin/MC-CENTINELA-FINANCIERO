@@ -51,37 +51,33 @@ export default function NewsFeed() {
     setIsAnalyzing(true);
     try {
       const prompt = `
-        Actúa como un analista financiero experto en el mercado argentino. 
-        Tu objetivo es proporcionar un veredicto y consejo de inversión superior, cruzando las noticias con los datos de mercado.
-        
-        IMPORTANTE: Tienes acceso a herramientas de búsqueda. ÚSALAS para buscar información actualizada sobre:
-        - Índice MERVAL y comportamiento de acciones líderes.
-        - Tasas de LECAPS y Letras del Tesoro actuales.
-        - Situación de Bancos, Empresas y nuevas Leyes Económicas.
-        - Noticias de último momento de diversos portales.
+        Actúa como un analista financiero de élite especializado en la economía argentina.
+        Tu misión es identificar RELACIONES CAUSA-EFECTO entre las noticias actuales y los indicadores financieros.
 
-        DATOS DE MERCADO PROVISTOS:
-        - Dólar Oficial: $${currentData.dolar?.venta || 'N/A'}
-        - Dólar Blue: $${currentData.dolarBlue?.venta || 'N/A'}
-        - Dólar MEP: $${currentData.dolarMep?.venta || 'N/A'}
-        - Dólar CCL: $${currentData.dolarCcl?.venta || 'N/A'}
-        - Riesgo País: ${currentData.riesgoPais?.valor || 'N/A'}
-        - Inflación (IPC mensual): ${currentData.inflacion?.valor || 'N/A'}%
+        IMPORTANTE: Usa tus herramientas de búsqueda para validar y profundizar:
+        - ¿Cómo impactan las noticias políticas/económicas de hoy en el Dólar y el Riesgo País?
+        - ¿Qué acciones del MERVAL o Bonos están reaccionando a estos eventos?
+        - Análisis de tasas reales (LECAPS/PF) vs Inflación esperada.
 
-        RENDIMIENTOS (TNA):
-        - Plazos Fijos (Top): ${currentData.plazosFijos?.map((f: any) => `${f.entidad}: ${(f.tna * 100).toFixed(1)}%`).join(', ') || 'N/A'}
-        - Billeteras (Top): ${currentData.billeteras?.map((b: any) => `${b.entidad}: ${b.tna}%`).join(', ') || 'N/A'}
+        DATOS DE MERCADO (Punto de partida):
+        - Dólar Oficial: $${currentData.dolar?.venta || 'N/A'} | Blue: $${currentData.dolarBlue?.venta || 'N/A'} | MEP: $${currentData.dolarMep?.venta || 'N/A'} | CCL: $${currentData.dolarCcl?.venta || 'N/A'}
+        - Riesgo País: ${currentData.riesgoPais?.valor || 'N/A'} pts
+        - Inflación (IPC): ${currentData.inflacion?.valor || 'N/A'}%
 
-        TITULARES DE NOTICIAS PROVISTOS (Úsalos como base):
+        RENDIMIENTOS (Referencia):
+        - Plazos Fijos: ${currentData.plazosFijos?.map((f: any) => `${f.entidad}: ${(f.tna * 100).toFixed(1)}%`).join(', ') || 'N/A'}
+        - Billeteras: ${currentData.billeteras?.map((b: any) => `${b.entidad}: ${b.tna}%`).join(', ') || 'N/A'}
+
+        TITULARES CLAVE (Analiza su impacto):
         ${currentData.news?.slice(0, 15).map((n: any) => `- ${n.titulo || n.title}`).join('\n')}
 
-        INSTRUCCIONES DE FORMATO:
-        1. **Panorama General:** Resumen de la situación de mercado (MERVAL, Bonos, Dólar).
-        2. **Análisis Cruzado:** Relaciona las noticias con las variaciones de precios y tasas.
-        3. **Veredicto:** Oportunidades en LECAPS, Acciones o Cedears según el contexto.
-        4. **Estrategia Sugerida:** Conclusión accionable de una oración.
-        
-        Sé directo, profesional y usa datos concretos. Máximo 250 palabras.
+        ESTRUCTURA DE RESPUESTA REQUERIDA:
+        1. **Sintomatología del Mercado:** ¿Qué dicen los precios sobre el clima político/económico actual? Conecta noticias específicas con movimientos del dólar o bonos.
+        2. **Oportunidades y Riesgos:** Identifica sectores o instrumentos (Cedears, Energéticas, Bancos, LECAPS) beneficiados o perjudicados por las noticias de hoy.
+        3. **Veredicto Táctico:** ¿Es momento de cobertura (Dólar), tasa (Pesos) o riesgo (Acciones)? Justifica con la relación causa-efecto detectada.
+        4. **Estrategia Accionable:** Una frase final contundente para el inversor minorista.
+
+        Tono: Profesional, crítico y directo. Máximo 250 palabras.
       `;
 
       const response = await fetch('/api/analyze', {

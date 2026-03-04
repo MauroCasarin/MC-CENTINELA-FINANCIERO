@@ -26,7 +26,7 @@ async function callGroq(prompt: string) {
   }
 
   try {
-    console.log(">>> 🚀 Iniciando protocolo de emergencia: Cambiando a motor Groq (Llama 3)...");
+    console.log(">>> 🚀 Iniciando protocolo de emergencia: Cambiando a motor Groq (Llama 3.3)...");
     const response = await fetch("https://api.groq.com/openai/v1/chat/completions", {
       method: "POST",
       headers: {
@@ -35,7 +35,7 @@ async function callGroq(prompt: string) {
       },
       body: JSON.stringify({
         messages: [{ role: "user", content: prompt }],
-        model: "llama3-8b-8192",
+        model: "llama-3.3-70b-versatile",
         temperature: 0.5,
         max_tokens: 1024
       })
@@ -168,12 +168,32 @@ async function processAnalysis(prompt: string) {
   };
 
   try {
-    // --- INTENTO 1: GEMINI (Google) ---
-    console.log(">>> 1️⃣ Iniciando intento con GEMINI...");
+    // --- INTENTO 1: GROQ (Prioridad) ---
+    const timeForGroq = ABSOLUTE_DEADLINE - Date.now();
+    if (timeForGroq > 1500) {
+      console.log(`>>> 1️⃣ Iniciando intento con GROQ (Tiempo restante: ${timeForGroq}ms)...`);
+      
+      // Wrapper con timeout para Groq
+      const groqPromise = callGroq(prompt);
+      const groqTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Groq Timeout")), timeForGroq - 500));
+      
+      try {
+        const groqText = await Promise.race([groqPromise, groqTimeout]);
+        if (groqText && typeof groqText === 'string') {
+          analysisCache.set(normalizedPrompt, { text: groqText, timestamp: Date.now() });
+          return { text: groqText, source: "groq" };
+        }
+      } catch (e) {
+        console.warn(">>> ⚠️ Falló/Timeout Groq");
+      }
+    }
+
+    // --- INTENTO 2: GEMINI (Google) ---
+    console.log(">>> 2️⃣ Iniciando intento con GEMINI...");
     
     const potentialKeys: string[] = [];
     const foundNames: string[] = [];
-    const keysToTry = ['GEMINI_API_KEY', 'cent', 'cent2'];
+    const keysToTry = ['cent', 'cent2'];
 
     for (const keyName of keysToTry) {
       const val = process.env[keyName];
@@ -193,7 +213,7 @@ async function processAnalysis(prompt: string) {
 
       for (const idx of indices) {
         const remaining = ABSOLUTE_DEADLINE - Date.now();
-        // Si queda menos de 3 segundos, saltamos Gemini para dar chance a Groq o Sintético
+        // Si queda menos de 3 segundos, saltamos Gemini para dar chance a Sintético
         if (remaining < 3000) {
           console.log(">>> ⏳ Poco tiempo restante. Saltando claves restantes de Gemini.");
           break;
@@ -208,8 +228,9 @@ async function processAnalysis(prompt: string) {
           
           console.log(`>>> [${keyName}] Ejecutando Gemini: ${model} (Budget: ${remaining}ms)`);
           
-          // Timeout agresivo de 4s por intento para permitir rotación
-          const requestTimeout = Math.min(4000, remaining - 1000);
+          // Damos más tiempo al primer intento (hasta 15s) porque Google Search es lento.
+          // Si falla, los siguientes intentos tendrán el tiempo restante.
+          const requestTimeout = Math.min(15000, remaining - 1000);
           
           const apiCall = ai.models.generateContent({
             model: model,
@@ -239,28 +260,6 @@ async function processAnalysis(prompt: string) {
       }
     } else {
       console.log(">>> ⚠️ No se encontraron claves válidas para Gemini.");
-    }
-
-    // --- INTENTO 2: GROQ (Fallback) ---
-    const timeForGroq = ABSOLUTE_DEADLINE - Date.now();
-    if (timeForGroq > 1500) { // Necesitamos al menos 1.5s para Groq
-      console.log(`>>> 2️⃣ Iniciando intento con GROQ (Tiempo restante: ${timeForGroq}ms)...`);
-      
-      // Wrapper con timeout para Groq
-      const groqPromise = callGroq(prompt);
-      const groqTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Groq Timeout")), timeForGroq - 500));
-      
-      try {
-        const groqText = await Promise.race([groqPromise, groqTimeout]);
-        if (groqText && typeof groqText === 'string') {
-          analysisCache.set(normalizedPrompt, { text: groqText, timestamp: Date.now() });
-          return { text: groqText, source: "groq" };
-        }
-      } catch (e) {
-        console.warn(">>> ⚠️ Falló/Timeout Groq");
-      }
-    } else {
-      console.log(">>> ⏩ Saltando Groq por falta de tiempo.");
     }
 
   } catch (globalError) {
