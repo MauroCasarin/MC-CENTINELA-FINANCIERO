@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Monitor Financiero Inteligente</title>
+    <style>
+        :root {
+            --bg: #f4f7f6;
+            --card: #ffffff;
+            --primary: #0056b3;
+            --up: #28a745;
+            --down: #dc3545;
+            --change-bg: #fff9c4;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            background: var(--bg);
+            margin: 0; padding: 20px;
+            display: flex; flex-direction: column; align-items: center;
+        }
+
+        .header { text-align: center; margin-bottom: 25px; width: 100%; max-width: 1000px; }
+        
+        .btn-manual {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+        }
+
+        .btn-manual:active { transform: scale(0.95); }
+        .btn-manual:disabled { background: #ccc; cursor: not-allowed; }
+
+        #status-bar {
+            font-size: 0.85rem;
+            color: #555;
+            background: #fff;
+            padding: 8px 20px;
+            border-radius: 30px;
+            border: 1px solid #ddd;
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 15px; width: 100%; max-width: 1100px;
+        }
+
+        .card {
+            background: var(--card);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+            border-top: 6px solid var(--primary);
+            transition: background-color 0.5s ease;
+        }
+
+        /* Estilo cuando el dato cambia */
+        .card.updated {
+            background-color: var(--change-bg);
+            border-top-color: #ff9800;
+        }
+
+        .card-header { display: flex; justify-content: space-between; align-items: center; }
+        .name { font-size: 0.8rem; font-weight: bold; color: #6c757d; text-transform: uppercase; }
+        .var { font-size: 0.8rem; font-weight: bold; padding: 2px 8px; border-radius: 4px; }
+        
+        .value { font-size: 2.1rem; font-weight: 800; margin: 10px 0; color: #1a1a1a; }
+        
+        .msg-cambio {
+            font-size: 0.75rem;
+            font-weight: bold;
+            color: #856404;
+            margin-top: 10px;
+            padding: 5px;
+            background: #fff3cd;
+            border-radius: 4px;
+            display: none; /* Se activa por JS */
+        }
+
+        .footer { font-size: 0.75rem; color: #adb5bd; border-top: 1px solid #f8f9fa; padding-top: 10px; margin-top: 10px; }
+
+        .down { color: var(--down); background: #fbeaea; }
+        .up { color: var(--up); background: #eafbeea; }
+        .equal { color: #6c757d; background: #f0f2f5; }
+
+        @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+
+    <div class="header">
+        <h1>Monitor Financiero Live</h1>
+        <button class="btn-manual" id="btnRefrescar" onclick="ejecutarRevision()">ACTUALIZAR AHORA</button>
+        <div id="status-bar">Iniciando monitor...</div>
+    </div>
+
+    <div class="grid" id="panel"></div>
+
+    <script>
+        let memoriaValores = {}; // Aquí guardamos los precios para comparar cambios
+
+        async function ejecutarRevision() {
+            const btn = document.getElementById('btnRefrescar');
+            const status = document.getElementById('status-bar');
+            const panel = document.getElementById('panel');
+
+            btn.disabled = true;
+            btn.innerText = "BUSCANDO DATOS...";
+
+            try {
+                // Petición a Ámbito vía Proxy
+                const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://mercados.ambito.com/home/general'));
+                const json = await res.json();
+                const data = JSON.parse(json.contents);
+
+                // Si es la primera vez, limpiamos el panel
+                if (Object.keys(memoriaValores).length === 0) panel.innerHTML = '';
+
+                data.forEach(item => {
+                    if (!item.val1 && !item.ultimo) return;
+
+                    const valorActual = item.venta || item.ultimo || item.val1;
+                    const idLimpio = item.nombre.replace(/\s+/g, '');
+                    
+                    // Lógica de detección de cambios
+                    let huboCambio = false;
+                    if (memoriaValores[idLimpio] && memoriaValores[idLimpio] !== valorActual) {
+                        huboCambio = true;
+                    }
+
+                    const vClass = item['class-variacion']?.includes('up') ? 'up' : 
+                                   (item['class-variacion']?.includes('down') ? 'down' : 'equal');
+
+                    let card = document.getElementById(idLimpio);
+                    
+                    // Si la tarjeta no existe, la creamos
+                    if (!card) {
+                        card = document.createElement('div');
+                        card.id = idLimpio;
+                        card.className = 'card';
+                        panel.appendChild(card);
+                    }
+
+                    // Si detectamos cambio, marcamos la tarjeta
+                    if (huboCambio) {
+                        card.classList.add('updated');
+                    }
+
+                    // Actualizamos el contenido de la tarjeta
+                    card.innerHTML = `
+                        <div class="card-header">
+                            <span class="name">${item.nombre}</span>
+                            <span class="var ${vClass}">${item.variacion || '0,00%'}</span>
+                        </div>
+                        <div class="value">${item.nombre.includes('Dólar') ? '$'+valorActual : valorActual}</div>
+                        <div class="msg-cambio" style="${huboCambio || card.classList.contains('updated') ? 'display:block' : ''}">
+                            ✨ ¡Cambio detectado! (${new Date().toLocaleTimeString()})
+                        </div>
+                        <div class="footer">Ref Ámbito: ${item.fecha}</div>
+                    `;
+
+                    // Guardamos el nuevo valor en la memoria
+                    memoriaValores[idLimpio] = valorActual;
+                });
+
+                status.innerHTML = `Monitor activo • Última revisión: <strong>${new Date().toLocaleTimeString()}</strong>`;
+
+            } catch (e) {
+                status.innerText = "Error de conexión. Reintentando...";
+                console.error(e);
+            } finally {
+                btn.disabled = false;
+                btn.innerText = "ACTUALIZAR AHORA";
+            }
+        }
+
+        // 1. Ejecución al abrir la página
+        ejecutarRevision();
+
+        // 2. Auto-actualización cada 60 segundos
+        setInterval(ejecutarRevision, 60000);
+    </script>
+</body>
+</html>
