@@ -149,7 +149,6 @@ ${recomendacion}
 
 // Función genérica para procesar el análisis con rotación de claves
 async function processAnalysis(prompt: string) {
-  // Normalizar prompt para mejor caché
   const normalizedPrompt = prompt.trim().toLowerCase();
   
   // Verificar caché
@@ -159,93 +158,121 @@ async function processAnalysis(prompt: string) {
     return { text: cached.text };
   }
 
-  const GLOBAL_TIMEOUT = 9500; // 9.5s total budget for Vercel (10s limit)
-  const startTime = Date.now();
-
-  // --- INTENTO 1: GEMINI (Google) ---
-  console.log(">>> 1️⃣ Iniciando intento con GEMINI...");
+  // Límite absoluto de tiempo para Vercel (10s max, cortamos a los 9s para seguridad)
+  const ABSOLUTE_DEADLINE = Date.now() + 9000;
   
-  const potentialKeys: string[] = [];
-  const foundNames: string[] = [];
-  const keysToTry = ['GEMINI_API_KEY', 'cent', 'cent2'];
+  const checkTimeBudget = () => {
+    const remaining = ABSOLUTE_DEADLINE - Date.now();
+    if (remaining <= 500) throw new Error("GLOBAL_TIMEOUT"); // Dejar 500ms para el fallback sintético
+    return remaining;
+  };
 
-  for (const keyName of keysToTry) {
-    const val = process.env[keyName];
-    if (val && val.length > 10 && val !== "AI Studio Free Tier" && val !== "MY_GEMINI_API_KEY") {
-      potentialKeys.push(val);
-      foundNames.push(keyName);
+  try {
+    // --- INTENTO 1: GEMINI (Google) ---
+    console.log(">>> 1️⃣ Iniciando intento con GEMINI...");
+    
+    const potentialKeys: string[] = [];
+    const foundNames: string[] = [];
+    const keysToTry = ['GEMINI_API_KEY', 'cent', 'cent2'];
+
+    for (const keyName of keysToTry) {
+      const val = process.env[keyName];
+      if (val && val.length > 10 && val !== "AI Studio Free Tier" && val !== "MY_GEMINI_API_KEY") {
+        potentialKeys.push(val);
+        foundNames.push(keyName);
+      }
     }
-  }
 
-  if (potentialKeys.length > 0) {
-    // Shuffle simple
-    const indices = Array.from({ length: potentialKeys.length }, (_, i) => i);
-    for (let i = indices.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [indices[i], indices[j]] = [indices[j], indices[i]];
-    }
-
-    for (const idx of indices) {
-      // Check if we have enough time left for a meaningful attempt (at least 2s)
-      if (Date.now() - startTime > 7000) {
-        console.log(">>> ⏳ Tiempo agotado para intentos de Gemini. Pasando a siguiente nivel.");
-        break;
+    if (potentialKeys.length > 0) {
+      // Shuffle simple
+      const indices = Array.from({ length: potentialKeys.length }, (_, i) => i);
+      for (let i = indices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [indices[i], indices[j]] = [indices[j], indices[i]];
       }
 
-      const apiKey = potentialKeys[idx];
-      const keyName = foundNames[idx];
+      for (const idx of indices) {
+        const remaining = ABSOLUTE_DEADLINE - Date.now();
+        // Si queda menos de 3 segundos, saltamos Gemini para dar chance a Groq o Sintético
+        if (remaining < 3000) {
+          console.log(">>> ⏳ Poco tiempo restante. Saltando claves restantes de Gemini.");
+          break;
+        }
+
+        const apiKey = potentialKeys[idx];
+        const keyName = foundNames[idx];
+        
+        try {
+          const ai = new GoogleGenAI({ apiKey });
+          const model = "gemini-2.5-flash";
+          
+          console.log(`>>> [${keyName}] Ejecutando Gemini: ${model} (Budget: ${remaining}ms)`);
+          
+          // Timeout agresivo de 4s por intento para permitir rotación
+          const requestTimeout = Math.min(4000, remaining - 1000);
+          
+          const apiCall = ai.models.generateContent({
+            model: model,
+            contents: [{ parts: [{ text: prompt }] }],
+            config: {
+              tools: [{ googleSearch: {} }],
+            }
+          });
+          
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error("Gemini Request Timeout")), requestTimeout)
+          );
+          
+          const response: any = await Promise.race([apiCall, timeoutPromise]);
+          
+          if (response && response.text) {
+             const text = response.text;
+             console.log(">>> ✅ Éxito con Gemini.");
+             analysisCache.set(normalizedPrompt, { text, timestamp: Date.now() });
+             return { text };
+          }
+        } catch (error: any) {
+          console.warn(`>>> ⚠️ Falló intento Gemini [${keyName}]:`, error.message);
+          // Si es error de cuota (429), seguimos a la siguiente clave.
+          // Si es timeout, el loop continuará si hay tiempo.
+        }
+      }
+    } else {
+      console.log(">>> ⚠️ No se encontraron claves válidas para Gemini.");
+    }
+
+    // --- INTENTO 2: GROQ (Fallback) ---
+    const timeForGroq = ABSOLUTE_DEADLINE - Date.now();
+    if (timeForGroq > 1500) { // Necesitamos al menos 1.5s para Groq
+      console.log(`>>> 2️⃣ Iniciando intento con GROQ (Tiempo restante: ${timeForGroq}ms)...`);
+      
+      // Wrapper con timeout para Groq
+      const groqPromise = callGroq(prompt);
+      const groqTimeout = new Promise((_, reject) => setTimeout(() => reject(new Error("Groq Timeout")), timeForGroq - 500));
       
       try {
-        const ai = new GoogleGenAI({ apiKey });
-        const model = "gemini-2.5-flash";
-        
-        console.log(`>>> [${keyName}] Ejecutando Gemini: ${model} con Google Search`);
-        
-        // Timeout específico para Gemini: 6s (para dejar tiempo a Groq si falla)
-        const apiCall = ai.models.generateContent({
-          model: model,
-          contents: [{ parts: [{ text: prompt }] }],
-          config: {
-            tools: [{ googleSearch: {} }],
-          }
-        });
-        
-        const timeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error("Gemini Request Timeout")), 6000)
-        );
-        
-        const response: any = await Promise.race([apiCall, timeoutPromise]);
-        
-        if (response && response.text) {
-           const text = response.text;
-           console.log(">>> ✅ Éxito con Gemini.");
-           analysisCache.set(normalizedPrompt, { text, timestamp: Date.now() });
-           return { text };
+        const groqText = await Promise.race([groqPromise, groqTimeout]);
+        if (groqText && typeof groqText === 'string') {
+          analysisCache.set(normalizedPrompt, { text: groqText, timestamp: Date.now() });
+          return { text: groqText, source: "groq" };
         }
-      } catch (error: any) {
-        console.warn(`>>> ⚠️ Falló intento Gemini [${keyName}]:`, error.message);
-        // Continue to next key
+      } catch (e) {
+        console.warn(">>> ⚠️ Falló/Timeout Groq");
       }
+    } else {
+      console.log(">>> ⏩ Saltando Groq por falta de tiempo.");
     }
-  } else {
-    console.log(">>> ⚠️ No se encontraron claves válidas para Gemini.");
-  }
 
-  // --- INTENTO 2: GROQ (Fallback) ---
-  const timeLeft = GLOBAL_TIMEOUT - (Date.now() - startTime);
-  if (timeLeft > 1000) { // Solo intentar si queda al menos 1 segundo
-    console.log(`>>> 2️⃣ Iniciando intento con GROQ (Tiempo restante: ${timeLeft}ms)...`);
-    const groqText = await callGroq(prompt);
-    if (groqText) {
-      analysisCache.set(normalizedPrompt, { text: groqText, timestamp: Date.now() });
-      return { text: groqText, source: "groq" };
-    }
-  } else {
-    console.log(">>> ⏩ Saltando Groq por falta de tiempo.");
+  } catch (globalError) {
+    console.error(">>> 🛑 Error global en proceso de IA:", globalError);
   }
   
   // --- INTENTO 3: SUPERVIVENCIA (Sintético) ---
-  console.log(">>> 3️⃣ Fallaron todos los modelos. Ejecutando Modo Respaldo Avanzado.");
+  // Este punto se alcanza si:
+  // 1. Todas las claves de Gemini fallaron o dieron timeout.
+  // 2. Groq falló o no hubo tiempo.
+  // 3. Se lanzó el GLOBAL_TIMEOUT.
+  console.log(">>> 3️⃣ Ejecutando Modo Respaldo Avanzado (Sintético).");
   const syntheticText = generateSyntheticAnalysis(prompt);
   return { text: syntheticText, source: "synthetic" };
 }
