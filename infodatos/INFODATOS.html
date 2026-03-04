@@ -34,7 +34,6 @@
             margin-bottom: 15px;
         }
 
-        .btn-manual:active { transform: scale(0.95); }
         .btn-manual:disabled { background: #ccc; cursor: not-allowed; }
 
         #status-bar {
@@ -81,7 +80,7 @@
     <div class="header">
         <h1>Centinela Financiero</h1>
         <button class="btn-manual" id="btnRefrescar" onclick="ejecutarRevision()">ACTUALIZAR AHORA</button>
-        <div id="status-bar">Iniciando monitor...</div>
+        <div id="status-bar">Conectando...</div>
     </div>
 
     <div class="grid" id="panel"></div>
@@ -98,21 +97,16 @@
             btn.innerText = "VERIFICANDO...";
 
             try {
-                // AllOrigins con parámetro de tiempo para evitar caché y timeouts
+                // Usamos un proxy alternativo (Corsproxy.io) que es más estable para GitHub Pages
                 const urlAmbito = 'https://mercados.ambito.com/home/general';
-                const res = await fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(urlAmbito)}&ts=${Date.now()}`);
+                const res = await fetch(`https://corsproxy.io/?${encodeURIComponent(urlAmbito)}`);
                 
-                if (!res.ok) throw new Error('Error de red');
+                if (!res.ok) throw new Error('Error de servidor');
 
-                const json = await res.json();
-                
-                // Validar si el contenido es un JSON válido para evitar el error de "Unexpected token O"
-                let data;
-                try {
-                    data = JSON.parse(json.contents);
-                } catch (e) {
-                    throw new Error('Respuesta inválida del servidor');
-                }
+                const data = await res.json();
+
+                // Si la respuesta no es un array, el servidor de Ámbito rechazó la petición
+                if (!Array.isArray(data)) throw new Error('Respuesta inválida');
 
                 if (Object.keys(memoriaValores).length === 0) panel.innerHTML = '';
 
@@ -147,9 +141,9 @@
                         </div>
                         <div class="value">${item.nombre.includes('Dólar') ? '$'+valorActual : valorActual}</div>
                         <div class="msg-cambio" style="${huboCambio || card.classList.contains('updated') ? 'display:block' : ''}">
-                            ✨ ¡Dato actualizado! (${new Date().toLocaleTimeString()})
+                            ✨ ¡Actualizado! (${new Date().toLocaleTimeString()})
                         </div>
-                        <div class="footer">Ref Ámbito: ${item.fecha}</div>
+                        <div class="footer">Ref: ${item.fecha}</div>
                     `;
 
                     memoriaValores[idLimpio] = valorActual;
@@ -158,17 +152,15 @@
                 status.innerHTML = `Sincronizado • <strong>${new Date().toLocaleTimeString()}</strong>`;
 
             } catch (e) {
-                console.warn('Reintentando por saturación del servicio...');
-                status.innerText = "Servidor saturado, reintentando automáticamente...";
-                // Reintento rápido en 3 segundos si falla
-                setTimeout(ejecutarRevision, 3000);
+                console.error('Fallo en la revisión:', e);
+                status.innerText = "Error de conexión. Reintentando en 5s...";
+                setTimeout(ejecutarRevision, 5000);
             } finally {
                 btn.disabled = false;
                 btn.innerText = "ACTUALIZAR AHORA";
             }
         }
 
-        // Ejecución inicial y auto-refresco cada 60 segundos
         ejecutarRevision();
         setInterval(ejecutarRevision, 60000);
     </script>
