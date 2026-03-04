@@ -428,6 +428,7 @@ export default function NewsFeed() {
 
   const pfScrollRef = useRef<HTMLDivElement>(null);
   const billScrollRef = useRef<HTMLDivElement>(null);
+  const newsScrollRef = useRef<HTMLDivElement>(null);
 
   const scroll = (ref: RefObject<HTMLDivElement | null>, direction: 'left' | 'right') => {
     if (ref.current) {
@@ -826,43 +827,62 @@ export default function NewsFeed() {
         </div>
 
         {/* Horizontal Flex of Sources */}
-        <div className="flex-1 flex flex-row divide-x divide-gray-100 overflow-hidden">
-           {(Object.entries(groupedNews) as [string, NewsItem[]][]).map(([source, items]) => (
-              <div key={source} className="flex-1 flex flex-col min-w-0 hover:bg-blue-50/30 transition-colors group/column relative">
-                 {/* Source Header */}
-                 <div className="py-1.5 px-1 text-center border-b border-gray-100 shrink-0 bg-white/50 backdrop-blur-sm">
-                    <h3 className="font-bold text-[10px] text-gray-900 truncate w-full px-1" title={source}>
-                      {source}
-                    </h3>
-                 </div>
+        <div className="flex-1 relative group/news overflow-hidden">
+           <button 
+             onClick={() => scroll(newsScrollRef, 'left')}
+             className="absolute left-2 top-1/2 -translate-y-1/2 z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-blue-600 transition-all flex opacity-80 hover:opacity-100"
+           >
+             <ChevronLeft className="w-4 h-4" />
+           </button>
 
-                 {/* News List */}
-                 <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5">
-                    {items.map((item, i) => {
-                      const title = item.titulo || item.title || item.headline || 'Sin título';
-                      const link = item.link || item.url || item.href;
-                      
-                      return (
-                       <a 
-                          key={i} 
-                          href={link} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="block mb-2 last:mb-0 group/item"
-                          title={title}
-                       >
-                          <p className="text-[9px] leading-snug text-gray-600 group-hover/column:text-gray-800 group-hover/item:text-blue-600 transition-colors line-clamp-3 font-medium">
-                             {title}
-                          </p>
-                       </a>
-                      );
-                    })}
+           <div 
+             ref={newsScrollRef}
+             className="h-full flex flex-row divide-x divide-gray-100 overflow-x-auto no-scrollbar snap-x snap-mandatory"
+           >
+              {(Object.entries(groupedNews) as [string, NewsItem[]][]).map(([source, items]) => (
+                 <div key={source} className="flex-none w-[85vw] sm:w-[300px] md:w-[250px] flex flex-col snap-center md:snap-start hover:bg-blue-50/30 transition-colors group/column relative">
+                    {/* Source Header */}
+                    <div className="py-1.5 px-1 text-center border-b border-gray-100 shrink-0 bg-white/50 backdrop-blur-sm">
+                       <h3 className="font-bold text-[10px] text-gray-900 truncate w-full px-1" title={source}>
+                         {source}
+                       </h3>
+                    </div>
+
+                    {/* News List */}
+                    <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5">
+                       {items.map((item, i) => {
+                         const title = item.titulo || item.title || item.headline || 'Sin título';
+                         const link = item.link || item.url || item.href;
+                         
+                         return (
+                          <a 
+                             key={i} 
+                             href={link} 
+                             target="_blank" 
+                             rel="noopener noreferrer" 
+                             className="block mb-2 last:mb-0 group/item"
+                             title={title}
+                          >
+                             <p className="text-[9px] leading-snug text-gray-600 group-hover/column:text-gray-800 group-hover/item:text-blue-600 transition-colors line-clamp-3 font-medium">
+                                {title}
+                             </p>
+                          </a>
+                         );
+                       })}
+                    </div>
+                    
+                    {/* Count Badge */}
+                    <div className="absolute top-1.5 right-1 w-1.5 h-1.5 rounded-full bg-blue-600/20 group-hover/column:bg-blue-600 transition-colors"></div>
                  </div>
-                 
-                 {/* Count Badge */}
-                 <div className="absolute top-1.5 right-1 w-1.5 h-1.5 rounded-full bg-blue-600/20 group-hover/column:bg-blue-600 transition-colors"></div>
-              </div>
-           ))}
+              ))}
+           </div>
+
+           <button 
+             onClick={() => scroll(newsScrollRef, 'right')}
+             className="absolute right-2 top-1/2 -translate-y-1/2 z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-blue-600 transition-all flex opacity-80 hover:opacity-100"
+           >
+             <ChevronRight className="w-4 h-4" />
+           </button>
         </div>
       </div>
     </div>
