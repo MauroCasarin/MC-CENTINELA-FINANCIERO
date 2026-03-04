@@ -3,7 +3,10 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Monitor Financiero Inteligente</title>
+    <title>Centinela Financiero</title>
+    
+    <link rel="icon" type="image/x-icon" href="https://raw.githubusercontent.com/MauroCasarin/MC-CENTINELA-FINANCIERO/refs/heads/main/favicon.ico">
+
     <style>
         :root {
             --bg: #f4f7f6;
@@ -63,7 +66,6 @@
             transition: background-color 0.5s ease;
         }
 
-        /* Estilo cuando el dato cambia */
         .card.updated {
             background-color: var(--change-bg);
             border-top-color: #ff9800;
@@ -83,7 +85,7 @@
             padding: 5px;
             background: #fff3cd;
             border-radius: 4px;
-            display: none; /* Se activa por JS */
+            display: none;
         }
 
         .footer { font-size: 0.75rem; color: #adb5bd; border-top: 1px solid #f8f9fa; padding-top: 10px; margin-top: 10px; }
@@ -98,15 +100,15 @@
 <body>
 
     <div class="header">
-        <h1>Monitor Financiero Live</h1>
+        <h1 style="margin-bottom: 10px;">Centinela Financiero</h1>
         <button class="btn-manual" id="btnRefrescar" onclick="ejecutarRevision()">ACTUALIZAR AHORA</button>
-        <div id="status-bar">Iniciando monitor...</div>
+        <div id="status-bar">Sincronizando datos...</div>
     </div>
 
     <div class="grid" id="panel"></div>
 
     <script>
-        let memoriaValores = {}; // Aquí guardamos los precios para comparar cambios
+        let memoriaValores = {}; 
 
         async function ejecutarRevision() {
             const btn = document.getElementById('btnRefrescar');
@@ -117,12 +119,11 @@
             btn.innerText = "BUSCANDO DATOS...";
 
             try {
-                // Petición a Ámbito vía Proxy
+                // Fetch a Ámbito vía Proxy AllOrigins
                 const res = await fetch('https://api.allorigins.win/get?url=' + encodeURIComponent('https://mercados.ambito.com/home/general'));
                 const json = await res.json();
                 const data = JSON.parse(json.contents);
 
-                // Si es la primera vez, limpiamos el panel
                 if (Object.keys(memoriaValores).length === 0) panel.innerHTML = '';
 
                 data.forEach(item => {
@@ -131,7 +132,6 @@
                     const valorActual = item.venta || item.ultimo || item.val1;
                     const idLimpio = item.nombre.replace(/\s+/g, '');
                     
-                    // Lógica de detección de cambios
                     let huboCambio = false;
                     if (memoriaValores[idLimpio] && memoriaValores[idLimpio] !== valorActual) {
                         huboCambio = true;
@@ -142,7 +142,6 @@
 
                     let card = document.getElementById(idLimpio);
                     
-                    // Si la tarjeta no existe, la creamos
                     if (!card) {
                         card = document.createElement('div');
                         card.id = idLimpio;
@@ -150,12 +149,8 @@
                         panel.appendChild(card);
                     }
 
-                    // Si detectamos cambio, marcamos la tarjeta
-                    if (huboCambio) {
-                        card.classList.add('updated');
-                    }
+                    if (huboCambio) card.classList.add('updated');
 
-                    // Actualizamos el contenido de la tarjeta
                     card.innerHTML = `
                         <div class="card-header">
                             <span class="name">${item.nombre}</span>
@@ -163,16 +158,15 @@
                         </div>
                         <div class="value">${item.nombre.includes('Dólar') ? '$'+valorActual : valorActual}</div>
                         <div class="msg-cambio" style="${huboCambio || card.classList.contains('updated') ? 'display:block' : ''}">
-                            ✨ ¡Cambio detectado! (${new Date().toLocaleTimeString()})
+                            ✨ ¡Dato actualizado! (${new Date().toLocaleTimeString()})
                         </div>
                         <div class="footer">Ref Ámbito: ${item.fecha}</div>
                     `;
 
-                    // Guardamos el nuevo valor en la memoria
                     memoriaValores[idLimpio] = valorActual;
                 });
 
-                status.innerHTML = `Monitor activo • Última revisión: <strong>${new Date().toLocaleTimeString()}</strong>`;
+                status.innerHTML = `Monitor Live • Última revisión: <strong>${new Date().toLocaleTimeString()}</strong>`;
 
             } catch (e) {
                 status.innerText = "Error de conexión. Reintentando...";
@@ -183,10 +177,8 @@
             }
         }
 
-        // 1. Ejecución al abrir la página
+        // Ejecución inicial y auto-refresco cada 60 segundos
         ejecutarRevision();
-
-        // 2. Auto-actualización cada 60 segundos
         setInterval(ejecutarRevision, 60000);
     </script>
 </body>
