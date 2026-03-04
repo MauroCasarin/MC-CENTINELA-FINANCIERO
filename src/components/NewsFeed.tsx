@@ -42,6 +42,23 @@ export default function NewsFeed() {
   const [analysisDate, setAnalysisDate] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
+  const [displayedAnalysis, setDisplayedAnalysis] = useState<string>("");
+
+  useEffect(() => {
+    if (aiAnalysis) {
+      setDisplayedAnalysis("");
+      let i = 0;
+      const intervalId = setInterval(() => {
+        setDisplayedAnalysis((prev) => prev + aiAnalysis.charAt(i));
+        i++;
+        if (i >= aiAnalysis.length) {
+          clearInterval(intervalId);
+        }
+      }, 15); // Speed of typewriter effect
+      return () => clearInterval(intervalId);
+    }
+  }, [aiAnalysis]);
+
   const generateAIAnalysis = async (currentData: any) => {
     setIsAnalyzing(true);
     try {
@@ -61,6 +78,13 @@ export default function NewsFeed() {
         ${currentData.news?.slice(0, 20).map((n: any) => `- ${n.titulo || n.title}`).join('\n')}
 
         OBJETIVOS DE ANÁLISIS
+        Sigue estrictamente este orden de razonamiento para construir tu conclusión:
+        1. Analiza METRICAS (Inflación, Riesgo País, Tasa Real).
+        2. Analiza MERCADO (Dólares, Brecha, Merval, Bonos).
+        3. Analiza RENDIMIENTOS (PF, Billeteras).
+        4. Cruza con NOTICIAS (Sentimiento y medidas).
+        5. Finalmente, genera la conclusión estratégica.
+
         Diagnóstico: ¿Estamos en ciclo de 'Carry Trade' o hay señales de dolarización inminente?
         Merval y Bonos: ¿La dinámica de los bonos soberanos (AL30/GD30) convalida la tendencia de las acciones?
         Estrategia de Pesos: ¿Conviene Lecaps, Tasa de Billeteras o cobertura inflacionaria?
@@ -550,7 +574,8 @@ export default function NewsFeed() {
               className="prose prose-invert prose-sm max-w-none"
             >
               <div className="whitespace-pre-wrap text-blue-50 leading-relaxed text-sm font-medium">
-                {aiAnalysis}
+                {displayedAnalysis}
+                <span className="animate-pulse inline-block w-1.5 h-4 bg-blue-400 ml-1 align-middle"></span>
               </div>
             </motion.div>
           ) : (
