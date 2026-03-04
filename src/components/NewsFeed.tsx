@@ -36,6 +36,7 @@ export default function NewsFeed() {
   const [merval, setMerval] = useState<{valor: number, variacion: number} | null>(null);
   const [bonos, setBonos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadingMessage, setLoadingMessage] = useState("Iniciando...");
   const [error, setError] = useState<string | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [analysisDate, setAnalysisDate] = useState<string | null>(null);
@@ -205,6 +206,7 @@ export default function NewsFeed() {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        setLoadingMessage("Obteniendo últimas noticias...");
         // Fetch News
         const newsResponse = await fetch(API_URL);
         if (!newsResponse.ok) throw new Error(`Failed to fetch news: ${newsResponse.statusText}`);
@@ -237,6 +239,7 @@ export default function NewsFeed() {
         setNews(uniqueItems);
 
         // Fetch Financial Data (Non-blocking)
+        setLoadingMessage("Consultando mercados y cotizaciones...");
         const fetchJsonSafe = async (url: string) => {
             try {
                 const res = await fetch(url);
@@ -369,6 +372,7 @@ export default function NewsFeed() {
             setBilleteras(topWallets);
 
             // Trigger AI Analysis
+            setLoadingMessage("Analizando datos con IA...");
             const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
             const topPFVal = sortedPF && sortedPF.length > 0 ? sortedPF[0].tna : 0;
             const ipcVal = inflacion && Array.isArray(inflacion) ? inflacion[inflacion.length - 1].valor : 0;
@@ -455,8 +459,9 @@ export default function NewsFeed() {
   if (loading) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-gray-500">
-        <Loader2 className="w-8 h-8 animate-spin mb-4" />
-        <p>Cargando noticias...</p>
+        <Loader2 className="w-10 h-10 animate-spin mb-4 text-blue-600" />
+        <p className="text-lg font-medium text-gray-700">{loadingMessage}</p>
+        <p className="text-xs text-gray-400 mt-2 animate-pulse">Por favor espere...</p>
       </div>
     );
   }
