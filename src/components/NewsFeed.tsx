@@ -17,6 +17,8 @@ const BILLETERAS_FCI_ULTIMO = "https://api.argentinadatos.com/v1/finanzas/fci/me
 const BILLETERAS_FCI_PENULTIMO = "https://api.argentinadatos.com/v1/finanzas/fci/mercadoDinero/penultimo";
 const BILLETERAS_RENDIMIENTOS = "https://api.argentinadatos.com/v1/finanzas/rendimientos";
 const ORO_API_URL = "https://api.gold-api.com/price/XAU";
+const MERVAL_API_URL = "https://api.argentinadatos.com/v1/finanzas/indices/merval";
+const BONOS_API_URL = "https://api.argentinadatos.com/v1/finanzas/cotizaciones/bonos";
 
 export default function NewsFeed() {
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -31,46 +33,43 @@ export default function NewsFeed() {
   const [plazosFijos, setPlazosFijos] = useState<any[]>([]);
   const [billeteras, setBilleteras] = useState<any[]>([]);
   const [oro, setOro] = useState<{valor: number} | null>(null);
+  const [merval, setMerval] = useState<{valor: number, variacion: number} | null>(null);
+  const [bonos, setBonos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
+  const [analysisDate, setAnalysisDate] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const generateAIAnalysis = async (currentData: any) => {
     setIsAnalyzing(true);
     try {
       const prompt = `
-        Actúa como un analista financiero experto en el mercado argentino. 
-        Analiza los siguientes datos actuales y proporciona una estrategia de inversión concisa, 
-        recomendaciones claras y un panorama general. Cruza la información de mercado, rendimientos y noticias.
-        
-        IMPORTANTE: Analiza la tendencia de la brecha cambiaria, la tasa real (plazo fijo vs inflación) y el sentimiento de las noticias.
+        ROL
+        Actúa como Senior Portfolio Manager de un Hedge Fund especializado en Argentina. Tu análisis debe ser quirúrgico, técnico y sin rodeos.
 
-        DATOS DE MERCADO:
-        - Dólar Oficial: $${currentData.dolar?.venta || 'N/A'}
-        - Dólar Blue: $${currentData.dolarBlue?.venta || 'N/A'}
-        - Dólar MEP: $${currentData.dolarMep?.venta || 'N/A'}
-        - Dólar CCL: $${currentData.dolarCcl?.venta || 'N/A'}
-        - Dólar Cripto: $${currentData.dolarCripto?.venta || 'N/A'}
-        - Brecha Cambiaria (Blue vs Oficial): ${currentData.brecha || 'N/A'}%
-        - Riesgo País: ${currentData.riesgoPais?.valor || 'N/A'}
-        - Inflación (IPC mensual): ${currentData.inflacion?.valor || 'N/A'}%
-        - Tasa Real (aprox): ${currentData.tasaReal ? currentData.tasaReal.toFixed(2) : 'N/A'}%
-        - Oro (gramo): $${currentData.oro?.valor ? currentData.oro.valor.toFixed(0) : 'N/A'}
+        DASHBOARD DE MERCADO (DATOS DUROS)
+        Dólares: Blue $${currentData.dolarBlue?.venta} | MEP $${currentData.dolarMep?.venta} | CCL $${currentData.dolarCcl?.venta} | Brecha: ${currentData.brecha}%
+        Renta Variable (MERVAL): Indice en $${currentData.merval?.valor?.toLocaleString()} ARS (${currentData.merval?.variacion?.toFixed(2)}% diario).
+        Renta Fija y Lecaps: ${currentData.bonos?.map((b: any) => `${b.nombre}: $${b.valor}`).join(' | ')}.
+        Riesgo País: ${currentData.riesgoPais?.valor} bps | Inflación: ${currentData.inflacion?.valor}% mensual.
+        Tasas: TNA Plazo Fijo ${currentData.plazosFijos?.[0]?.tna * 100}% | Tasa Real Proyectada: ${currentData.tasaReal?.toFixed(2)}%.
+        Oro (Gramo local): $${currentData.oro?.valor?.toFixed(0)}.
 
-        RENDIMIENTOS (TNA):
-        - Plazos Fijos (Top): ${currentData.plazosFijos?.map((f: any) => `${f.entidad}: ${(f.tna * 100).toFixed(1)}%`).join(', ') || 'N/A'}
-        - Billeteras (Top): ${currentData.billeteras?.map((b: any) => `${b.entidad}: ${b.tna}%`).join(', ') || 'N/A'}
+        CONTEXTO DE NOTICIAS
+        ${currentData.news?.slice(0, 20).map((n: any) => `- ${n.titulo || n.title}`).join('\n')}
 
-        NOTICIAS RECIENTES (Analiza el sentimiento general y medidas económicas):
-        ${currentData.news?.slice(0, 30).map((n: any) => `- ${n.titulo || n.title}`).join('\n')}
+        OBJETIVOS DE ANÁLISIS
+        Diagnóstico: ¿Estamos en ciclo de 'Carry Trade' o hay señales de dolarización inminente?
+        Merval y Bonos: ¿La dinámica de los bonos soberanos (AL30/GD30) convalida la tendencia de las acciones?
+        Estrategia de Pesos: ¿Conviene Lecaps, Tasa de Billeteras o cobertura inflacionaria?
+        Portafolio Sugerido: Define una división porcentual para un perfil Moderado y otro Agresivo.
 
-        INSTRUCCIONES DE FORMATO:
-        1. Sé directo y profesional.
-        2. Usa viñetas para las recomendaciones.
-        3. Concluye con una "Estrategia Sugerida" de una oración.
-        4. No uses introducciones largas.
-        5. Máximo 250 palabras.
+        FORMATO DE SALIDA
+        Responde exclusivamente en Markdown profesional.
+        Máximo 250 palabras.
+        Tono: Ejecutivo financiero.
+        Finaliza con una 'Alerta de Riesgo' de una sola línea.
       `;
 
       const response = await fetch('/api/analyze', {
@@ -88,6 +87,13 @@ export default function NewsFeed() {
 
       const data = await response.json();
       setAiAnalysis(data.text || "No se pudo generar el análisis en este momento.");
+      setAnalysisDate(new Date().toLocaleString('es-AR', { 
+        day: '2-digit', 
+        month: '2-digit', 
+        year: 'numeric', 
+        hour: '2-digit', 
+        minute: '2-digit' 
+      }));
     } catch (err: any) {
       console.error("AI Analysis Error:", err);
       setAiAnalysis(`Error: ${err.message || "Error al procesar el análisis."}`);
@@ -243,7 +249,7 @@ export default function NewsFeed() {
         };
 
         try {
-            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData] = await Promise.all([
+            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData, mervalData, bonosData] = await Promise.all([
                 fetchJsonSafe(DOLAR_API_URL),
                 fetchJsonSafe(DOLAR_BLUE_API_URL),
                 fetchJsonSafe(DOLAR_MEP_API_URL),
@@ -256,7 +262,9 @@ export default function NewsFeed() {
                 fetchJsonSafe(BILLETERAS_FCI_ULTIMO),
                 fetchJsonSafe(BILLETERAS_FCI_PENULTIMO),
                 fetchJsonSafe(BILLETERAS_RENDIMIENTOS),
-                fetchJsonSafe(ORO_API_URL)
+                fetchJsonSafe(ORO_API_URL),
+                fetchJsonSafe(MERVAL_API_URL),
+                fetchJsonSafe(BONOS_API_URL)
             ]);
 
             if (oficial) setDolar(oficial);
@@ -265,6 +273,19 @@ export default function NewsFeed() {
             if (ccl) setDolarCcl(ccl);
             if (mayorista) setDolarMayorista(mayorista);
             if (cripto) setDolarCripto(cripto);
+            
+            if (mervalData && Array.isArray(mervalData) && mervalData.length >= 2) {
+                const last = mervalData[mervalData.length - 1];
+                const prev = mervalData[mervalData.length - 2];
+                const variacion = ((last.valor - prev.valor) / prev.valor) * 100;
+                setMerval({ valor: last.valor, variacion });
+            }
+
+            if (bonosData && Array.isArray(bonosData)) {
+                const targetBonos = ['AL30', 'GD30', 'AL30D', 'S31M4'];
+                const filteredBonos = bonosData.filter((b: any) => targetBonos.includes(b.nombre));
+                setBonos(filteredBonos);
+            }
             
             if (oroData && blue) {
                 // Convert global gold price (oz) to local gram price: (Price * Blue) / 31.1035
@@ -367,7 +388,12 @@ export default function NewsFeed() {
                 news: items,
                 oro: oroData ? { valor: (oroData.price * (blue?.venta || 0)) / 31.1035 } : null,
                 brecha: brechaVal,
-                tasaReal: tasaRealVal
+                tasaReal: tasaRealVal,
+                merval: (mervalData && Array.isArray(mervalData) && mervalData.length >= 2) ? {
+                    valor: mervalData[mervalData.length - 1].valor,
+                    variacion: ((mervalData[mervalData.length - 1].valor - mervalData[mervalData.length - 2].valor) / mervalData[mervalData.length - 2].valor) * 100
+                } : null,
+                bonos: (bonosData && Array.isArray(bonosData)) ? bonosData.filter((b: any) => ['AL30', 'GD30', 'AL30D', 'S31M4'].includes(b.nombre)) : []
             });
           } catch (e) {
             console.error("Error fetching financial data:", e);
@@ -478,7 +504,10 @@ export default function NewsFeed() {
                 <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
               </h2>
               <div className="flex items-center gap-2">
-                 <p className="text-xs text-blue-100/70 font-medium uppercase tracking-wider">Análisis Financiero en Tiempo Real</p>
+                 <p className="text-xs text-blue-100/70 font-medium uppercase tracking-wider">
+                    Análisis Financiero en Tiempo Real
+                    {analysisDate && <span className="text-blue-200 ml-1 normal-case">({analysisDate})</span>}
+                 </p>
                  <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-blue-200">Versión 4.3G</span>
               </div>
             </div>
@@ -488,7 +517,7 @@ export default function NewsFeed() {
                 const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
                 generateAIAnalysis({
                     dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
-                    oro, brecha: brechaVal, tasaReal
+                    oro, brecha: brechaVal, tasaReal, merval, bonos
                 });
             }}
             disabled={isAnalyzing}
