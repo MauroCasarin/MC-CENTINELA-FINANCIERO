@@ -17,8 +17,7 @@ const BILLETERAS_FCI_ULTIMO = "https://api.argentinadatos.com/v1/finanzas/fci/me
 const BILLETERAS_FCI_PENULTIMO = "https://api.argentinadatos.com/v1/finanzas/fci/mercadoDinero/penultimo";
 const BILLETERAS_RENDIMIENTOS = "https://api.argentinadatos.com/v1/finanzas/rendimientos";
 const ORO_API_URL = "https://api.gold-api.com/price/XAU";
-const MERVAL_API_URL = "https://api.argentinadatos.com/v1/finanzas/indices/merval";
-const BONOS_API_URL = "https://api.argentinadatos.com/v1/finanzas/cotizaciones/bonos";
+const AMBITO_GENERAL_URL = "https://mercados.ambito.com/home/general";
 
 export default function NewsFeed() {
   const [news, setNews] = useState<NewsItem[]>([]);
@@ -275,7 +274,7 @@ export default function NewsFeed() {
         };
 
         try {
-            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData, mervalData, bonosData] = await Promise.all([
+            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData, ambitoData] = await Promise.all([
                 fetchJsonSafe(DOLAR_API_URL),
                 fetchJsonSafe(DOLAR_BLUE_API_URL),
                 fetchJsonSafe(DOLAR_MEP_API_URL),
@@ -289,8 +288,7 @@ export default function NewsFeed() {
                 fetchJsonSafe(BILLETERAS_FCI_PENULTIMO),
                 fetchJsonSafe(BILLETERAS_RENDIMIENTOS),
                 fetchJsonSafe(ORO_API_URL),
-                fetchJsonSafe(MERVAL_API_URL),
-                fetchJsonSafe(BONOS_API_URL)
+                fetchJsonSafe(AMBITO_GENERAL_URL)
             ]);
 
             if (oficial) setDolar(oficial);
@@ -300,18 +298,25 @@ export default function NewsFeed() {
             if (mayorista) setDolarMayorista(mayorista);
             if (cripto) setDolarCripto(cripto);
             
-            if (mervalData && Array.isArray(mervalData) && mervalData.length >= 2) {
-                const last = mervalData[mervalData.length - 1];
-                const prev = mervalData[mervalData.length - 2];
-                const variacion = ((last.valor - prev.valor) / prev.valor) * 100;
-                setMerval({ valor: last.valor, variacion });
+            let parsedMerval = null;
+            let parsedRiesgoPais = null;
+
+            if (ambitoData && Array.isArray(ambitoData)) {
+                const mervalItem = ambitoData.find((item: any) => item.nombre === "S&P Merval");
+                if (mervalItem) {
+                    const valorStr = mervalItem.val1 || mervalItem.ultimo;
+                    const variacionStr = mervalItem.variacion;
+                    if (valorStr && variacionStr) {
+                        const valor = parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
+                        const variacion = parseFloat(variacionStr.replace('%', '').replace(',', '.'));
+                        parsedMerval = { valor, variacion };
+                        setMerval(parsedMerval);
+                    }
+                }
             }
 
-            if (bonosData && Array.isArray(bonosData)) {
-                const targetBonos = ['AL30', 'GD30', 'AL30D', 'S31M4'];
-                const filteredBonos = bonosData.filter((b: any) => targetBonos.includes(b.nombre));
-                setBonos(filteredBonos);
-            }
+            // Bonos API is currently unavailable, setting to empty array
+            setBonos([]);
             
             if (oroData && blue) {
                 // Convert global gold price (oz) to local gram price: (Price * Blue) / 31.1035
@@ -319,9 +324,17 @@ export default function NewsFeed() {
                 setOro({ valor: pricePerGram });
             }
 
-            if (riesgo) {
-                const lastValue = Array.isArray(riesgo) ? riesgo[riesgo.length - 1] : null;
-                setRiesgoPais(lastValue);
+            if (riesgo && Array.isArray(riesgo) && riesgo.length > 0) {
+                parsedRiesgoPais = riesgo[riesgo.length - 1];
+                setRiesgoPais(parsedRiesgoPais);
+            } else if (ambitoData && Array.isArray(ambitoData)) {
+                // Fallback to Ambito for Riesgo Pais if argentinadatos fails
+                const riesgoPaisItem = ambitoData.find((item: any) => item.nombre === "Riesgo País" || item.nombre === "Riesgo Pa\u00eds");
+                if (riesgoPaisItem) {
+                    const valor = parseFloat(riesgoPaisItem.val1.replace(/\./g, '').replace(',', '.'));
+                    parsedRiesgoPais = { valor, fecha: riesgoPaisItem.fecha };
+                    setRiesgoPais(parsedRiesgoPais);
+                }
             }
             
             if (inflacion) {
@@ -408,7 +421,7 @@ export default function NewsFeed() {
                 dolarCcl: ccl,
                 dolarCripto: cripto,
                 dolarMayorista: mayorista,
-                riesgoPais: Array.isArray(riesgo) ? riesgo[riesgo.length - 1] : null,
+                riesgoPais: parsedRiesgoPais,
                 inflacion: Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null,
                 plazosFijos: pf ? pf.filter((item: any) => item.tnaClientes > 0).sort((a: any, b: any) => b.tnaClientes - a.tnaClientes).slice(0, 4) : [],
                 billeteras: topWallets,
@@ -416,11 +429,8 @@ export default function NewsFeed() {
                 oro: oroData ? { valor: (oroData.price * (blue?.venta || 0)) / 31.1035 } : null,
                 brecha: brechaVal,
                 tasaReal: tasaRealVal,
-                merval: (mervalData && Array.isArray(mervalData) && mervalData.length >= 2) ? {
-                    valor: mervalData[mervalData.length - 1].valor,
-                    variacion: ((mervalData[mervalData.length - 1].valor - mervalData[mervalData.length - 2].valor) / mervalData[mervalData.length - 2].valor) * 100
-                } : null,
-                bonos: (bonosData && Array.isArray(bonosData)) ? bonosData.filter((b: any) => ['AL30', 'GD30', 'AL30D', 'S31M4'].includes(b.nombre)) : []
+                merval: parsedMerval,
+                bonos: []
             });
           } catch (e) {
             console.error("Error fetching financial data:", e);
