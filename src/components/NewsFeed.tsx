@@ -78,22 +78,21 @@ export default function NewsFeed() {
         ${currentData.news?.slice(0, 20).map((n: any) => `- ${n.titulo || n.title}`).join('\n')}
 
         OBJETIVOS DE ANÁLISIS
-        Sigue estrictamente este orden de razonamiento para construir tu conclusión:
-        1. Analiza METRICAS (Inflación, Riesgo País, Tasa Real).
-        2. Analiza MERCADO (Dólares, Brecha, Merval, Bonos).
-        3. Analiza RENDIMIENTOS (PF, Billeteras).
-        4. Cruza con NOTICIAS (Sentimiento y medidas).
-        5. Finalmente, genera la conclusión estratégica.
+        Tu misión es integrar TODA la información disponible (Métricas, Mercado, Rendimientos y Noticias) para generar un VERDICTO ÚNICO y COHESIVO.
+        NO detalles el análisis de cada sección por separado. Ve directo a la conclusión estratégica.
+        
+        IMPORTANTE: Si algún dato falta o es nulo, IGNÓRALO y continúa con lo que sí tienes. NUNCA digas "faltan datos" o "imposible evaluar". Asume que la información provista es suficiente para tomar una postura.
 
-        Diagnóstico: ¿Estamos en ciclo de 'Carry Trade' o hay señales de dolarización inminente?
-        Merval y Bonos: ¿La dinámica de los bonos soberanos (AL30/GD30) convalida la tendencia de las acciones?
-        Estrategia de Pesos: ¿Conviene Lecaps, Tasa de Billeteras o cobertura inflacionaria?
-        Portafolio Sugerido: Define una división porcentual para un perfil Moderado y otro Agresivo.
+        PREGUNTAS CLAVE A RESPONDER EN TU VERDICTO:
+        1. Diagnóstico de Ciclo: ¿Es momento de Tasa (Carry Trade) o de Dolarización?
+        2. Oportunidades: ¿Dónde está la ganancia real hoy? (Bonos, Acciones, Lecaps o Cauciones).
+        3. Portafolio Táctico: Define una asignación de activos clara para hoy.
 
         FORMATO DE SALIDA
         Responde exclusivamente en Markdown profesional.
-        Máximo 250 palabras.
-        Tono: Ejecutivo financiero.
+        Estructura tu respuesta en 3 bloques breves: "Diagnóstico", "Estrategia" y "Portafolio".
+        Máximo 200 palabras.
+        Tono: Ejecutivo financiero senior (directo, sin obviedades).
         Finaliza con una 'Alerta de Riesgo' de una sola línea.
       `;
 
@@ -648,6 +647,9 @@ export default function NewsFeed() {
               </div>
             </div>
         </div>
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
+            <span className="font-semibold">Fuente:</span> INDEC (IPC) y JP Morgan (Riesgo). Último dato oficial disponible.
+        </div>
       </div>
 
       {/* Financial Indicators Container */}
@@ -726,6 +728,9 @@ export default function NewsFeed() {
                  <span className="text-[10px] text-gray-400 mt-0.5">Comercio Exterior</span>
                </div>
             )}
+        </div>
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
+            <span className="font-semibold">Fuente:</span> Cotizaciones en tiempo real vía DolarApi y mercados globales.
         </div>
       </div>
 
@@ -841,6 +846,9 @@ export default function NewsFeed() {
                 </button>
             </div>
         </div>
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
+            <span className="font-semibold">Nota:</span> TNA proyectada en base al último valor de cuotaparte (ayer) y reportes BCRA.
+        </div>
       </div>
 
       {/* News Container */}
@@ -913,6 +921,9 @@ export default function NewsFeed() {
            >
              <ChevronRight className="w-4 h-4" />
            </button>
+        </div>
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
+            <span className="font-semibold">Fuente:</span> Agregador de medios en tiempo real vía Google News RSS.
         </div>
       </div>
     </div>
