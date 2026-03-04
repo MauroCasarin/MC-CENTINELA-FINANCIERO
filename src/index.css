@@ -1,11 +1,7 @@
 @import "tailwindcss";
 
 body {
-  background-image: linear-gradient(rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.9));
-  background-attachment: fixed;
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
+  background-color: #f3f4f6; /* Fallback to a light gray background */
 }
 
 @layer utilities {

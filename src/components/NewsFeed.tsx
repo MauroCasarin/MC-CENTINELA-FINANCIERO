@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
 import { NewsItem } from '../types';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCgq6dfLzp7R6-xO0zvComD3gg1CJbODXaZdqUe5GX9zi0lP4A/exec";
@@ -37,47 +36,41 @@ export default function NewsFeed() {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
-  const generateAIAnalysis = async (currentData: any, force = false) => {
-    // Evitar análisis si ya tenemos uno reciente en esta sesión, a menos que se fuerce
-    const cachedAnalysis = sessionStorage.getItem('last_ai_analysis');
-    const lastAnalysisTime = sessionStorage.getItem('last_ai_analysis_time');
-    const isRecent = lastAnalysisTime && (Date.now() - parseInt(lastAnalysisTime) < 30 * 60 * 1000);
-
-    if (!force && cachedAnalysis && isRecent) {
-      setAiAnalysis(cachedAnalysis);
-      return;
-    }
-
+  const generateAIAnalysis = async (currentData: any) => {
     setIsAnalyzing(true);
     try {
       const prompt = `
-        Actúa como un analista financiero de élite especializado en la economía argentina.
-        Tu misión es identificar RELACIONES CAUSA-EFECTO entre las noticias actuales y los indicadores financieros.
+        Actúa como un analista financiero experto en el mercado argentino. 
+        Analiza los siguientes datos actuales y proporciona una estrategia de inversión concisa, 
+        recomendaciones claras y un panorama general. Cruza la información de mercado, rendimientos y noticias.
+        
+        IMPORTANTE: Analiza la tendencia de la brecha cambiaria, la tasa real (plazo fijo vs inflación) y el sentimiento de las noticias.
 
-        IMPORTANTE: Usa tus herramientas de búsqueda para validar y profundizar:
-        - ¿Cómo impactan las noticias políticas/económicas de hoy en el Dólar y el Riesgo País?
-        - ¿Qué acciones del MERVAL o Bonos están reaccionando a estos eventos?
-        - Análisis de tasas reales (LECAPS/PF) vs Inflación esperada.
+        DATOS DE MERCADO:
+        - Dólar Oficial: $${currentData.dolar?.venta || 'N/A'}
+        - Dólar Blue: $${currentData.dolarBlue?.venta || 'N/A'}
+        - Dólar MEP: $${currentData.dolarMep?.venta || 'N/A'}
+        - Dólar CCL: $${currentData.dolarCcl?.venta || 'N/A'}
+        - Dólar Cripto: $${currentData.dolarCripto?.venta || 'N/A'}
+        - Brecha Cambiaria (Blue vs Oficial): ${currentData.brecha || 'N/A'}%
+        - Riesgo País: ${currentData.riesgoPais?.valor || 'N/A'}
+        - Inflación (IPC mensual): ${currentData.inflacion?.valor || 'N/A'}%
+        - Tasa Real (aprox): ${currentData.tasaReal ? currentData.tasaReal.toFixed(2) : 'N/A'}%
+        - Oro (gramo): $${currentData.oro?.valor ? currentData.oro.valor.toFixed(0) : 'N/A'}
 
-        DATOS DE MERCADO (Punto de partida):
-        - Dólar Oficial: $${currentData.dolar?.venta || 'N/A'} | Blue: $${currentData.dolarBlue?.venta || 'N/A'} | MEP: $${currentData.dolarMep?.venta || 'N/A'} | CCL: $${currentData.dolarCcl?.venta || 'N/A'}
-        - Riesgo País: ${currentData.riesgoPais?.valor || 'N/A'} pts
-        - Inflación (IPC): ${currentData.inflacion?.valor || 'N/A'}%
+        RENDIMIENTOS (TNA):
+        - Plazos Fijos (Top): ${currentData.plazosFijos?.map((f: any) => `${f.entidad}: ${(f.tna * 100).toFixed(1)}%`).join(', ') || 'N/A'}
+        - Billeteras (Top): ${currentData.billeteras?.map((b: any) => `${b.entidad}: ${b.tna}%`).join(', ') || 'N/A'}
 
-        RENDIMIENTOS (Referencia):
-        - Plazos Fijos: ${currentData.plazosFijos?.map((f: any) => `${f.entidad}: ${(f.tna * 100).toFixed(1)}%`).join(', ') || 'N/A'}
-        - Billeteras: ${currentData.billeteras?.map((b: any) => `${b.entidad}: ${b.tna}%`).join(', ') || 'N/A'}
+        NOTICIAS RECIENTES (Analiza el sentimiento general y medidas económicas):
+        ${currentData.news?.slice(0, 30).map((n: any) => `- ${n.titulo || n.title}`).join('\n')}
 
-        TITULARES CLAVE (Analiza su impacto):
-        ${currentData.news?.slice(0, 15).map((n: any) => `- ${n.titulo || n.title}`).join('\n')}
-
-        ESTRUCTURA DE RESPUESTA REQUERIDA:
-        1. **Sintomatología del Mercado:** ¿Qué dicen los precios sobre el clima político/económico actual? Conecta noticias específicas con movimientos del dólar o bonos.
-        2. **Oportunidades y Riesgos:** Identifica sectores o instrumentos (Cedears, Energéticas, Bancos, LECAPS) beneficiados o perjudicados por las noticias de hoy.
-        3. **Veredicto Táctico:** ¿Es momento de cobertura (Dólar), tasa (Pesos) o riesgo (Acciones)? Justifica con la relación causa-efecto detectada.
-        4. **Estrategia Accionable:** Una frase final contundente para el inversor minorista.
-
-        Tono: Profesional, crítico y directo. Máximo 250 palabras.
+        INSTRUCCIONES DE FORMATO:
+        1. Sé directo y profesional.
+        2. Usa viñetas para las recomendaciones.
+        3. Concluye con una "Estrategia Sugerida" de una oración.
+        4. No uses introducciones largas.
+        5. Máximo 250 palabras.
       `;
 
       const response = await fetch('/api/analyze', {
@@ -88,27 +81,16 @@ export default function NewsFeed() {
         body: JSON.stringify({ prompt }),
       });
 
-      const data = await response.json();
-      
       if (!response.ok) {
-        // Manejo amigable de cuota agotada
-        if (data.error?.includes("Límite") || data.error?.includes("429")) {
-          setAiAnalysis("⚠️ El servicio de IA está saturado por hoy. Mostrando último análisis guardado o intenta más tarde.");
-          return;
-        }
-        throw new Error(data.error || "Error en el servidor de análisis");
+        const errorData = await response.json();
+        throw new Error(errorData.error || "Error al conectar con el servidor de análisis.");
       }
 
+      const data = await response.json();
       setAiAnalysis(data.text || "No se pudo generar el análisis en este momento.");
-      
-      // Guardar en sesión para evitar re-llamadas al refrescar
-      if (data.text) {
-        sessionStorage.setItem('last_ai_analysis', data.text);
-        sessionStorage.setItem('last_ai_analysis_time', Date.now().toString());
-      }
     } catch (err: any) {
       console.error("AI Analysis Error:", err);
-      setAiAnalysis(`Aviso: No se pudo actualizar el análisis (Límite de cuota).`);
+      setAiAnalysis(`Error: ${err.message || "Error al procesar el análisis."}`);
     } finally {
       setIsAnalyzing(false);
     }
@@ -300,10 +282,11 @@ export default function NewsFeed() {
                 setInflacion(lastValue);
             }
             
+            let sortedPF: any[] = [];
             if (pf) {
                 // Sort by TNA desc and take top 4
                 if (Array.isArray(pf) && pf.length > 0) {
-                    const sortedPF = pf
+                    sortedPF = pf
                         .filter((item: any) => item.tnaClientes > 0)
                         .sort((a: any, b: any) => b.tnaClientes - a.tnaClientes)
                         .slice(0, 4)
@@ -364,26 +347,31 @@ export default function NewsFeed() {
             const topWallets = walletRates.slice(0, 4);
             setBilleteras(topWallets);
 
-            // Trigger AI Analysis ONLY if we have critical data
-            if (oficial && blue && riesgo && inflacion && items.length > 0) {
-                generateAIAnalysis({
-                    dolar: oficial,
-                    dolarBlue: blue,
-                    dolarMep: mep,
-                    dolarCcl: ccl,
-                    riesgoPais: Array.isArray(riesgo) ? riesgo[riesgo.length - 1] : null,
-                    inflacion: Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null,
-                    plazosFijos: pf ? pf.filter((item: any) => item.tnaClientes > 0).sort((a: any, b: any) => b.tnaClientes - a.tnaClientes).slice(0, 4) : [],
-                    billeteras: topWallets,
-                    news: items
-                });
-            } else {
-                console.log("Skipping AI analysis: Missing critical data");
-            }
+            // Trigger AI Analysis
+            const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
+            const topPFVal = sortedPF && sortedPF.length > 0 ? sortedPF[0].tna : 0;
+            const ipcVal = inflacion && Array.isArray(inflacion) ? inflacion[inflacion.length - 1].valor : 0;
+            const tasaRealVal = ipcVal > 0 ? (((1 + (topPFVal / 12)) / (1 + (ipcVal / 100))) - 1) * 100 : 0;
 
-        } catch (e) {
+            generateAIAnalysis({
+                dolar: oficial,
+                dolarBlue: blue,
+                dolarMep: mep,
+                dolarCcl: ccl,
+                dolarCripto: cripto,
+                dolarMayorista: mayorista,
+                riesgoPais: Array.isArray(riesgo) ? riesgo[riesgo.length - 1] : null,
+                inflacion: Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null,
+                plazosFijos: pf ? pf.filter((item: any) => item.tnaClientes > 0).sort((a: any, b: any) => b.tnaClientes - a.tnaClientes).slice(0, 4) : [],
+                billeteras: topWallets,
+                news: items,
+                oro: oroData ? { valor: (oroData.price * (blue?.venta || 0)) / 31.1035 } : null,
+                brecha: brechaVal,
+                tasaReal: tasaRealVal
+            });
+          } catch (e) {
             console.error("Error fetching financial data:", e);
-        }
+          }
 
       } catch (err) {
         console.error("Error fetching data:", err);
@@ -486,16 +474,23 @@ export default function NewsFeed() {
             </div>
             <div>
               <h2 className="font-bold text-lg tracking-tight flex items-center gap-2">
-                Estrategias IA
+                Estrategias IA (Llama 3)
                 <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
               </h2>
-              <p className="text-xs text-blue-100/70 font-medium uppercase tracking-wider">Análisis Financiero en Tiempo Real</p>
+              <div className="flex items-center gap-2">
+                 <p className="text-xs text-blue-100/70 font-medium uppercase tracking-wider">Análisis Financiero en Tiempo Real</p>
+                 <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-blue-200">Versión 4.3G</span>
+              </div>
             </div>
           </div>
           <button 
-            onClick={() => generateAIAnalysis({
-                dolar, dolarBlue, dolarMep, dolarCcl, riesgoPais, inflacion, plazosFijos, billeteras, news
-            }, true)}
+            onClick={() => {
+                const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
+                generateAIAnalysis({
+                    dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
+                    oro, brecha: brechaVal, tasaReal
+                });
+            }}
             disabled={isAnalyzing}
             className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
             title="Actualizar análisis"
@@ -511,7 +506,7 @@ export default function NewsFeed() {
                 <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
                 <Brain className="w-6 h-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/50" />
               </div>
-              <p className="text-sm font-medium text-blue-100 animate-pulse">Cruzando datos y noticias...</p>
+              <p className="text-sm font-medium text-blue-100 animate-pulse">Cruzando datos y noticias con Llama 3...</p>
             </div>
           ) : aiAnalysis ? (
             <motion.div 
@@ -794,26 +789,26 @@ export default function NewsFeed() {
         <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 shrink-0 overflow-x-auto no-scrollbar">
            <div className="flex items-center shrink-0 mr-4">
              <Newspaper className="w-4 h-4 text-blue-600 mr-2" />
-             <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide flex items-baseline gap-2">
-               Noticias
-               <span className="text-[10px] font-normal text-gray-500 normal-case">({news.length} encontradas)</span>
-             </h2>
+             <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Noticias</h2>
+             <span className="ml-2 text-[10px] font-medium text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded-full">
+                {news.length} capturadas
+             </span>
            </div>
         </div>
 
         {/* Horizontal Flex of Sources */}
-        <div className="flex-1 flex flex-row divide-x divide-gray-100 overflow-x-auto custom-scrollbar">
-           {Object.entries(groupedNews).map(([source, items]) => (
-              <div key={source} className="flex-1 min-w-[200px] flex flex-col hover:bg-blue-50/30 transition-colors group/column relative">
+        <div className="flex-1 flex flex-row divide-x divide-gray-100 overflow-hidden">
+           {(Object.entries(groupedNews) as [string, NewsItem[]][]).map(([source, items]) => (
+              <div key={source} className="flex-1 flex flex-col min-w-0 hover:bg-blue-50/30 transition-colors group/column relative">
                  {/* Source Header */}
-                 <div className="py-2 px-2 text-center border-b border-gray-100 shrink-0 bg-white/50 backdrop-blur-sm sticky top-0 z-10">
-                    <h3 className="font-bold text-[11px] text-gray-900 truncate w-full" title={source}>
+                 <div className="py-1.5 px-1 text-center border-b border-gray-100 shrink-0 bg-white/50 backdrop-blur-sm">
+                    <h3 className="font-bold text-[10px] text-gray-900 truncate w-full px-1" title={source}>
                       {source}
                     </h3>
                  </div>
 
                  {/* News List */}
-                 <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-2">
+                 <div className="flex-1 overflow-y-auto custom-scrollbar p-1.5">
                     {items.map((item, i) => {
                       const title = item.titulo || item.title || item.headline || 'Sin título';
                       const link = item.link || item.url || item.href;
@@ -824,10 +819,10 @@ export default function NewsFeed() {
                           href={link} 
                           target="_blank" 
                           rel="noopener noreferrer" 
-                          className="block group/item"
+                          className="block mb-2 last:mb-0 group/item"
                           title={title}
                        >
-                          <p className="text-[10px] leading-snug text-gray-600 group-hover/column:text-gray-800 group-hover/item:text-blue-600 transition-colors line-clamp-3 font-medium hover:underline">
+                          <p className="text-[9px] leading-snug text-gray-600 group-hover/column:text-gray-800 group-hover/item:text-blue-600 transition-colors line-clamp-3 font-medium">
                              {title}
                           </p>
                        </a>
@@ -836,7 +831,7 @@ export default function NewsFeed() {
                  </div>
                  
                  {/* Count Badge */}
-                 <div className="absolute top-2 right-2 w-1.5 h-1.5 rounded-full bg-blue-600/20 group-hover/column:bg-blue-600 transition-colors"></div>
+                 <div className="absolute top-1.5 right-1 w-1.5 h-1.5 rounded-full bg-blue-600/20 group-hover/column:bg-blue-600 transition-colors"></div>
               </div>
            ))}
         </div>
