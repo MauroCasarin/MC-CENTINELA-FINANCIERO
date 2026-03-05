@@ -102,6 +102,7 @@ export default function NewsFeed() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isYieldsOpen, setIsYieldsOpen] = useState(false);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
+  const [showUpdateFlash, setShowUpdateFlash] = useState(false);
 
   const getLoadingState = (p: number) => {
     if (p < 35) return { text: "Calculando métricas...", icon: Activity };
@@ -418,6 +419,10 @@ export default function NewsFeed() {
                 const lastValue = Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null;
                 setInflacion(lastValue);
             }
+            
+            // Trigger update flash
+            setShowUpdateFlash(true);
+            setTimeout(() => setShowUpdateFlash(false), 5000);
             
             let sortedPF: any[] = [];
             if (pf) {
@@ -857,9 +862,18 @@ export default function NewsFeed() {
                       {merval.variacion >= 0 ? '+' : ''}{merval.variacion}%
                     </span>
                  </div>
-                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
-                   S&P Merval ARS {merval.timestamp && <span>• {merval.timestamp}hs</span>}
-                 </span>
+                 <div className="flex flex-col mt-0.5">
+                   <span className="text-[9px] text-gray-500 font-medium">S&P Merval ARS - Índice bursátil local</span>
+                   <span className="text-[8px] text-gray-400">Ref: {merval.timestamp}hs</span>
+                   {showUpdateFlash && (
+                     <motion.span 
+                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                       className="text-[8px] text-yellow-600 font-bold"
+                     >
+                       Actualización automática: {merval.timestamp}hs
+                     </motion.span>
+                   )}
+                 </div>
                </div>
             )}
 
@@ -868,9 +882,18 @@ export default function NewsFeed() {
                 <span className="text-yellow-700">ORO</span>
                 <span>{oro ? `$${oro.valor.toLocaleString('es-AR', { maximumFractionDigits: 0 })}` : 'Cargando...'}</span>
               </div>
-              <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
-                Gramo local {oro?.timestamp && <span>• {oro.timestamp}hs</span>}
-              </span>
+              <div className="flex flex-col mt-0.5">
+                <span className="text-[9px] text-gray-500 font-medium">Gramo local - Cotización pesificada</span>
+                <span className="text-[8px] text-gray-400">Ref: {oro?.timestamp}hs</span>
+                {showUpdateFlash && oro && (
+                  <motion.span 
+                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                    className="text-[8px] text-yellow-600 font-bold"
+                  >
+                    Actualización automática: {oro.timestamp}hs
+                  </motion.span>
+                )}
+              </div>
             </div>
 
             {dolar && (
@@ -879,9 +902,18 @@ export default function NewsFeed() {
                     <span className="text-green-600">OFICIAL</span>
                     <span>${dolar.venta}</span>
                  </div>
-                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
-                   BNA Venta {dolar.timestamp && <span>• {dolar.timestamp}hs</span>}
-                 </span>
+                 <div className="flex flex-col mt-0.5">
+                   <span className="text-[9px] text-gray-500 font-medium">BNA Venta - Cotización Banco Nación</span>
+                   <span className="text-[8px] text-gray-400">Ref: {dolar.timestamp}hs</span>
+                   {showUpdateFlash && (
+                     <motion.span 
+                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                       className="text-[8px] text-yellow-600 font-bold"
+                     >
+                       Actualización automática: {dolar.timestamp}hs
+                     </motion.span>
+                   )}
+                 </div>
                </div>
             )}
             
@@ -891,9 +923,18 @@ export default function NewsFeed() {
                     <span className="text-blue-600">BLUE</span>
                     <span>${dolarBlue.venta}</span>
                  </div>
-                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
-                   Informal {dolarBlue.timestamp && <span>• {dolarBlue.timestamp}hs</span>}
-                 </span>
+                 <div className="flex flex-col mt-0.5">
+                   <span className="text-[9px] text-gray-500 font-medium">Informal - Mercado paralelo</span>
+                   <span className="text-[8px] text-gray-400">Ref: {dolarBlue.timestamp}hs</span>
+                   {showUpdateFlash && (
+                     <motion.span 
+                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                       className="text-[8px] text-yellow-600 font-bold"
+                     >
+                       Actualización automática: {dolarBlue.timestamp}hs
+                     </motion.span>
+                   )}
+                 </div>
                </div>
             )}
 
@@ -903,9 +944,18 @@ export default function NewsFeed() {
                     <span className="text-yellow-600">CRIPTO</span>
                     <span>${dolarCripto.venta}</span>
                  </div>
-                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
-                   USDT/USDC {dolarCripto.timestamp && <span>• {dolarCripto.timestamp}hs</span>}
-                 </span>
+                 <div className="flex flex-col mt-0.5">
+                   <span className="text-[9px] text-gray-500 font-medium">USDT/USDC - Paridad estable</span>
+                   <span className="text-[8px] text-gray-400">Ref: {dolarCripto.timestamp}hs</span>
+                   {showUpdateFlash && (
+                     <motion.span 
+                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                       className="text-[8px] text-yellow-600 font-bold"
+                     >
+                       Actualización automática: {dolarCripto.timestamp}hs
+                     </motion.span>
+                   )}
+                 </div>
                </div>
             )}
 
@@ -915,9 +965,18 @@ export default function NewsFeed() {
                     <span className="text-orange-500">MEP</span>
                     <span>${dolarMep.venta}</span>
                  </div>
-                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
-                   Dólar Bolsa {dolarMep.timestamp && <span>• {dolarMep.timestamp}hs</span>}
-                 </span>
+                 <div className="flex flex-col mt-0.5">
+                   <span className="text-[9px] text-gray-500 font-medium">Dólar Bolsa - Operativa bonos</span>
+                   <span className="text-[8px] text-gray-400">Ref: {dolarMep.timestamp}hs</span>
+                   {showUpdateFlash && (
+                     <motion.span 
+                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                       className="text-[8px] text-yellow-600 font-bold"
+                     >
+                       Actualización automática: {dolarMep.timestamp}hs
+                     </motion.span>
+                   )}
+                 </div>
                </div>
             )}
 
@@ -927,9 +986,18 @@ export default function NewsFeed() {
                     <span className="text-purple-600">CCL</span>
                     <span>${dolarCcl.venta}</span>
                  </div>
-                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
-                   Liqui {dolarCcl.timestamp && <span>• {dolarCcl.timestamp}hs</span>}
-                 </span>
+                 <div className="flex flex-col mt-0.5">
+                   <span className="text-[9px] text-gray-500 font-medium">Liqui - Contado con Liquidación</span>
+                   <span className="text-[8px] text-gray-400">Ref: {dolarCcl.timestamp}hs</span>
+                   {showUpdateFlash && (
+                     <motion.span 
+                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                       className="text-[8px] text-yellow-600 font-bold"
+                     >
+                       Actualización automática: {dolarCcl.timestamp}hs
+                     </motion.span>
+                   )}
+                 </div>
                </div>
             )}
 
@@ -939,9 +1007,18 @@ export default function NewsFeed() {
                     <span className="text-gray-700">MAYORISTA</span>
                     <span>${dolarMayorista.venta}</span>
                  </div>
-                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
-                   Comex {dolarMayorista.timestamp && <span>• {dolarMayorista.timestamp}hs</span>}
-                 </span>
+                 <div className="flex flex-col mt-0.5">
+                   <span className="text-[9px] text-gray-500 font-medium">Comex - Comercio exterior</span>
+                   <span className="text-[8px] text-gray-400">Ref: {dolarMayorista.timestamp}hs</span>
+                   {showUpdateFlash && (
+                     <motion.span 
+                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
+                       className="text-[8px] text-yellow-600 font-bold"
+                     >
+                       Actualización automática: {dolarMayorista.timestamp}hs
+                     </motion.span>
+                   )}
+                 </div>
                </div>
             )}
         </div>
