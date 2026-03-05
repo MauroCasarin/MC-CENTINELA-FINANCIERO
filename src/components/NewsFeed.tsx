@@ -38,6 +38,47 @@ const TypewriterText = ({ text, speed = 50 }: { text: string, speed?: number }) 
   return <span>{displayedText}</span>;
 };
 
+const DottedProgress = ({ size = 100 }: { size?: number }) => {
+  const dots = 24;
+  const radius = size / 2 - 10;
+  const centerX = size / 2;
+  const centerY = size / 2;
+
+  return (
+    <div className="relative" style={{ width: size, height: size }}>
+      <svg width={size} height={size} className="transform -rotate-90">
+        {[...Array(dots)].map((_, i) => {
+          const angle = (i / dots) * 2 * Math.PI;
+          const x = centerX + radius * Math.cos(angle);
+          const y = centerY + radius * Math.sin(angle);
+
+          return (
+            <motion.circle
+              key={i}
+              cx={x}
+              cy={y}
+              r={2}
+              initial={{ opacity: 0.2, fill: "#cbd5e1", scale: 1 }}
+              animate={{
+                opacity: [0.2, 1, 1, 0.2],
+                fill: ["#cbd5e1", "#2563eb", "#2563eb", "#cbd5e1"],
+                scale: [1, 1.4, 1.4, 1],
+              }}
+              transition={{
+                duration: 2.5,
+                repeat: Infinity,
+                delay: i * 0.06,
+                times: [0, 0.2, 0.7, 1],
+                ease: "easeInOut",
+              }}
+            />
+          );
+        })}
+      </svg>
+    </div>
+  );
+};
+
 export default function NewsFeed() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [dolar, setDolar] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
@@ -509,15 +550,26 @@ export default function NewsFeed() {
 
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-gray-500">
-        <div className="relative mb-8">
-          <Loader2 className="w-16 h-16 animate-spin text-blue-600/30" />
+        <div className="relative mb-8 flex items-center justify-center">
+          {/* Dotted Circular Progress (Continuous Loop) */}
+          <DottedProgress size={130} />
+          
+          {/* Central Pulsing Icon */}
           <div className="absolute inset-0 flex items-center justify-center">
              <motion.div 
-               animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
-               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
-               className="p-4 bg-blue-100/50 rounded-full shadow-lg shadow-blue-200/50"
+               animate={{ 
+                 scale: [1, 1.2, 1], 
+                 opacity: [0.9, 1, 0.9],
+                 boxShadow: [
+                   "0 0 0px rgba(37, 99, 235, 0)",
+                   "0 0 20px rgba(37, 99, 235, 0.2)",
+                   "0 0 0px rgba(37, 99, 235, 0)"
+                 ]
+               }}
+               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
+               className="p-4 bg-white rounded-full shadow-xl border border-blue-100 z-10"
              >
-               <BarChart3 className="w-8 h-8 text-blue-600" />
+               <BarChart3 className="w-9 h-9 text-blue-600" />
              </motion.div>
           </div>
         </div>
