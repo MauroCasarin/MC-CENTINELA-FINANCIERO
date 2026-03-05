@@ -61,10 +61,10 @@ export default function NewsFeed() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
 
   const getLoadingState = (p: number) => {
-    if (p < 15) return { text: "Calculando métricas...", icon: Activity };
+    if (p < 35) return { text: "Calculando métricas...", icon: Activity };
     if (p < 45) return { text: "Capturando cotizaciones...", icon: TrendingUp };
-    if (p < 65) return { text: "Sincronizando noticias del mercados...", icon: Newspaper };
-    if (p < 85) return { text: "Preparando motor...", icon: Cpu };
+    if (p < 55) return { text: "Sincronizando noticias del mercados...", icon: Newspaper };
+    if (p < 90) return { text: "Preparando motor...", icon: Cpu };
     return { text: "Iniciando sistema...", icon: Zap };
   };
 
@@ -259,7 +259,7 @@ export default function NewsFeed() {
         // Small delay to show initial state
         await new Promise(r => setTimeout(r, 800));
         
-        setProgress(15);
+        setProgress(35);
         // Fetch News
         const newsResponse = await fetch(API_URL);
         if (!newsResponse.ok) throw new Error(`Failed to fetch news: ${newsResponse.statusText}`);
@@ -322,7 +322,7 @@ export default function NewsFeed() {
                 fetchJsonSafe(AMBITO_GENERAL_URL)
             ]);
 
-            setProgress(65);
+            setProgress(55);
             const now = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
             if (oficial) setDolar({ ...oficial, timestamp: now });
@@ -441,7 +441,7 @@ export default function NewsFeed() {
             const topWallets = walletRates.slice(0, 4);
             setBilleteras(topWallets);
 
-            setProgress(85);
+            setProgress(90);
             // Small delay to show final state
             await new Promise(r => setTimeout(r, 800));
             setProgress(100);
@@ -510,14 +510,14 @@ export default function NewsFeed() {
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-gray-500">
         <div className="relative mb-8">
-          <Loader2 className="w-16 h-16 animate-spin text-blue-600/10" />
+          <Loader2 className="w-16 h-16 animate-spin text-blue-600/30" />
           <div className="absolute inset-0 flex items-center justify-center">
              <motion.div 
-               animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
-               transition={{ repeat: Infinity, duration: 2 }}
-               className="p-4 bg-blue-50 rounded-full shadow-inner"
+               animate={{ scale: [1, 1.3, 1], opacity: [0.8, 1, 0.8] }}
+               transition={{ repeat: Infinity, duration: 1.5, ease: "easeInOut" }}
+               className="p-4 bg-blue-100/50 rounded-full shadow-lg shadow-blue-200/50"
              >
-               <BarChart3 className="w-7 h-7 text-blue-600" />
+               <BarChart3 className="w-8 h-8 text-blue-600" />
              </motion.div>
           </div>
         </div>
