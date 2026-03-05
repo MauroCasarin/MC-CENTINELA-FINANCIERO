@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap } from 'lucide-react';
+import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X } from 'lucide-react';
 import { NewsItem } from '../types';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCgq6dfLzp7R6-xO0zvComD3gg1CJbODXaZdqUe5GX9zi0lP4A/exec";
@@ -100,6 +100,8 @@ export default function NewsFeed() {
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [analysisDate, setAnalysisDate] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isYieldsOpen, setIsYieldsOpen] = useState(false);
+  const [iframeUrl, setIframeUrl] = useState<string | null>(null);
 
   const getLoadingState = (p: number) => {
     if (p < 35) return { text: "Calculando métricas...", icon: Activity };
@@ -642,6 +644,44 @@ export default function NewsFeed() {
 
   return (
     <div className="w-full px-4 py-8 space-y-6">
+      {/* Iframe Modal */}
+      <AnimatePresence>
+        {iframeUrl && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm"
+          >
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.9, opacity: 0, y: 20 }}
+              className="relative w-full max-w-5xl h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+            >
+              <div className="h-12 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
+                <div className="flex items-center gap-2">
+                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Vista Externa de Datos</span>
+                </div>
+                <button 
+                  onClick={() => setIframeUrl(null)}
+                  className="p-1.5 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
+              <div className="flex-1 bg-gray-100 relative">
+                <iframe 
+                  src={iframeUrl} 
+                  className="w-full h-full border-none"
+                  title="External Content"
+                />
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
       
       {/* AI Strategy Container */}
       <motion.div 
@@ -797,7 +837,13 @@ export default function NewsFeed() {
       <div className="w-full bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
         <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center px-4 shrink-0">
            <TrendingUp className="w-4 h-4 text-green-600 mr-2" />
-           <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Mercado</h2>
+           <button 
+             onClick={() => setIframeUrl('https://cotizaciones-fawn.vercel.app/')}
+             className="font-bold text-gray-800 text-sm uppercase tracking-wide hover:text-blue-600 transition-colors flex items-center gap-1 group"
+           >
+             Mercado
+             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+           </button>
         </div>
         
         <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -906,119 +952,141 @@ export default function NewsFeed() {
 
       {/* Yields Container */}
       <div className="w-full bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
-        <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center px-4 shrink-0">
-           <TrendingUp className="w-4 h-4 text-indigo-600 mr-2" />
-           <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Rendimientos (TNA)</h2>
-        </div>
+        <button 
+          onClick={() => setIsYieldsOpen(!isYieldsOpen)}
+          className="h-9 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 shrink-0 hover:bg-gray-100 transition-colors w-full text-left"
+        >
+           <div className="flex items-center">
+             <TrendingUp className="w-4 h-4 text-indigo-600 mr-2" />
+             <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Rendimientos (TNA)</h2>
+           </div>
+           <motion.div
+             animate={{ rotate: isYieldsOpen ? 180 : 0 }}
+             transition={{ duration: 0.3 }}
+           >
+             <ChevronLeft className="w-4 h-4 text-gray-400 -rotate-90" />
+           </motion.div>
+        </button>
         
-        <div className="flex flex-col divide-y divide-gray-100">
-            {/* Plazos Fijos Row */}
-            <div className="flex items-center px-4 py-2 overflow-hidden h-12 relative group/pf">
-                <span className="text-xs font-bold text-gray-500 uppercase shrink-0 mr-3 w-[100px]">Plazos Fijos:</span>
-                
-                <button 
-                  onClick={() => scroll(pfScrollRef, 'left')}
-                  className="absolute left-[105px] z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-blue-600 transition-all flex md:opacity-0 md:group-hover/pf:opacity-100"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
+        <AnimatePresence>
+          {isYieldsOpen && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <div className="flex flex-col divide-y divide-gray-100">
+                  {/* Plazos Fijos Row */}
+                  <div className="flex items-center px-4 py-2 overflow-hidden h-12 relative group/pf">
+                      <span className="text-xs font-bold text-gray-500 uppercase shrink-0 mr-3 w-[100px]">Plazos Fijos:</span>
+                      
+                      <button 
+                        onClick={() => scroll(pfScrollRef, 'left')}
+                        className="absolute left-[105px] z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-blue-600 transition-all flex md:opacity-0 md:group-hover/pf:opacity-100"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
 
-                <div 
-                  ref={pfScrollRef}
-                  className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar mask-gradient-right scroll-smooth px-2"
-                >
-                    {loading ? (
-                        <div className="animate-pulse flex gap-4">
-                            <div className="h-4 bg-gray-100 rounded w-24"></div>
-                            <div className="h-4 bg-gray-100 rounded w-24"></div>
-                            <div className="h-4 bg-gray-100 rounded w-24"></div>
-                        </div>
-                    ) : plazosFijos.length > 0 ? (
-                        plazosFijos.map((item, i) => {
-                            const cleanedName = cleanEntityName(item.entidad);
-                            const url = getEntityUrl(cleanedName);
-                            return (
-                                <a 
-                                    key={i} 
-                                    href={url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 group hover:bg-gray-50 px-2 py-1 rounded transition-colors shrink-0"
-                                    title={`Ir a ${item.entidad}`}
-                                >
-                                    <span className="text-xs font-medium text-gray-800 whitespace-nowrap group-hover:text-blue-600 transition-colors">{cleanedName}</span>
-                                    <span className="text-xs font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">{(item.tna * 100).toFixed(1)}%</span>
-                                </a>
-                            );
-                        })
-                    ) : (
-                        <p className="text-xs text-gray-400">No disponible</p>
-                    )}
-                </div>
+                      <div 
+                        ref={pfScrollRef}
+                        className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar mask-gradient-right scroll-smooth px-2"
+                      >
+                          {loading ? (
+                              <div className="animate-pulse flex gap-4">
+                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                              </div>
+                          ) : plazosFijos.length > 0 ? (
+                              plazosFijos.map((item, i) => {
+                                  const cleanedName = cleanEntityName(item.entidad);
+                                  const url = getEntityUrl(cleanedName);
+                                  return (
+                                      <a 
+                                          key={i} 
+                                          href={url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-1.5 group hover:bg-gray-50 px-2 py-1 rounded transition-colors shrink-0"
+                                          title={`Ir a ${item.entidad}`}
+                                      >
+                                          <span className="text-xs font-medium text-gray-800 whitespace-nowrap group-hover:text-blue-600 transition-colors">{cleanedName}</span>
+                                          <span className="text-xs font-bold text-blue-600 bg-blue-50 px-1.5 py-0.5 rounded-full">{(item.tna * 100).toFixed(1)}%</span>
+                                      </a>
+                                  );
+                              })
+                          ) : (
+                              <p className="text-xs text-gray-400">No disponible</p>
+                          )}
+                      </div>
 
-                <button 
-                  onClick={() => scroll(pfScrollRef, 'right')}
-                  className="absolute right-1 z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-blue-600 transition-all flex md:opacity-0 md:group-hover/pf:opacity-100"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-            </div>
+                      <button 
+                        onClick={() => scroll(pfScrollRef, 'right')}
+                        className="absolute right-1 z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-blue-600 transition-all flex md:opacity-0 md:group-hover/pf:opacity-100"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                  </div>
 
-            {/* Billeteras Row */}
-            <div className="flex items-center px-4 py-2 overflow-hidden h-12 relative group/bill">
-                <span className="text-xs font-bold text-gray-500 uppercase shrink-0 mr-3 w-[100px]">Billeteras:</span>
-                
-                <button 
-                  onClick={() => scroll(billScrollRef, 'left')}
-                  className="absolute left-[105px] z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-green-600 transition-all flex md:opacity-0 md:group-hover/bill:opacity-100"
-                >
-                  <ChevronLeft className="w-3.5 h-3.5" />
-                </button>
+                  {/* Billeteras Row */}
+                  <div className="flex items-center px-4 py-2 overflow-hidden h-12 relative group/bill">
+                      <span className="text-xs font-bold text-gray-500 uppercase shrink-0 mr-3 w-[100px]">Billeteras:</span>
+                      
+                      <button 
+                        onClick={() => scroll(billScrollRef, 'left')}
+                        className="absolute left-[105px] z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-green-600 transition-all flex md:opacity-0 md:group-hover/bill:opacity-100"
+                      >
+                        <ChevronLeft className="w-3.5 h-3.5" />
+                      </button>
 
-                <div 
-                  ref={billScrollRef}
-                  className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar mask-gradient-right scroll-smooth px-2"
-                >
-                    {loading ? (
-                        <div className="animate-pulse flex gap-4">
-                            <div className="h-4 bg-gray-100 rounded w-24"></div>
-                            <div className="h-4 bg-gray-100 rounded w-24"></div>
-                            <div className="h-4 bg-gray-100 rounded w-24"></div>
-                        </div>
-                    ) : billeteras.length > 0 ? (
-                        billeteras.map((item, i) => {
-                            const cleanedName = cleanEntityName(item.entidad);
-                            const url = getEntityUrl(cleanedName);
-                            return (
-                                <a 
-                                    key={i} 
-                                    href={url} 
-                                    target="_blank" 
-                                    rel="noopener noreferrer"
-                                    className="flex items-center gap-1.5 group hover:bg-gray-50 px-2 py-1 rounded transition-colors shrink-0"
-                                    title={`Ir a ${item.entidad}`}
-                                >
-                                    <span className="text-xs font-medium text-gray-800 whitespace-nowrap group-hover:text-green-600 transition-colors">{cleanedName}</span>
-                                    <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">{item.tna}%</span>
-                                </a>
-                            );
-                        })
-                    ) : (
-                        <p className="text-xs text-gray-400">No disponible</p>
-                    )}
-                </div>
+                      <div 
+                        ref={billScrollRef}
+                        className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar mask-gradient-right scroll-smooth px-2"
+                      >
+                          {loading ? (
+                              <div className="animate-pulse flex gap-4">
+                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                              </div>
+                          ) : billeteras.length > 0 ? (
+                              billeteras.map((item, i) => {
+                                  const cleanedName = cleanEntityName(item.entidad);
+                                  const url = getEntityUrl(cleanedName);
+                                  return (
+                                      <a 
+                                          key={i} 
+                                          href={url} 
+                                          target="_blank" 
+                                          rel="noopener noreferrer"
+                                          className="flex items-center gap-1.5 group hover:bg-gray-50 px-2 py-1 rounded transition-colors shrink-0"
+                                          title={`Ir a ${item.entidad}`}
+                                      >
+                                          <span className="text-xs font-medium text-gray-800 whitespace-nowrap group-hover:text-green-600 transition-colors">{cleanedName}</span>
+                                          <span className="text-xs font-bold text-green-600 bg-green-50 px-1.5 py-0.5 rounded-full">{item.tna}%</span>
+                                      </a>
+                                  );
+                              })
+                          ) : (
+                              <p className="text-xs text-gray-400">No disponible</p>
+                          )}
+                      </div>
 
-                <button 
-                  onClick={() => scroll(billScrollRef, 'right')}
-                  className="absolute right-1 z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-green-600 transition-all flex md:opacity-0 md:group-hover/bill:opacity-100"
-                >
-                  <ChevronRight className="w-3.5 h-3.5" />
-                </button>
-            </div>
-        </div>
-        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
-            <span className="font-semibold">Nota:</span> TNA proyectada en base al último valor de cuotaparte (ayer) y reportes BCRA.
-        </div>
+                      <button 
+                        onClick={() => scroll(billScrollRef, 'right')}
+                        className="absolute right-1 z-10 p-1.5 bg-white/95 border border-gray-200 rounded-full shadow-md text-gray-500 hover:text-green-600 transition-all flex md:opacity-0 md:group-hover/bill:opacity-100"
+                      >
+                        <ChevronRight className="w-3.5 h-3.5" />
+                      </button>
+                  </div>
+              </div>
+              <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
+                  <span className="font-semibold">Nota:</span> TNA proyectada en base al último valor de cuotaparte (ayer) y reportes BCRA.
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* News Container */}
@@ -1027,7 +1095,13 @@ export default function NewsFeed() {
         <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 shrink-0 overflow-x-auto no-scrollbar">
            <div className="flex items-center shrink-0 mr-4">
              <Newspaper className="w-4 h-4 text-blue-600 mr-2" />
-             <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Noticias</h2>
+             <button 
+               onClick={() => setIframeUrl('https://noticias-pi-beryl.vercel.app/')}
+               className="font-bold text-gray-800 text-sm uppercase tracking-wide hover:text-blue-600 transition-colors flex items-center gap-1 group"
+             >
+               Noticias
+               <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+             </button>
              <span className="ml-2 text-[10px] font-medium text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded-full">
                 {news.length} capturadas
              </span>
@@ -1096,6 +1170,32 @@ export default function NewsFeed() {
             <span className="font-semibold">Fuente:</span> Agregador de medios en tiempo real vía Google News RSS.
         </div>
       </div>
+
+      {/* Footer / Transparency Protocol */}
+      <footer className="w-full mt-12 mb-8 px-4">
+        <div className="max-w-4xl mx-auto border-t border-gray-200 pt-8 flex flex-col items-center text-center">
+          <div className="flex items-center gap-2 mb-4">
+            <div className="h-px w-8 bg-gray-300"></div>
+            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-[0.3em]">
+              [ PROTOCOLO DE TRANSPARENCIA DE DATOS ]
+            </span>
+            <div className="h-px w-8 bg-gray-300"></div>
+          </div>
+          
+          <p className="text-[11px] text-gray-500 leading-relaxed max-w-2xl font-medium">
+            Sincronización activa con fuentes oficiales y mercados en tiempo real. 
+            Los valores de activos, tasas de interés e indicadores macroeconómicos son extraídos de APIs financieras verificadas. 
+            Este terminal actúa como procesador de datos vigentes, no como simulador.
+          </p>
+          
+          <div className="mt-8 flex flex-col items-center gap-1">
+            <span className="text-[11px] font-bold text-gray-800 tracking-widest uppercase">
+              CENTINELA FINANCIERO © 2026
+            </span>
+            <div className="w-12 h-0.5 bg-blue-600 rounded-full"></div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }
