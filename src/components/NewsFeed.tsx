@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity } from 'lucide-react';
+import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap } from 'lucide-react';
 import { NewsItem } from '../types';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCgq6dfLzp7R6-xO0zvComD3gg1CJbODXaZdqUe5GX9zi0lP4A/exec";
@@ -19,6 +19,25 @@ const BILLETERAS_RENDIMIENTOS = "https://api.argentinadatos.com/v1/finanzas/rend
 const ORO_API_URL = "https://api.gold-api.com/price/XAU";
 const AMBITO_GENERAL_URL = "https://mercados.ambito.com/home/general";
 
+const TypewriterText = ({ text, speed = 50 }: { text: string, speed?: number }) => {
+  const [displayedText, setDisplayedText] = useState("");
+  
+  useEffect(() => {
+    setDisplayedText("");
+    let i = 0;
+    const intervalId = setInterval(() => {
+      setDisplayedText((prev) => text.slice(0, i + 1));
+      i++;
+      if (i >= text.length) {
+        clearInterval(intervalId);
+      }
+    }, speed);
+    return () => clearInterval(intervalId);
+  }, [text, speed]);
+
+  return <span>{displayedText}</span>;
+};
+
 export default function NewsFeed() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [dolar, setDolar] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
@@ -35,11 +54,19 @@ export default function NewsFeed() {
   const [merval, setMerval] = useState<{valor: number, variacion: number, timestamp?: string} | null>(null);
   const [bonos, setBonos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [loadingMessage, setLoadingMessage] = useState("Iniciando...");
+  const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [aiAnalysis, setAiAnalysis] = useState<string | null>(null);
   const [analysisDate, setAnalysisDate] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+
+  const getLoadingState = (p: number) => {
+    if (p < 15) return { text: "Calculando métricas...", icon: Activity };
+    if (p < 45) return { text: "Capturando cotizaciones...", icon: TrendingUp };
+    if (p < 65) return { text: "Sincronizando noticias del mercados...", icon: Newspaper };
+    if (p < 85) return { text: "Preparando motor...", icon: Cpu };
+    return { text: "Iniciando sistema...", icon: Zap };
+  };
 
   const [displayedAnalysis, setDisplayedAnalysis] = useState<string>("");
 
@@ -228,11 +255,16 @@ export default function NewsFeed() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setLoadingMessage("Obteniendo últimas noticias...");
+        setProgress(0);
+        // Small delay to show initial state
+        await new Promise(r => setTimeout(r, 800));
+        
+        setProgress(15);
         // Fetch News
         const newsResponse = await fetch(API_URL);
         if (!newsResponse.ok) throw new Error(`Failed to fetch news: ${newsResponse.statusText}`);
         const newsData = await newsResponse.json();
+        setProgress(45);
         
         // Process News Data
         let items: NewsItem[] = [];
@@ -261,7 +293,6 @@ export default function NewsFeed() {
         setNews(uniqueItems);
 
         // Fetch Financial Data (Non-blocking)
-        setLoadingMessage("Consultando mercados y cotizaciones...");
         const fetchJsonSafe = async (url: string) => {
             try {
                 const res = await fetch(url);
@@ -291,6 +322,7 @@ export default function NewsFeed() {
                 fetchJsonSafe(AMBITO_GENERAL_URL)
             ]);
 
+            setProgress(65);
             const now = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
             if (oficial) setDolar({ ...oficial, timestamp: now });
@@ -409,6 +441,10 @@ export default function NewsFeed() {
             const topWallets = walletRates.slice(0, 4);
             setBilleteras(topWallets);
 
+            setProgress(85);
+            // Small delay to show final state
+            await new Promise(r => setTimeout(r, 800));
+            setProgress(100);
             // AI Analysis is now manual via button
           } catch (e) {
             console.error("Error fetching financial data:", e);
@@ -468,11 +504,62 @@ export default function NewsFeed() {
   const tasaReal = ipcMensual > 0 ? (((1 + (topPF / 12)) / (1 + (ipcMensual / 100))) - 1) * 100 : 0;
 
   if (loading) {
+    const currentState = getLoadingState(progress);
+    const CurrentIcon = currentState.icon;
+
     return (
       <div className="flex flex-col items-center justify-center min-h-[50vh] text-gray-500">
-        <Loader2 className="w-10 h-10 animate-spin mb-4 text-blue-600" />
-        <p className="text-lg font-medium text-gray-700">{loadingMessage}</p>
-        <p className="text-xs text-gray-400 mt-2 animate-pulse">Por favor espere...</p>
+        <div className="relative mb-8">
+          <Loader2 className="w-16 h-16 animate-spin text-blue-600/10" />
+          <div className="absolute inset-0 flex items-center justify-center">
+             <motion.div 
+               animate={{ scale: [1, 1.15, 1], opacity: [0.7, 1, 0.7] }}
+               transition={{ repeat: Infinity, duration: 2 }}
+               className="p-4 bg-blue-50 rounded-full shadow-inner"
+             >
+               <BarChart3 className="w-7 h-7 text-blue-600" />
+             </motion.div>
+          </div>
+        </div>
+        
+        <div className="h-16 flex flex-col items-center justify-center mb-6">
+          <AnimatePresence mode="wait">
+            <motion.div 
+              key={currentState.text}
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.4 }}
+              className="flex flex-col items-center gap-2"
+            >
+              <CurrentIcon className="w-5 h-5 text-blue-500" />
+              <p className="text-lg font-bold text-gray-800 text-center tracking-tight">
+                {currentState.text}
+              </p>
+            </motion.div>
+          </AnimatePresence>
+        </div>
+
+        {/* Animated Progress Bar */}
+        <div className="w-64 h-1.5 bg-gray-100 rounded-full overflow-hidden relative shadow-inner">
+          <motion.div 
+            className="absolute top-0 left-0 h-full bg-gradient-to-r from-indigo-500 via-blue-600 to-blue-400"
+            initial={{ width: 0 }}
+            animate={{ width: `${progress}%` }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            {/* Moving shine effect */}
+            <motion.div 
+              animate={{ x: ['-100%', '200%'] }}
+              transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+              className="absolute top-0 left-0 w-1/2 h-full bg-gradient-to-r from-transparent via-white/30 to-transparent"
+            />
+          </motion.div>
+        </div>
+        
+        <p className="text-[10px] text-gray-400 mt-6 tracking-[0.2em] uppercase font-bold opacity-40">
+          Terminal de Datos Financieros
+        </p>
       </div>
     );
   }
@@ -551,7 +638,10 @@ export default function NewsFeed() {
                 <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
                 <Brain className="w-6 h-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/50" />
               </div>
-              <p className="text-sm font-medium text-blue-100 animate-pulse">Cruzando datos y noticias...</p>
+              <p className="text-sm font-medium text-blue-100 min-h-[1.25rem]">
+                <TypewriterText text="Cruzando datos y noticias..." speed={40} />
+                <span className="inline-block w-1 h-4 bg-blue-300 ml-1 animate-pulse align-middle"></span>
+              </p>
             </div>
           ) : aiAnalysis ? (
             <motion.div 
@@ -565,10 +655,7 @@ export default function NewsFeed() {
               </div>
             </motion.div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-8 space-y-4">
-              <p className="text-blue-200/70 italic text-sm text-center max-w-xs">
-                Los datos de mercado están listos. Pulsa el botón para generar una estrategia táctica.
-              </p>
+            <div className="flex flex-col items-center justify-center py-10 space-y-4">
               <button 
                 onClick={() => {
                   const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
@@ -577,9 +664,9 @@ export default function NewsFeed() {
                       oro, brecha: brechaVal, tasaReal, merval, bonos
                   });
                 }}
-                className="px-6 py-2.5 bg-white text-blue-700 rounded-full font-bold text-sm shadow-lg hover:bg-blue-50 transition-all flex items-center gap-2 group"
+                className="px-8 py-3 bg-white text-blue-700 rounded-full font-bold text-sm shadow-xl hover:bg-blue-50 transition-all flex items-center gap-2 group"
               >
-                <Brain className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                <Brain className="w-5 h-5 group-hover:scale-110 transition-transform" />
                 ANALIZAR MERCADO
               </button>
             </div>
