@@ -21,18 +21,18 @@ const AMBITO_GENERAL_URL = "https://mercados.ambito.com/home/general";
 
 export default function NewsFeed() {
   const [news, setNews] = useState<NewsItem[]>([]);
-  const [dolar, setDolar] = useState<{compra: number, venta: number} | null>(null);
-  const [dolarBlue, setDolarBlue] = useState<{compra: number, venta: number} | null>(null);
-  const [dolarMep, setDolarMep] = useState<{compra: number, venta: number} | null>(null);
-  const [dolarCcl, setDolarCcl] = useState<{compra: number, venta: number} | null>(null);
-  const [dolarMayorista, setDolarMayorista] = useState<{compra: number, venta: number} | null>(null);
-  const [dolarCripto, setDolarCripto] = useState<{compra: number, venta: number} | null>(null);
-  const [riesgoPais, setRiesgoPais] = useState<{valor: number, fecha: string} | null>(null);
+  const [dolar, setDolar] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
+  const [dolarBlue, setDolarBlue] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
+  const [dolarMep, setDolarMep] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
+  const [dolarCcl, setDolarCcl] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
+  const [dolarMayorista, setDolarMayorista] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
+  const [dolarCripto, setDolarCripto] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
+  const [riesgoPais, setRiesgoPais] = useState<{valor: number, fecha: string, timestamp?: string} | null>(null);
   const [inflacion, setInflacion] = useState<{valor: number, fecha: string} | null>(null);
   const [plazosFijos, setPlazosFijos] = useState<any[]>([]);
   const [billeteras, setBilleteras] = useState<any[]>([]);
-  const [oro, setOro] = useState<{valor: number} | null>(null);
-  const [merval, setMerval] = useState<{valor: number, variacion: number} | null>(null);
+  const [oro, setOro] = useState<{valor: number, timestamp?: string} | null>(null);
+  const [merval, setMerval] = useState<{valor: number, variacion: number, timestamp?: string} | null>(null);
   const [bonos, setBonos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMessage, setLoadingMessage] = useState("Iniciando...");
@@ -291,12 +291,14 @@ export default function NewsFeed() {
                 fetchJsonSafe(AMBITO_GENERAL_URL)
             ]);
 
-            if (oficial) setDolar(oficial);
-            if (blue) setDolarBlue(blue);
-            if (mep) setDolarMep(mep);
-            if (ccl) setDolarCcl(ccl);
-            if (mayorista) setDolarMayorista(mayorista);
-            if (cripto) setDolarCripto(cripto);
+            const now = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+
+            if (oficial) setDolar({ ...oficial, timestamp: now });
+            if (blue) setDolarBlue({ ...blue, timestamp: now });
+            if (mep) setDolarMep({ ...mep, timestamp: now });
+            if (ccl) setDolarCcl({ ...ccl, timestamp: now });
+            if (mayorista) setDolarMayorista({ ...mayorista, timestamp: now });
+            if (cripto) setDolarCripto({ ...cripto, timestamp: now });
             
             let parsedMerval = null;
             let parsedRiesgoPais = null;
@@ -309,7 +311,7 @@ export default function NewsFeed() {
                     if (valorStr && variacionStr) {
                         const valor = parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
                         const variacion = parseFloat(variacionStr.replace('%', '').replace(',', '.'));
-                        parsedMerval = { valor, variacion };
+                        parsedMerval = { valor, variacion, timestamp: now };
                         setMerval(parsedMerval);
                     }
                 }
@@ -321,18 +323,18 @@ export default function NewsFeed() {
             if (oroData && blue) {
                 // Convert global gold price (oz) to local gram price: (Price * Blue) / 31.1035
                 const pricePerGram = (oroData.price * blue.venta) / 31.1035;
-                setOro({ valor: pricePerGram });
+                setOro({ valor: pricePerGram, timestamp: now });
             }
 
             if (riesgo && Array.isArray(riesgo) && riesgo.length > 0) {
-                parsedRiesgoPais = riesgo[riesgo.length - 1];
+                parsedRiesgoPais = { ...riesgo[riesgo.length - 1], timestamp: now };
                 setRiesgoPais(parsedRiesgoPais);
             } else if (ambitoData && Array.isArray(ambitoData)) {
                 // Fallback to Ambito for Riesgo Pais if argentinadatos fails
                 const riesgoPaisItem = ambitoData.find((item: any) => item.nombre === "Riesgo País" || item.nombre === "Riesgo Pa\u00eds");
                 if (riesgoPaisItem) {
                     const valor = parseFloat(riesgoPaisItem.val1.replace(/\./g, '').replace(',', '.'));
-                    parsedRiesgoPais = { valor, fecha: riesgoPaisItem.fecha };
+                    parsedRiesgoPais = { valor, fecha: riesgoPaisItem.fecha, timestamp: now };
                     setRiesgoPais(parsedRiesgoPais);
                 }
             }
@@ -407,31 +409,7 @@ export default function NewsFeed() {
             const topWallets = walletRates.slice(0, 4);
             setBilleteras(topWallets);
 
-            // Trigger AI Analysis
-            setLoadingMessage("Analizando datos con IA...");
-            const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
-            const topPFVal = sortedPF && sortedPF.length > 0 ? sortedPF[0].tna : 0;
-            const ipcVal = inflacion && Array.isArray(inflacion) ? inflacion[inflacion.length - 1].valor : 0;
-            const tasaRealVal = ipcVal > 0 ? (((1 + (topPFVal / 12)) / (1 + (ipcVal / 100))) - 1) * 100 : 0;
-
-            generateAIAnalysis({
-                dolar: oficial,
-                dolarBlue: blue,
-                dolarMep: mep,
-                dolarCcl: ccl,
-                dolarCripto: cripto,
-                dolarMayorista: mayorista,
-                riesgoPais: parsedRiesgoPais,
-                inflacion: Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null,
-                plazosFijos: pf ? pf.filter((item: any) => item.tnaClientes > 0).sort((a: any, b: any) => b.tnaClientes - a.tnaClientes).slice(0, 4) : [],
-                billeteras: topWallets,
-                news: items,
-                oro: oroData ? { valor: (oroData.price * (blue?.venta || 0)) / 31.1035 } : null,
-                brecha: brechaVal,
-                tasaReal: tasaRealVal,
-                merval: parsedMerval,
-                bonos: []
-            });
+            // AI Analysis is now manual via button
           } catch (e) {
             console.error("Error fetching financial data:", e);
           }
@@ -539,7 +517,7 @@ export default function NewsFeed() {
             </div>
             <div>
               <h2 className="font-bold text-lg tracking-tight flex items-center gap-2">
-                Estrategias IA (Llama 3)
+                Estrategias IA
                 <Sparkles className="w-4 h-4 text-yellow-300 animate-pulse" />
               </h2>
               <div className="flex items-center gap-2">
@@ -547,7 +525,6 @@ export default function NewsFeed() {
                     Análisis Financiero en Tiempo Real
                     {analysisDate && <span className="text-blue-200 ml-1 normal-case">({analysisDate})</span>}
                  </p>
-                 <span className="text-[10px] bg-white/10 px-1.5 py-0.5 rounded text-blue-200">Versión 4.3G</span>
               </div>
             </div>
           </div>
@@ -574,7 +551,7 @@ export default function NewsFeed() {
                 <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
                 <Brain className="w-6 h-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/50" />
               </div>
-              <p className="text-sm font-medium text-blue-100 animate-pulse">Cruzando datos y noticias con Llama 3...</p>
+              <p className="text-sm font-medium text-blue-100 animate-pulse">Cruzando datos y noticias...</p>
             </div>
           ) : aiAnalysis ? (
             <motion.div 
@@ -588,8 +565,23 @@ export default function NewsFeed() {
               </div>
             </motion.div>
           ) : (
-            <div className="flex items-center justify-center py-8 text-blue-200/50 italic text-sm">
-              Esperando datos para iniciar el análisis...
+            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+              <p className="text-blue-200/70 italic text-sm text-center max-w-xs">
+                Los datos de mercado están listos. Pulsa el botón para generar una estrategia táctica.
+              </p>
+              <button 
+                onClick={() => {
+                  const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
+                  generateAIAnalysis({
+                      dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
+                      oro, brecha: brechaVal, tasaReal, merval, bonos
+                  });
+                }}
+                className="px-6 py-2.5 bg-white text-blue-700 rounded-full font-bold text-sm shadow-lg hover:bg-blue-50 transition-all flex items-center gap-2 group"
+              >
+                <Brain className="w-4 h-4 group-hover:scale-110 transition-transform" />
+                ANALIZAR MERCADO
+              </button>
             </div>
           )}
           
@@ -669,14 +661,31 @@ export default function NewsFeed() {
            <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Mercado</h2>
         </div>
         
-        <div className="p-4 grid grid-cols-3 gap-4">
-            {/* Fila 0: ORO y Dólares */}
+        <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
+            {/* Fila 0: MERVAL, ORO y Dólares */}
+            {merval && (
+               <div className="flex flex-col">
+                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                    <span className="text-indigo-600">MERVAL</span>
+                    <span>${merval.valor.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span>
+                    <span className={`text-[10px] ${merval.variacion >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
+                      {merval.variacion >= 0 ? '+' : ''}{merval.variacion}%
+                    </span>
+                 </div>
+                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
+                   S&P Merval ARS {merval.timestamp && <span>• {merval.timestamp}hs</span>}
+                 </span>
+               </div>
+            )}
+
             <div className="flex flex-col">
               <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                 <span className="text-yellow-700">ORO</span>
                 <span>{oro ? `$${oro.valor.toLocaleString('es-AR', { maximumFractionDigits: 0 })}` : 'Cargando...'}</span>
               </div>
-              <span className="text-[10px] text-gray-400 mt-0.5">Cotización local gramo</span>
+              <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
+                Gramo local {oro?.timestamp && <span>• {oro.timestamp}hs</span>}
+              </span>
             </div>
 
             {dolar && (
@@ -685,7 +694,9 @@ export default function NewsFeed() {
                     <span className="text-green-600">OFICIAL</span>
                     <span>${dolar.venta}</span>
                  </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Banco Nación Venta</span>
+                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
+                   BNA Venta {dolar.timestamp && <span>• {dolar.timestamp}hs</span>}
+                 </span>
                </div>
             )}
             
@@ -695,17 +706,9 @@ export default function NewsFeed() {
                     <span className="text-blue-600">BLUE</span>
                     <span>${dolarBlue.venta}</span>
                  </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Mercado Paralelo</span>
-               </div>
-            )}
-
-            {dolar && dolarBlue && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                    <span className="text-purple-600">BRECHA</span>
-                    <span>{((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1)}%</span>
-                 </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Diferencia Blue vs Oficial</span>
+                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
+                   Informal {dolarBlue.timestamp && <span>• {dolarBlue.timestamp}hs</span>}
+                 </span>
                </div>
             )}
 
@@ -715,7 +718,9 @@ export default function NewsFeed() {
                     <span className="text-yellow-600">CRIPTO</span>
                     <span>${dolarCripto.venta}</span>
                  </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">USDT/USDC 24/7</span>
+                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
+                   USDT/USDC {dolarCripto.timestamp && <span>• {dolarCripto.timestamp}hs</span>}
+                 </span>
                </div>
             )}
 
@@ -725,7 +730,21 @@ export default function NewsFeed() {
                     <span className="text-orange-500">MEP</span>
                     <span>${dolarMep.venta}</span>
                  </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Dólar Bolsa</span>
+                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
+                   Dólar Bolsa {dolarMep.timestamp && <span>• {dolarMep.timestamp}hs</span>}
+                 </span>
+               </div>
+            )}
+
+            {dolarCcl && (
+               <div className="flex flex-col">
+                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                    <span className="text-purple-600">CCL</span>
+                    <span>${dolarCcl.venta}</span>
+                 </div>
+                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
+                   Liqui {dolarCcl.timestamp && <span>• {dolarCcl.timestamp}hs</span>}
+                 </span>
                </div>
             )}
 
@@ -735,12 +754,14 @@ export default function NewsFeed() {
                     <span className="text-gray-700">MAYORISTA</span>
                     <span>${dolarMayorista.venta}</span>
                  </div>
-                 <span className="text-[10px] text-gray-400 mt-0.5">Comercio Exterior</span>
+                 <span className="text-[9px] text-gray-400 mt-0.5 flex items-center gap-1">
+                   Comex {dolarMayorista.timestamp && <span>• {dolarMayorista.timestamp}hs</span>}
+                 </span>
                </div>
             )}
         </div>
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
-            <span className="font-semibold">Fuente:</span> Cotizaciones en tiempo real vía DolarApi y mercados globales.
+            <span className="font-semibold">Fuente:</span> Cotizaciones con retraso de 20min aprox. (Ámbito, DolarApi y Mercados).
         </div>
       </div>
 
