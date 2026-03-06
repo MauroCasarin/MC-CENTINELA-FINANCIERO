@@ -4,10 +4,12 @@
  */
 
 import NewsFeed from './components/NewsFeed';
+import UserRegistrationModal from './components/UserRegistrationModal';
 
 export default function App() {
   return (
     <div className="min-h-screen">
+      <UserRegistrationModal />
       <header className="w-full py-3 px-6 flex items-center justify-between bg-white/60 backdrop-blur-md sticky top-0 z-50 border-b border-white/20 shadow-sm">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 uppercase flex items-baseline gap-2">
           CENTINELA FINANCIERO

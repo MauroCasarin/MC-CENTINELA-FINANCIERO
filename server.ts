@@ -1,6 +1,7 @@
 import express from "express";
 import dotenv from "dotenv";
 import Groq from "groq-sdk";
+import { kv } from "@vercel/kv";
 
 dotenv.config();
 
@@ -60,6 +61,37 @@ const analyzeHandler = async (req: any, res: any) => {
 };
 
 app.post("/api/analyze", analyzeHandler);
+
+// Ruta para registrar usuarios en Vercel KV
+app.post("/api/register-user", async (req, res) => {
+  const { name } = req.body;
+  if (!name || typeof name !== 'string' || name.trim().length < 2) {
+    return res.status(400).json({ error: "Nombre inválido" });
+  }
+
+  try {
+    const timestamp = new Date().toISOString();
+    const userData = { name: name.trim(), timestamp };
+    
+    // Guardamos en una lista de usuarios
+    await kv.lpush('site_users', JSON.stringify(userData));
+    
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("KV Error:", error);
+    res.status(500).json({ error: "Error al guardar en base de datos" });
+  }
+});
+
+// Ruta opcional para ver usuarios (puedes borrarla luego si quieres privacidad)
+app.get("/api/users", async (req, res) => {
+  try {
+    const users = await kv.lrange('site_users', 0, -1);
+    res.json(users.map(u => typeof u === 'string' ? JSON.parse(u) : u));
+  } catch (error) {
+    res.status(500).json({ error: "Error al obtener usuarios" });
+  }
+});
 
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", env: process.env.NODE_ENV, local: true });
