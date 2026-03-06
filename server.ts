@@ -42,7 +42,7 @@ const analyzeHandler = async (req: any, res: any) => {
           content: prompt,
         },
       ],
-      model: "llama-3.3-70b-versatile",
+      model: "llama-3.1-8b-instant",
       temperature: 0.5,
       max_tokens: 1024,
     });
@@ -56,6 +56,9 @@ const analyzeHandler = async (req: any, res: any) => {
     res.json({ text });
   } catch (error: any) {
     console.error("Groq Error:", error);
+    if (error.status === 429) {
+      return res.status(429).json({ error: "Límite de IA alcanzado por hoy. Por favor, intenta de nuevo más tarde." });
+    }
     res.status(500).json({ error: `Error de IA: ${error.message}` });
   }
 };
