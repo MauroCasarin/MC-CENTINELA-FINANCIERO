@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X } from 'lucide-react';
 import { NewsItem } from '../types';
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyRzAtQjhLexPaatkpxGCgq6dfLzp7R6-xO0zvComD3gg1CJbODXaZdqUe5GX9zi0lP4A/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbyXl8OB3W2nNyMRZJefyjsfJzYVUgBLAQDTSVCefEC2iUBUUlf3kKRCbIM5y0VA3kizdw/exec";
 const DOLAR_API_URL = "https://dolarapi.com/v1/dolares/oficial";
 const DOLAR_BLUE_API_URL = "https://dolarapi.com/v1/dolares/blue";
 const DOLAR_MEP_API_URL = "https://dolarapi.com/v1/dolares/bolsa";
