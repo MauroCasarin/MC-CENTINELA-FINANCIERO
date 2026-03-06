@@ -5,6 +5,14 @@ export default async function handler(req: any, res: any) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
+  // Verificación defensiva de variables de entorno
+  if (!process.env.KV_REST_API_URL || !process.env.KV_REST_API_TOKEN) {
+    console.error("Faltan variables de entorno KV");
+    return res.status(500).json({ 
+      error: "Error de configuración: Faltan las credenciales de la base de datos (KV_REST_API_URL/TOKEN)." 
+    });
+  }
+
   const { name } = req.body;
   if (!name || typeof name !== 'string' || name.trim().length < 2) {
     return res.status(400).json({ error: "Nombre inválido" });
