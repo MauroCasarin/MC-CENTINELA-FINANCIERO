@@ -662,12 +662,22 @@ export default function NewsFeed() {
               initial={{ scale: 0.9, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className="relative w-full max-w-5xl h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
+              className="relative w-full max-w-5xl h-[92vh] md:h-[85vh] bg-white rounded-2xl shadow-2xl overflow-hidden flex flex-col"
             >
               <div className="h-12 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-6 shrink-0">
-                <div className="flex items-center gap-2">
-                  <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                  <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Vista Externa de Datos</span>
+                <div className="flex items-center gap-3">
+                  {iframeUrl && (
+                    <img 
+                      src={`https://www.google.com/s2/favicons?domain=${new URL(iframeUrl).hostname}&sz=64`} 
+                      alt="favicon" 
+                      className="w-5 h-5 rounded-sm shadow-sm"
+                      referrerPolicy="no-referrer"
+                    />
+                  )}
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Vista Externa de Datos</span>
+                  </div>
                 </div>
                 <button 
                   onClick={() => setIframeUrl(null)}
@@ -676,10 +686,10 @@ export default function NewsFeed() {
                   <X className="w-5 h-5" />
                 </button>
               </div>
-              <div className="flex-1 bg-gray-100 relative">
+              <div className="flex-1 bg-gray-100 relative overflow-y-auto custom-scrollbar">
                 <iframe 
                   src={iframeUrl} 
-                  className="w-full h-full border-none"
+                  className="w-full h-full border-none min-h-[100%]"
                   title="External Content"
                 />
               </div>
@@ -1167,7 +1177,7 @@ export default function NewsFeed() {
       </div>
 
       {/* News Container */}
-      <div className="w-full h-[180px] bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
+      <div className="w-full h-[320px] md:h-[180px] bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
         {/* Container Header */}
         <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 shrink-0 overflow-x-auto no-scrollbar">
            <div className="flex items-center shrink-0 mr-4">

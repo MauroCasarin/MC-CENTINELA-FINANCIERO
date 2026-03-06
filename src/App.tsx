@@ -11,7 +11,7 @@ export default function App() {
       <header className="w-full py-3 px-6 flex items-center justify-between bg-white/60 backdrop-blur-md sticky top-0 z-50 border-b border-white/20 shadow-sm">
         <h1 className="text-xl md:text-2xl font-bold tracking-tight text-gray-900 uppercase flex items-baseline gap-2">
           CENTINELA FINANCIERO
-          <span className="text-xs font-medium text-gray-500 normal-case tracking-normal">Versión 5.3IN</span>
+          <span className="text-xs font-medium text-gray-500 normal-case tracking-normal">Versión 6.3</span>
         </h1>
         <a 
           href="https://www.instagram.com/3d_mc_3d/" 
