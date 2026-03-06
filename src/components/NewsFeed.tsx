@@ -854,10 +854,31 @@ export default function NewsFeed() {
            <TrendingUp className="w-4 h-4 text-green-600 mr-2" />
            <button 
              onClick={() => setIframeUrl('https://cotizaciones-fawn.vercel.app/')}
-             className="font-bold text-gray-800 text-sm uppercase tracking-wide hover:text-blue-600 transition-colors flex items-center gap-1 group"
+             className="relative flex items-center gap-2 group px-2 py-1 rounded-md hover:bg-blue-50 transition-all duration-300"
            >
-             Mercado
-             <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+             <div className="flex items-center gap-1.5">
+               <span className="font-bold text-gray-800 text-sm uppercase tracking-wide group-hover:text-blue-600 transition-colors">
+                 Mercado
+               </span>
+               <div className="flex items-center gap-1">
+                 <span className="relative flex h-2 w-2">
+                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                 </span>
+                 <span className="text-[9px] font-bold text-green-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">En Vivo</span>
+               </div>
+             </div>
+             <motion.div
+               whileHover={{ scale: 1.2, x: 2, y: -2 }}
+               className="text-gray-400 group-hover:text-blue-600 transition-colors"
+             >
+               <ExternalLink className="w-3.5 h-3.5" />
+             </motion.div>
+             
+             {/* Tooltip hint */}
+             <div className="absolute left-0 -bottom-8 hidden group-hover:block bg-gray-900 text-white text-[9px] px-2 py-1 rounded shadow-xl whitespace-nowrap z-20 pointer-events-none font-bold uppercase tracking-widest border border-white/10">
+               Click para expandir terminal
+             </div>
            </button>
         </div>
         
@@ -1184,10 +1205,31 @@ export default function NewsFeed() {
              <Newspaper className="w-4 h-4 text-blue-600 mr-2" />
              <button 
                onClick={() => setIframeUrl('https://noticias-pi-beryl.vercel.app/')}
-               className="font-bold text-gray-800 text-sm uppercase tracking-wide hover:text-blue-600 transition-colors flex items-center gap-1 group"
+               className="relative flex items-center gap-2 group px-2 py-1 rounded-md hover:bg-blue-50 transition-all duration-300"
              >
-               Noticias
-               <ExternalLink className="w-3 h-3 opacity-0 group-hover:opacity-100 transition-opacity" />
+               <div className="flex items-center gap-1.5">
+                 <span className="font-bold text-gray-800 text-sm uppercase tracking-wide group-hover:text-blue-600 transition-colors">
+                   Noticias
+                 </span>
+                 <div className="flex items-center gap-1">
+                   <span className="relative flex h-2 w-2">
+                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-blue-400 opacity-75"></span>
+                     <span className="relative inline-flex rounded-full h-2 w-2 bg-blue-500"></span>
+                   </span>
+                   <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Actualizado</span>
+                 </div>
+               </div>
+               <motion.div
+                 whileHover={{ scale: 1.2, x: 2, y: -2 }}
+                 className="text-gray-400 group-hover:text-blue-600 transition-colors"
+               >
+                 <ExternalLink className="w-3.5 h-3.5" />
+               </motion.div>
+
+               {/* Tooltip hint */}
+               <div className="absolute left-0 -bottom-8 hidden group-hover:block bg-gray-900 text-white text-[9px] px-2 py-1 rounded shadow-xl whitespace-nowrap z-20 pointer-events-none font-bold uppercase tracking-widest border border-white/10">
+                 Abrir lector de noticias completo
+               </div>
              </button>
              <span className="ml-2 text-[10px] font-medium text-gray-500 bg-gray-200 px-1.5 py-0.5 rounded-full">
                 {news.length} capturadas
