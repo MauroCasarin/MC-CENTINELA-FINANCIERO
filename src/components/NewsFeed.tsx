@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X } from 'lucide-react';
+import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen } from 'lucide-react';
 import { NewsItem } from '../types';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyXl8OB3W2nNyMRZJefyjsfJzYVUgBLAQDTSVCefEC2iUBUUlf3kKRCbIM5y0VA3kizdw/exec";
@@ -722,7 +722,9 @@ export default function NewsFeed() {
                   )}
                   <div className="flex items-center gap-2">
                     <div className="w-2 h-2 rounded-full bg-blue-500 animate-pulse"></div>
-                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">Vista Externa de Datos</span>
+                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest">
+                      {iframeUrl.includes('diccionario-theta') ? 'Diccionario Educativo Argento' : 'Vista Externa de Datos'}
+                    </span>
                   </div>
                 </div>
                 <button 
@@ -1354,6 +1356,26 @@ export default function NewsFeed() {
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
             <span className="font-semibold">Fuente:</span> Agregador de medios en tiempo real vía Google News RSS.
         </div>
+      </div>
+
+      {/* Dictionary Quick Access */}
+      <div className="flex justify-center pt-4">
+        <motion.button
+          whileHover={{ scale: 1.02, y: -2 }}
+          whileTap={{ scale: 0.98 }}
+          onClick={() => setIframeUrl("https://diccionario-theta.vercel.app/")}
+          className="flex items-center gap-3 px-6 py-4 bg-white border border-gray-200 rounded-2xl shadow-sm hover:shadow-md transition-all group relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-50/5 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+          <div className="p-2.5 bg-gray-50 rounded-xl group-hover:bg-blue-50 transition-colors">
+            <BookOpen className="w-5 h-5 text-gray-400 group-hover:text-blue-600" />
+          </div>
+          <div className="flex flex-col items-start">
+            <span className="text-sm font-bold text-gray-800">Diccionario Educativo Argento</span>
+            <span className="text-[10px] text-gray-400 font-medium">Explorá términos y modismos locales</span>
+          </div>
+          <ChevronRight className="w-4 h-4 text-gray-300 group-hover:text-blue-400 group-hover:translate-x-1 transition-all" />
+        </motion.button>
       </div>
 
       {/* Footer / Transparency Protocol */}
