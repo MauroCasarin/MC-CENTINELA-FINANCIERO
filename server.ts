@@ -65,6 +65,20 @@ const analyzeHandler = async (req: any, res: any) => {
 
 app.post("/api/analyze", analyzeHandler);
 
+// Ruta para obtener datos del REM (Banco Central) vía Series de Tiempo
+app.get("/api/rem", async (req, res) => {
+  try {
+    // Usamos el ID de serie validado para la mediana de inflación mensual del REM
+    const response = await fetch("https://apis.datos.gob.ar/series/api/series?ids=430.1_REM_IPC_NAL_T_M_0_0_25_28&limit=1&sort=desc");
+    if (!response.ok) throw new Error(`Error API Gob: ${response.status}`);
+    const data = await response.json();
+    res.json(data);
+  } catch (error: any) {
+    console.error("REM API Error:", error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Ruta para registrar usuarios en Vercel KV
 app.post("/api/register-user", async (req, res) => {
   const { name } = req.body;

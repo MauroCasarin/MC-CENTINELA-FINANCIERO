@@ -89,6 +89,7 @@ export default function NewsFeed() {
   const [dolarCripto, setDolarCripto] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
   const [riesgoPais, setRiesgoPais] = useState<{valor: number, fecha: string, timestamp?: string} | null>(null);
   const [inflacion, setInflacion] = useState<{valor: number, fecha: string} | null>(null);
+  const [inflacionREM, setInflacionREM] = useState<{valor: number, fecha: string} | null>(null);
   const [plazosFijos, setPlazosFijos] = useState<any[]>([]);
   const [billeteras, setBilleteras] = useState<any[]>([]);
   const [oro, setOro] = useState<{valor: number, timestamp?: string} | null>(null);
@@ -141,7 +142,7 @@ export default function NewsFeed() {
         Renta Variable (MERVAL): Indice en $${currentData.merval?.valor?.toLocaleString()} ARS (${currentData.merval?.variacion?.toFixed(2)}% diario).
         Renta Fija y Lecaps: ${currentData.bonos?.map((b: any) => `${b.nombre}: $${b.valor}`).join(' | ')}.
         Riesgo País: ${currentData.riesgoPais?.valor} bps | Inflación: ${currentData.inflacion?.valor}% mensual.
-        Tasas: TNA Plazo Fijo ${currentData.plazosFijos?.[0]?.tna * 100}% | Tasa Real Proyectada: ${currentData.tasaReal?.toFixed(2)}%.
+        Tasas: TNA Plazo Fijo ${currentData.plazosFijos?.[0]?.tna * 100}% | Tasa Real (Pasada): ${currentData.tasaReal?.toFixed(2)}% | Tasa Real (REM): ${currentData.tasaRealREM?.toFixed(2)}%.
         Oro (Gramo local): $${currentData.oro?.valor?.toFixed(0)}.
 
         CONTEXTO DE NOTICIAS
@@ -297,6 +298,11 @@ export default function NewsFeed() {
   };
 
   useEffect(() => {
+    const parseAmbitoValue = (val: string) => {
+      if (!val) return 0;
+      return parseFloat(val.replace(/\./g, '').replace(',', '.'));
+    };
+
     const fetchData = async () => {
       try {
         setProgress(0);
@@ -349,7 +355,7 @@ export default function NewsFeed() {
         };
 
         try {
-            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData, ambitoData] = await Promise.all([
+            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData, ambitoData, remData] = await Promise.all([
                 fetchJsonSafe(DOLAR_API_URL),
                 fetchJsonSafe(DOLAR_BLUE_API_URL),
                 fetchJsonSafe(DOLAR_MEP_API_URL),
@@ -363,61 +369,100 @@ export default function NewsFeed() {
                 fetchJsonSafe(BILLETERAS_FCI_PENULTIMO),
                 fetchJsonSafe(BILLETERAS_RENDIMIENTOS),
                 fetchJsonSafe(ORO_API_URL),
-                fetchJsonSafe(AMBITO_GENERAL_URL)
+                fetchJsonSafe(AMBITO_GENERAL_URL),
+                fetchJsonSafe('/api/rem')
             ]);
 
             setProgress(55);
             const now = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
-            if (oficial) setDolar({ ...oficial, timestamp: now });
-            if (blue) setDolarBlue({ ...blue, timestamp: now });
-            if (mep) setDolarMep({ ...mep, timestamp: now });
-            if (ccl) setDolarCcl({ ...ccl, timestamp: now });
-            if (mayorista) setDolarMayorista({ ...mayorista, timestamp: now });
-            if (cripto) setDolarCripto({ ...cripto, timestamp: now });
-            
-            let parsedMerval = null;
-            let parsedRiesgoPais = null;
-
+            // Prioritize Ambito for overlapping data
             if (ambitoData && Array.isArray(ambitoData)) {
+                // Dolar Oficial
+                const ambitoOficial = ambitoData.find((i: any) => i.nombre === "Dólar Oficial");
+                if (ambitoOficial) {
+                    setDolar({ 
+                        compra: parseAmbitoValue(ambitoOficial.compra), 
+                        venta: parseAmbitoValue(ambitoOficial.venta), 
+                        timestamp: now 
+                    });
+                } else if (oficial) setDolar({ ...oficial, timestamp: now });
+
+                // Dolar Blue
+                const ambitoBlue = ambitoData.find((i: any) => i.nombre === "Dólar Blue");
+                if (ambitoBlue) {
+                    setDolarBlue({ 
+                        compra: parseAmbitoValue(ambitoBlue.compra), 
+                        venta: parseAmbitoValue(ambitoBlue.venta), 
+                        timestamp: now 
+                    });
+                } else if (blue) setDolarBlue({ ...blue, timestamp: now });
+
+                // Dolar Mayorista
+                const ambitoMayorista = ambitoData.find((i: any) => i.nombre === "Dólar Mayorista");
+                if (ambitoMayorista) {
+                    setDolarMayorista({ 
+                        compra: parseAmbitoValue(ambitoMayorista.compra), 
+                        venta: parseAmbitoValue(ambitoMayorista.venta), 
+                        timestamp: now 
+                    });
+                } else if (mayorista) setDolarMayorista({ ...mayorista, timestamp: now });
+
+                // Merval
                 const mervalItem = ambitoData.find((item: any) => item.nombre === "S&P Merval");
                 if (mervalItem) {
-                    const valorStr = mervalItem.val1 || mervalItem.ultimo;
-                    const variacionStr = mervalItem.variacion;
-                    if (valorStr && variacionStr) {
-                        const valor = parseFloat(valorStr.replace(/\./g, '').replace(',', '.'));
-                        const variacion = parseFloat(variacionStr.replace('%', '').replace(',', '.'));
-                        parsedMerval = { valor, variacion, timestamp: now };
-                        setMerval(parsedMerval);
-                    }
+                    const valor = parseAmbitoValue(mervalItem.val1 || mervalItem.ultimo);
+                    const variacion = parseFloat((mervalItem.variacion || "0").replace('%', '').replace(',', '.'));
+                    setMerval({ valor, variacion, timestamp: now });
                 }
-            }
 
-            // Bonos API is currently unavailable, setting to empty array
-            setBonos([]);
-            
-            if (oroData && blue) {
-                // Convert global gold price (oz) to local gram price: (Price * Blue) / 31.1035
-                const pricePerGram = (oroData.price * blue.venta) / 31.1035;
-                setOro({ valor: pricePerGram, timestamp: now });
-            }
-
-            if (riesgo && Array.isArray(riesgo) && riesgo.length > 0) {
-                parsedRiesgoPais = { ...riesgo[riesgo.length - 1], timestamp: now };
-                setRiesgoPais(parsedRiesgoPais);
-            } else if (ambitoData && Array.isArray(ambitoData)) {
-                // Fallback to Ambito for Riesgo Pais if argentinadatos fails
+                // Riesgo Pais
                 const riesgoPaisItem = ambitoData.find((item: any) => item.nombre === "Riesgo País" || item.nombre === "Riesgo Pa\u00eds");
                 if (riesgoPaisItem) {
-                    const valor = parseFloat(riesgoPaisItem.val1.replace(/\./g, '').replace(',', '.'));
-                    parsedRiesgoPais = { valor, fecha: riesgoPaisItem.fecha, timestamp: now };
-                    setRiesgoPais(parsedRiesgoPais);
+                    const valor = parseAmbitoValue(riesgoPaisItem.val1 || riesgoPaisItem.ultimo);
+                    setRiesgoPais({ valor, fecha: riesgoPaisItem.fecha, timestamp: now });
+                } else if (riesgo && Array.isArray(riesgo) && riesgo.length > 0) {
+                    setRiesgoPais({ ...riesgo[riesgo.length - 1], timestamp: now });
+                }
+
+                // Oro (Local gram price calculation using Ambito's Blue if possible)
+                const blueVenta = ambitoBlue ? parseAmbitoValue(ambitoBlue.venta) : (blue?.venta || 0);
+                if (oroData && blueVenta > 0) {
+                    const pricePerGram = (oroData.price * blueVenta) / 31.1035;
+                    setOro({ valor: pricePerGram, timestamp: now });
+                }
+            } else {
+                // Fallback to individual APIs if Ambito fails
+                if (oficial) setDolar({ ...oficial, timestamp: now });
+                if (blue) setDolarBlue({ ...blue, timestamp: now });
+                if (mayorista) setDolarMayorista({ ...mayorista, timestamp: now });
+                if (riesgo && Array.isArray(riesgo) && riesgo.length > 0) {
+                    setRiesgoPais({ ...riesgo[riesgo.length - 1], timestamp: now });
+                }
+                if (oroData && blue) {
+                    const pricePerGram = (oroData.price * blue.venta) / 31.1035;
+                    setOro({ valor: pricePerGram, timestamp: now });
                 }
             }
+
+            // Non-overlapping data from other APIs
+            if (mep) setDolarMep({ ...mep, timestamp: now });
+            if (ccl) setDolarCcl({ ...ccl, timestamp: now });
+            if (cripto) setDolarCripto({ ...cripto, timestamp: now });
             
             if (inflacion) {
                 const lastValue = Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null;
                 setInflacion(lastValue);
+            }
+
+            if (remData && remData.data && remData.data.length > 0) {
+                const lastRem = remData.data[0];
+                // La API de Series de Tiempo devuelve la variación como decimal (ej: 0.023 para 2.3%)
+                // Multiplicamos por 100 para normalizar con el formato de la inflación del INDEC
+                setInflacionREM({
+                    valor: lastRem[1] < 1 ? lastRem[1] * 100 : lastRem[1],
+                    fecha: lastRem[0]
+                });
             }
             
             // Trigger update flash
@@ -550,6 +595,7 @@ export default function NewsFeed() {
   const topPF = plazosFijos.length > 0 ? plazosFijos[0].tna : 0;
   const ipcMensual = inflacion?.valor || 0;
   const tasaReal = ipcMensual > 0 ? (((1 + (topPF / 12)) / (1 + (ipcMensual / 100))) - 1) * 100 : 0;
+  const tasaRealREM = (inflacionREM?.valor || 0) > 0 ? (((1 + (topPF / 12)) / (1 + ((inflacionREM?.valor || 0) / 100))) - 1) * 100 : 0;
 
   if (loading) {
     const currentState = getLoadingState(progress);
@@ -727,7 +773,7 @@ export default function NewsFeed() {
                 const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
                 generateAIAnalysis({
                     dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
-                    oro, brecha: brechaVal, tasaReal, merval, bonos
+                    oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos
                 });
             }}
             disabled={isAnalyzing}
@@ -768,7 +814,7 @@ export default function NewsFeed() {
                   const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
                   generateAIAnalysis({
                       dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
-                      oro, brecha: brechaVal, tasaReal, merval, bonos
+                      oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos
                   });
                 }}
                 className="px-8 py-3 bg-white text-blue-700 rounded-full font-bold text-sm shadow-xl hover:bg-blue-50 transition-all flex items-center gap-2 group"
@@ -792,59 +838,69 @@ export default function NewsFeed() {
            <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Metricas</h2>
         </div>
         
-        <div className="p-4 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div className="p-4 grid grid-cols-2 gap-6">
             {/* IPC */}
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-rose-50 rounded-lg">
-                <Activity className="w-5 h-5 text-rose-600" />
-              </div>
+            {inflacion && (
               <div className="flex flex-col">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-bold text-gray-900">{inflacion?.valor || '0'}%</span>
-                  <span className="text-xs font-bold text-rose-600 uppercase">IPC</span>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                  <span className="text-rose-600">IPC</span>
+                  <span>{inflacion.valor}%</span>
                 </div>
-                <span className="text-[10px] text-gray-500 uppercase font-medium">
-                  Inflación {getMonthName(inflacion?.fecha || '')}
-                </span>
+                <div className="flex flex-col mt-0.5">
+                  <span className="text-[9px] text-gray-500 font-medium">Inflación {getMonthName(inflacion.fecha)}</span>
+                  <span className="text-[8px] text-gray-400">Último dato oficial INDEC</span>
+                </div>
               </div>
-            </div>
+            )}
 
             {/* Riesgo Pais */}
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-orange-50 rounded-lg">
-                <TrendingUp className="w-5 h-5 text-orange-600" />
-              </div>
+            {riesgoPais && (
               <div className="flex flex-col">
-                <div className="flex items-baseline gap-2">
-                  <span className="text-xl font-bold text-gray-900">{riesgoPais?.valor || '0'}</span>
-                  <span className="text-xs font-bold text-orange-600 uppercase">RIESGO PAÍS</span>
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                  <span className="text-orange-600">RIESGO PAÍS</span>
+                  <span>{riesgoPais.valor}</span>
                 </div>
-                <span className="text-[10px] text-gray-500 uppercase font-medium">
-                  Nivel de riesgo inversor
-                </span>
+                <div className="flex flex-col mt-0.5">
+                  <span className="text-[9px] text-gray-500 font-medium">Nivel de riesgo soberano</span>
+                  <span className="text-[8px] text-gray-400">Ref: JP Morgan</span>
+                </div>
               </div>
-            </div>
+            )}
 
-            {/* Tasa Real */}
-            <div className="flex items-center gap-4">
-              <div className="p-2 bg-emerald-50 rounded-lg">
-                <Sparkles className="w-5 h-5 text-emerald-600" />
-              </div>
+            {/* Tasa Real Pasada */}
+            {inflacion && (
               <div className="flex flex-col">
-                <div className="flex items-baseline gap-2">
-                  <span className={`text-xl font-bold ${tasaReal >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
-                    {tasaReal.toFixed(2)}%
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                  <span className="text-emerald-600">TASA REAL (PASADA)</span>
+                  <span className={tasaReal >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                    {tasaReal >= 0 ? '+' : ''}{tasaReal.toFixed(2)}%
                   </span>
-                  <span className="text-xs font-bold text-emerald-600 uppercase">Tasa Real</span>
                 </div>
-                <span className="text-[10px] text-gray-500 uppercase font-medium">
-                  Poder adquisitivo
-                </span>
+                <div className="flex flex-col mt-0.5">
+                  <span className="text-[9px] text-gray-500 font-medium">Poder adquisitivo vs IPC previo</span>
+                  <span className="text-[8px] text-gray-400">Cálculo: PF vs Inflación INDEC</span>
+                </div>
               </div>
-            </div>
+            )}
+
+            {/* Tasa Real REM */}
+            {inflacionREM && (
+              <div className="flex flex-col">
+                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                  <span className="text-blue-600">TASA REAL (REM)</span>
+                  <span className={tasaRealREM >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                    {tasaRealREM >= 0 ? '+' : ''}{tasaRealREM.toFixed(2)}%
+                  </span>
+                </div>
+                <div className="flex flex-col mt-0.5">
+                  <span className="text-[9px] text-gray-500 font-medium">Poder adquisitivo proyectado</span>
+                  <span className="text-[8px] text-gray-400">Cálculo: PF vs Expectativa REM</span>
+                </div>
+              </div>
+            )}
         </div>
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
-            <span className="font-semibold">Fuente:</span> INDEC (IPC) y JP Morgan (Riesgo). Último dato oficial disponible.
+            <span className="font-semibold">Fuente:</span> INDEC (IPC), JP Morgan (Riesgo) y REM (BCRA). Últimos datos oficiales.
         </div>
       </div>
 
@@ -1322,6 +1378,44 @@ export default function NewsFeed() {
               CENTINELA FINANCIERO © 2026
             </span>
             <div className="w-12 h-0.5 bg-blue-600 rounded-full"></div>
+          </div>
+
+          {/* Developer Section */}
+          <div className="mt-8 flex flex-col items-center gap-3">
+            <span className="text-[10px] text-gray-400 font-bold uppercase tracking-[0.2em]">
+              Desarrollado por
+            </span>
+            <motion.a
+              href="https://www.instagram.com/3d_mc_3d/"
+              target="_blank"
+              rel="noopener noreferrer"
+              whileHover={{ scale: 1.1 }}
+              whileTap={{ scale: 0.95 }}
+              className="relative group"
+            >
+              <div className="absolute -inset-2 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-full opacity-0 group-hover:opacity-20 blur transition-opacity duration-300"></div>
+              <motion.img 
+                src="https://avatars.githubusercontent.com/u/70527971?v=4&size=64" 
+                alt="Developer Logo" 
+                className="w-12 h-12 rounded-full border-2 border-white shadow-lg relative z-10"
+                referrerPolicy="no-referrer"
+                animate={{ 
+                  y: [0, -5, 0],
+                }}
+                transition={{ 
+                  duration: 3, 
+                  repeat: Infinity, 
+                  ease: "easeInOut" 
+                }}
+              />
+              <motion.div 
+                initial={{ opacity: 0, y: 10 }}
+                whileHover={{ opacity: 1, y: 0 }}
+                className="absolute -bottom-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[9px] font-bold text-blue-600 uppercase tracking-tighter"
+              >
+                Seguir en Instagram
+              </motion.div>
+            </motion.a>
           </div>
         </div>
       </footer>
