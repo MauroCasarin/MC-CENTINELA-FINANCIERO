@@ -72,9 +72,6 @@ export default function UserRegistrationModal() {
               <div className="p-4 bg-blue-600 rounded-2xl shadow-lg shadow-blue-200 mb-4">
                 <User className="w-8 h-8 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
-                ¡HOLA! QUEREMOS CONOCERTE
-              </h2>
               <p className="text-gray-500 text-sm mt-2 font-medium">
                 Para continuar navegando en <span className="text-blue-600 font-bold">CENTINELA FINANCIERO</span>, por favor dinos cómo te llamas o tu apodo.
               </p>
@@ -116,7 +113,10 @@ export default function UserRegistrationModal() {
             </form>
 
             <div className="mt-8 flex items-center justify-center gap-2 text-[10px] text-gray-400 font-bold uppercase tracking-widest opacity-60">
-              <ShieldCheck className="w-3 h-3" />
+              <ShieldCheck 
+                className="w-3 h-3 cursor-pointer hover:text-blue-500 transition-colors" 
+                onClick={() => setIsOpen(false)}
+              />
               Tus datos están protegidos
             </div>
           </div>
