@@ -108,7 +108,7 @@ export default function NewsFeed() {
   const getLoadingState = (p: number) => {
     if (p < 35) return { text: "Calculando métricas...", icon: Activity };
     if (p < 45) return { text: "Capturando cotizaciones...", icon: TrendingUp };
-    if (p < 55) return { text: "Sincronizando noticias del mercados...", icon: Newspaper };
+    if (p < 50) return { text: "Sincronizando noticias financieras...", icon: Newspaper };
     if (p < 90) return { text: "Preparando motor...", icon: Cpu };
     return { text: "Iniciando sistema...", icon: Zap };
   };
