@@ -101,6 +101,29 @@ const MiniDottedLoader = () => (
   </div>
 );
 
+const Marquee = ({ text }: { text: string }) => {
+  return (
+    <div className="w-full overflow-hidden bg-black/20 py-1.5 border-b border-white/5">
+      <div className="flex whitespace-nowrap">
+        <motion.div
+          animate={{ x: [0, "-50%"] }}
+          transition={{
+            duration: 50,
+            repeat: Infinity,
+            ease: "linear",
+          }}
+          className="flex gap-12 pr-12"
+        >
+          <span className="text-[10px] font-mono text-blue-100/60 uppercase tracking-widest flex items-center gap-4">
+            {text} <span className="text-blue-400/40">//</span>
+            {text} <span className="text-blue-400/40">//</span>
+          </span>
+        </motion.div>
+      </div>
+    </div>
+  );
+};
+
 export default function NewsFeed() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [dolar, setDolar] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
@@ -841,6 +864,8 @@ export default function NewsFeed() {
         animate={{ opacity: 1, y: 0 }}
         className="w-full bg-gradient-to-br from-indigo-600 via-blue-700 to-blue-800 rounded-2xl shadow-xl overflow-hidden text-white"
       >
+        <Marquee text="Un analista interpretativo de datos y noticias basado en IA. - Motor IA (Análisis de noticias/tasas) + Actualización (Dinámica vía APIs) - Ninguna IA (ni humano) puede predecir con 100% de certeza el futuro - Usa el veredicto de Centinela para ahorrarte horas de lectura y entender el panorama general." />
+        
         <div className="px-6 py-4 flex items-center justify-between border-b border-white/10">
           <div className="flex items-center gap-3">
             <div className="p-2 bg-white/10 rounded-lg backdrop-blur-md">
