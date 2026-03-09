@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, RefObject } from 'react';
+import { useState, useEffect, useRef, RefObject, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
@@ -80,6 +80,27 @@ const DottedProgress = ({ size = 100 }: { size?: number }) => {
   );
 };
 
+const MiniDottedLoader = () => (
+  <div className="flex items-center gap-1 h-4">
+    {[0, 1, 2].map((i) => (
+      <motion.div
+        key={i}
+        className="w-1.5 h-1.5 bg-blue-400 rounded-full"
+        animate={{
+          scale: [1, 1.5, 1],
+          opacity: [0.3, 1, 0.3],
+        }}
+        transition={{
+          duration: 1,
+          repeat: Infinity,
+          delay: i * 0.2,
+          ease: "easeInOut",
+        }}
+      />
+    ))}
+  </div>
+);
+
 export default function NewsFeed() {
   const [news, setNews] = useState<NewsItem[]>([]);
   const [dolar, setDolar] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
@@ -115,6 +136,26 @@ export default function NewsFeed() {
   };
 
   const [displayedAnalysis, setDisplayedAnalysis] = useState<string>("");
+  const [analysisStep, setAnalysisStep] = useState(0);
+  const analysisSteps = [
+    "Capturando cotizaciones de mercado...",
+    "Analizando brecha cambiaria y Merval...",
+    "Cruzando noticias de última hora...",
+    "Evaluando tasas reales y REM...",
+    "Generando portafolio táctico...",
+    "Finalizando veredicto financiero..."
+  ];
+
+  useEffect(() => {
+    if (isAnalyzing) {
+      const interval = setInterval(() => {
+        setAnalysisStep((prev) => (prev + 1) % analysisSteps.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    } else {
+      setAnalysisStep(0);
+    }
+  }, [isAnalyzing]);
 
   useEffect(() => {
     if (aiAnalysis) {
@@ -239,7 +280,7 @@ export default function NewsFeed() {
   const cleanEntityName = (name: string) => {
     if (!name) return '';
     
-    // 1. Fix common encoding issues (UTF-8 bytes interpreted as Latin-1)
+    // 1. Fix common encoding issues
     let fixed = name
       .replace(/Ã\u008D/g, 'Í')
       .replace(/Ã\u0091/g, 'Ñ')
@@ -253,30 +294,42 @@ export default function NewsFeed() {
       .replace(/Ã¡/g, 'á')
       .replace(/Ã©/g, 'é')
       .replace(/Ãº/g, 'ú')
-      .replace(/CRÃDITO/gi, 'CRÉDITO') // Specific fix for user's example
-      .replace(/Ã/g, 'Ñ'); // Catch-all for remaining Ã (often Ñ)
+      .replace(/CRÃDITO/gi, 'CRÉDITO')
+      .replace(/Ã/g, 'Ñ');
 
-    // 2. Shorten and clean
-    let cleaned = fixed
-      .replace(/COMPAÑIA FINANCIERA/gi, '')
-      .replace(/COMPAÑÍA FINANCIERA/gi, '')
-      .replace(/S\.A\.U\./gi, '')
-      .replace(/S\.A\./gi, '')
-      .replace(/S\.A/gi, '')
-      .replace(/BANCO/gi, '')
-      .replace(/\s+/g, ' ')
-      .trim();
+    // 2. Map of common replacements for cleaner code
+    const replacements = [
+      [/COMPAÑIA FINANCIERA/gi, ''],
+      [/COMPAÑÍA FINANCIERA/gi, ''],
+      [/S\.A\.U\./gi, ''],
+      [/S\.A\./gi, ''],
+      [/S\.A/gi, ''],
+      [/BANCO/gi, ''],
+    ];
+
+    let cleaned = fixed;
+    replacements.forEach(([regex, replacement]) => {
+      cleaned = cleaned.replace(regex, replacement as string);
+    });
+
+    cleaned = cleaned.replace(/\s+/g, ' ').trim();
 
     // 3. Title Case
     cleaned = cleaned.toLowerCase().split(' ').map(word => 
       word.charAt(0).toUpperCase() + word.slice(1)
     ).join(' ');
 
-    // 4. Specific manual overrides for better display
-    if (cleaned.includes('Credito Regional')) return 'Crédito Regional';
-    if (cleaned.includes('Reba')) return 'Reba';
-    if (cleaned.includes('Galicia')) return 'Galicia';
-    if (normalizedIncludes(cleaned, 'Delsol')) return 'Banco del Sol';
+    // 4. Specific manual overrides
+    const overrides: Record<string, string> = {
+      'Credito Regional': 'Crédito Regional',
+      'Reba': 'Reba',
+      'Galicia': 'Galicia',
+      'Delsol': 'Banco del Sol'
+    };
+
+    for (const [key, value] of Object.entries(overrides)) {
+      if (normalizedIncludes(cleaned, key)) return value;
+    }
     
     return cleaned;
   };
@@ -588,21 +641,23 @@ export default function NewsFeed() {
     fetchData();
   }, []);
 
-  // Group news by source
-  const groupedNews = news.reduce((acc, item) => {
-    let sourceName = item.fuente || item.source || item.sourceName || 'Otras Fuentes';
-    if (typeof sourceName === 'object') {
-        sourceName = sourceName.name || 'Otras Fuentes';
-    }
-    // Capitalize first letter just in case
-    sourceName = String(sourceName).charAt(0).toUpperCase() + String(sourceName).slice(1);
-    
-    if (!acc[sourceName]) {
-      acc[sourceName] = [];
-    }
-    acc[sourceName].push(item);
-    return acc;
-  }, {} as Record<string, NewsItem[]>);
+  // Group news by source (memoized for performance)
+  const groupedNews = useMemo(() => {
+    return news.reduce((acc, item) => {
+      let sourceName = item.fuente || item.source || item.sourceName || 'Otras Fuentes';
+      if (typeof sourceName === 'object') {
+          sourceName = sourceName.name || 'Otras Fuentes';
+      }
+      // Capitalize first letter just in case
+      sourceName = String(sourceName).charAt(0).toUpperCase() + String(sourceName).slice(1);
+      
+      if (!acc[sourceName]) {
+        acc[sourceName] = [];
+      }
+      acc[sourceName].push(item);
+      return acc;
+    }, {} as Record<string, NewsItem[]>);
+  }, [news]);
 
   const pfScrollRef = useRef<HTMLDivElement>(null);
   const billScrollRef = useRef<HTMLDivElement>(null);
@@ -827,10 +882,24 @@ export default function NewsFeed() {
                 <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
                 <Brain className="w-6 h-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/50" />
               </div>
-              <p className="text-sm font-medium text-blue-100 min-h-[1.25rem]">
-                <TypewriterText text="Cruzando datos y noticias..." speed={40} />
-                <span className="inline-block w-1 h-4 bg-blue-300 ml-1 animate-pulse align-middle"></span>
-              </p>
+              <div className="flex flex-col items-center gap-1">
+                <p className="text-sm font-medium text-blue-100 min-h-[1.25rem]">
+                  <TypewriterText text={analysisSteps[analysisStep]} speed={30} />
+                </p>
+                <div className="flex gap-1 mt-2">
+                  {[0, 1, 2, 3, 4].map((i) => (
+                    <motion.div
+                      key={i}
+                      className="w-1.5 h-1.5 bg-blue-300 rounded-full"
+                      animate={{
+                        scale: i === analysisStep % 5 ? [1, 1.5, 1] : 1,
+                        opacity: i === analysisStep % 5 ? 1 : 0.3,
+                      }}
+                      transition={{ duration: 0.5 }}
+                    />
+                  ))}
+                </div>
+              </div>
             </div>
           ) : aiAnalysis ? (
             <motion.div 
@@ -889,9 +958,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -910,9 +982,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -933,9 +1008,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-24"></div>
-                  <div className="h-2 bg-gray-50 rounded w-32"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-24 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-32 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -956,9 +1034,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-24"></div>
-                  <div className="h-2 bg-gray-50 rounded w-32"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-24 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-32 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -1020,9 +1101,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -1040,9 +1124,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -1060,9 +1147,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -1080,9 +1170,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -1100,9 +1193,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -1120,9 +1216,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -1140,9 +1239,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -1160,9 +1262,12 @@ export default function NewsFeed() {
                   </div>
                 </>
               ) : (
-                <div className="animate-pulse space-y-2">
-                  <div className="h-3 bg-gray-100 rounded w-16"></div>
-                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                    <MiniDottedLoader />
+                  </div>
+                  <div className="h-2 bg-gray-50 rounded w-24 animate-pulse"></div>
                 </div>
               )}
             </div>
@@ -1215,10 +1320,9 @@ export default function NewsFeed() {
                         className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar mask-gradient-right scroll-smooth px-2"
                       >
                           {loading ? (
-                              <div className="animate-pulse flex gap-4">
-                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
-                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
-                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                              <div className="flex gap-4 items-center">
+                                  <div className="h-4 bg-gray-100 rounded w-24 animate-pulse"></div>
+                                  <MiniDottedLoader />
                               </div>
                           ) : plazosFijos.length > 0 ? (
                               plazosFijos.map((item, i) => {
@@ -1267,10 +1371,9 @@ export default function NewsFeed() {
                         className="flex-1 flex items-center gap-4 overflow-x-auto no-scrollbar mask-gradient-right scroll-smooth px-2"
                       >
                           {loading ? (
-                              <div className="animate-pulse flex gap-4">
-                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
-                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
-                                  <div className="h-4 bg-gray-100 rounded w-24"></div>
+                              <div className="flex gap-4 items-center">
+                                  <div className="h-4 bg-gray-100 rounded w-24 animate-pulse"></div>
+                                  <MiniDottedLoader />
                               </div>
                           ) : billeteras.length > 0 ? (
                               billeteras.map((item, i) => {
