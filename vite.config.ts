@@ -13,7 +13,7 @@ export default defineConfig(({mode}) => {
     plugins: [react(), tailwindcss()],
     define: {
       'import.meta.env.VITE_GEMINI_API_KEY': JSON.stringify(
-        [process.env.GEMINI_API_KEY, process.env.cent, env.VITE_GEMINI_API_KEY, env.VITE_CENT].find(k => k && k !== "MY_GEMINI_API_KEY" && k !== "") || ""
+        [process.env.GEMINI_API_KEY, process.env.APIKeyGem, process.env.cent, env.VITE_GEMINI_API_KEY, env.VITE_CENT].find(k => k && k !== "MY_GEMINI_API_KEY" && k !== "") || ""
       ),
       'import.meta.env.VITE_CENT': JSON.stringify(
         [process.env.cent, env.VITE_CENT].find(k => k && k !== "MY_GEMINI_API_KEY" && k !== "") || ""

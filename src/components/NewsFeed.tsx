@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, RefObject } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen } from 'lucide-react';
+import { GoogleGenAI } from "@google/genai";
 import { NewsItem } from '../types';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyXl8OB3W2nNyMRZJefyjsfJzYVUgBLAQDTSVCefEC2iUBUUlf3kKRCbIM5y0VA3kizdw/exec";
@@ -167,21 +168,59 @@ export default function NewsFeed() {
         Finaliza con una 'Alerta de Riesgo' de una sola línea.
       `;
 
-      const response = await fetch('/api/analyze', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ prompt }),
-      });
+      const apiKey = import.meta.env.VITE_GEMINI_API_KEY;
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.error || "Error al conectar con el servidor de análisis.");
+      // Función para intentar con Gemini
+      const tryGemini = async (modelName: string) => {
+        if (!apiKey) throw new Error("API Key no configurada");
+        const genAI = new GoogleGenAI({ apiKey });
+        const response = await genAI.models.generateContent({
+          model: modelName,
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        });
+        return response.text;
+      };
+
+      // Función para intentar con Groq (backend)
+      const tryGroq = async () => {
+        const response = await fetch('/api/analyze', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ prompt }),
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          throw new Error(errorData.error || "Error al conectar con el servidor de análisis.");
+        }
+
+        const data = await response.json();
+        return data.text;
+      };
+
+      let resultText = "";
+      
+      try {
+        // NIVEL 1: Gemini 3 Flash
+        console.log("Intentando con Gemini 3 Flash...");
+        resultText = await tryGemini("gemini-3-flash-preview");
+      } catch (e3: any) {
+        console.warn("Gemini 3 falló o límite excedido:", e3);
+        try {
+          // NIVEL 2: Gemini 1.5 Flash
+          console.log("Intentando con Gemini 1.5 Flash...");
+          resultText = await tryGemini("gemini-1.5-flash");
+        } catch (e15: any) {
+          console.warn("Gemini 1.5 falló o límite excedido:", e15);
+          // NIVEL 3: Groq (Llama via Backend)
+          console.log("Intentando con Groq (Backend)...");
+          resultText = await tryGroq();
+        }
       }
 
-      const data = await response.json();
-      setAiAnalysis(data.text || "No se pudo generar el análisis en este momento.");
+      setAiAnalysis(resultText || "No se pudo generar el análisis en este momento.");
       setAnalysisDate(new Date().toLocaleString('es-AR', { 
         day: '2-digit', 
         month: '2-digit', 
@@ -190,7 +229,7 @@ export default function NewsFeed() {
         minute: '2-digit' 
       }));
     } catch (err: any) {
-      console.error("AI Analysis Error:", err);
+      console.error("AI Analysis Final Error:", err);
       setAiAnalysis(`Error: ${err.message || "Error al procesar el análisis."}`);
     } finally {
       setIsAnalyzing(false);
@@ -305,16 +344,13 @@ export default function NewsFeed() {
 
     const fetchData = async () => {
       try {
-        setProgress(0);
-        // Small delay to show initial state
-        await new Promise(r => setTimeout(r, 800));
+        setProgress(10);
         
-        setProgress(35);
         // Fetch News
         const newsResponse = await fetch(API_URL);
         if (!newsResponse.ok) throw new Error(`Failed to fetch news: ${newsResponse.statusText}`);
         const newsData = await newsResponse.json();
-        setProgress(45);
+        setProgress(30);
         
         // Process News Data
         let items: NewsItem[] = [];
@@ -341,6 +377,7 @@ export default function NewsFeed() {
            }
         }
         setNews(uniqueItems);
+        setProgress(45);
 
         // Fetch Financial Data (Non-blocking)
         const fetchJsonSafe = async (url: string) => {
@@ -373,7 +410,7 @@ export default function NewsFeed() {
                 fetchJsonSafe('/api/rem')
             ]);
 
-            setProgress(55);
+            setProgress(70);
             const now = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
             // Prioritize Ambito for overlapping data
@@ -534,9 +571,6 @@ export default function NewsFeed() {
             const topWallets = walletRates.slice(0, 4);
             setBilleteras(topWallets);
 
-            setProgress(90);
-            // Small delay to show final state
-            await new Promise(r => setTimeout(r, 800));
             setProgress(100);
             // AI Analysis is now manual via button
           } catch (e) {
@@ -597,7 +631,7 @@ export default function NewsFeed() {
   const tasaReal = ipcMensual > 0 ? (((1 + (topPF / 12)) / (1 + (ipcMensual / 100))) - 1) * 100 : 0;
   const tasaRealREM = (inflacionREM?.valor || 0) > 0 ? (((1 + (topPF / 12)) / (1 + ((inflacionREM?.valor || 0) / 100))) - 1) * 100 : 0;
 
-  if (loading) {
+  if (loading && progress < 45) {
     const currentState = getLoadingState(progress);
     const CurrentIcon = currentState.icon;
 
@@ -842,64 +876,92 @@ export default function NewsFeed() {
         
         <div className="p-4 grid grid-cols-2 gap-6">
             {/* IPC */}
-            {inflacion && (
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                  <span className="text-rose-600">IPC</span>
-                  <span>{inflacion.valor}%</span>
+            <div className="flex flex-col">
+              {inflacion ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                    <span className="text-rose-600">IPC</span>
+                    <span>{inflacion.valor}%</span>
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">Inflación {getMonthName(inflacion.fecha)}</span>
+                    <span className="text-[8px] text-gray-400">Último dato oficial INDEC</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
                 </div>
-                <div className="flex flex-col mt-0.5">
-                  <span className="text-[9px] text-gray-500 font-medium">Inflación {getMonthName(inflacion.fecha)}</span>
-                  <span className="text-[8px] text-gray-400">Último dato oficial INDEC</span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Riesgo Pais */}
-            {riesgoPais && (
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                  <span className="text-orange-600">RIESGO PAÍS</span>
-                  <span>{riesgoPais.valor}</span>
+            <div className="flex flex-col">
+              {riesgoPais ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                    <span className="text-orange-600">RIESGO PAÍS</span>
+                    <span>{riesgoPais.valor}</span>
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">Nivel de riesgo soberano</span>
+                    <span className="text-[8px] text-gray-400">Ref: JP Morgan</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
                 </div>
-                <div className="flex flex-col mt-0.5">
-                  <span className="text-[9px] text-gray-500 font-medium">Nivel de riesgo soberano</span>
-                  <span className="text-[8px] text-gray-400">Ref: JP Morgan</span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Tasa Real Pasada */}
-            {inflacion && (
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                  <span className="text-emerald-600">TASA REAL (PASADA)</span>
-                  <span className={tasaReal >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
-                    {tasaReal >= 0 ? '+' : ''}{tasaReal.toFixed(2)}%
-                  </span>
+            <div className="flex flex-col">
+              {inflacion ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                    <span className="text-emerald-600">TASA REAL (PASADA)</span>
+                    <span className={tasaReal >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                      {tasaReal >= 0 ? '+' : ''}{tasaReal.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">Poder adquisitivo vs IPC previo</span>
+                    <span className="text-[8px] text-gray-400">Cálculo: PF vs Inflación INDEC</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-24"></div>
+                  <div className="h-2 bg-gray-50 rounded w-32"></div>
                 </div>
-                <div className="flex flex-col mt-0.5">
-                  <span className="text-[9px] text-gray-500 font-medium">Poder adquisitivo vs IPC previo</span>
-                  <span className="text-[8px] text-gray-400">Cálculo: PF vs Inflación INDEC</span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
 
             {/* Tasa Real REM */}
-            {inflacionREM && (
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                  <span className="text-blue-600">TASA REAL (REM)</span>
-                  <span className={tasaRealREM >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
-                    {tasaRealREM >= 0 ? '+' : ''}{tasaRealREM.toFixed(2)}%
-                  </span>
+            <div className="flex flex-col">
+              {inflacionREM ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                    <span className="text-blue-600">TASA REAL (REM)</span>
+                    <span className={tasaRealREM >= 0 ? 'text-emerald-600' : 'text-rose-600'}>
+                      {tasaRealREM >= 0 ? '+' : ''}{tasaRealREM.toFixed(2)}%
+                    </span>
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">Poder adquisitivo proyectado</span>
+                    <span className="text-[8px] text-gray-400">Cálculo: PF vs Expectativa REM</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-24"></div>
+                  <div className="h-2 bg-gray-50 rounded w-32"></div>
                 </div>
-                <div className="flex flex-col mt-0.5">
-                  <span className="text-[9px] text-gray-500 font-medium">Poder adquisitivo proyectado</span>
-                  <span className="text-[8px] text-gray-400">Cálculo: PF vs Expectativa REM</span>
-                </div>
-              </div>
-            )}
+              )}
+            </div>
         </div>
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
             <span className="font-semibold">Fuente:</span> INDEC (IPC), JP Morgan (Riesgo) y REM (BCRA). Últimos datos oficiales.
@@ -942,174 +1004,168 @@ export default function NewsFeed() {
         
         <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
             {/* Fila 0: MERVAL, ORO y Dólares */}
-            {merval && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+            <div className="flex flex-col">
+              {merval ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-indigo-600">MERVAL</span>
                     <span>${merval.valor.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span>
                     <span className={`text-[10px] ${merval.variacion >= 0 ? 'text-emerald-600' : 'text-rose-600'}`}>
                       {merval.variacion >= 0 ? '+' : ''}{merval.variacion}%
                     </span>
-                 </div>
-                 <div className="flex flex-col mt-0.5">
-                   <span className="text-[9px] text-gray-500 font-medium">S&P Merval ARS - Índice bursátil local</span>
-                   <span className="text-[8px] text-gray-400">Ref: {merval.timestamp}hs</span>
-                   {showUpdateFlash && (
-                     <motion.span 
-                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                       className="text-[8px] text-yellow-600 font-bold"
-                     >
-                       Actualización automática: {merval.timestamp}hs
-                     </motion.span>
-                   )}
-                 </div>
-               </div>
-            )}
-
-            <div className="flex flex-col">
-              <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
-                <span className="text-yellow-700">ORO</span>
-                <span>{oro ? `$${oro.valor.toLocaleString('es-AR', { maximumFractionDigits: 0 })}` : 'Cargando...'}</span>
-              </div>
-              <div className="flex flex-col mt-0.5">
-                <span className="text-[9px] text-gray-500 font-medium">Gramo local - Cotización pesificada</span>
-                <span className="text-[8px] text-gray-400">Ref: {oro?.timestamp}hs</span>
-                {showUpdateFlash && oro && (
-                  <motion.span 
-                    initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                    className="text-[8px] text-yellow-600 font-bold"
-                  >
-                    Actualización automática: {oro.timestamp}hs
-                  </motion.span>
-                )}
-              </div>
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">S&P Merval ARS - Índice bursátil local</span>
+                    <span className="text-[8px] text-gray-400">Ref: {merval.timestamp}hs</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                </div>
+              )}
             </div>
 
-            {dolar && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+            <div className="flex flex-col">
+              {oro ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                    <span className="text-yellow-700">ORO</span>
+                    <span>${oro.valor.toLocaleString('es-AR', { maximumFractionDigits: 0 })}</span>
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">Gramo local - Cotización pesificada</span>
+                    <span className="text-[8px] text-gray-400">Ref: {oro.timestamp}hs</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                </div>
+              )}
+            </div>
+
+            <div className="flex flex-col">
+              {dolar ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-green-600">OFICIAL</span>
                     <span>${dolar.venta}</span>
-                 </div>
-                 <div className="flex flex-col mt-0.5">
-                   <span className="text-[9px] text-gray-500 font-medium">BNA Venta - Cotización Banco Nación</span>
-                   <span className="text-[8px] text-gray-400">Ref: {dolar.timestamp}hs</span>
-                   {showUpdateFlash && (
-                     <motion.span 
-                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                       className="text-[8px] text-yellow-600 font-bold"
-                     >
-                       Actualización automática: {dolar.timestamp}hs
-                     </motion.span>
-                   )}
-                 </div>
-               </div>
-            )}
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">BNA Venta - Cotización Banco Nación</span>
+                    <span className="text-[8px] text-gray-400">Ref: {dolar.timestamp}hs</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                </div>
+              )}
+            </div>
             
-            {dolarBlue && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+            <div className="flex flex-col">
+              {dolarBlue ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-blue-600">BLUE</span>
                     <span>${dolarBlue.venta}</span>
-                 </div>
-                 <div className="flex flex-col mt-0.5">
-                   <span className="text-[9px] text-gray-500 font-medium">Informal - Mercado paralelo</span>
-                   <span className="text-[8px] text-gray-400">Ref: {dolarBlue.timestamp}hs</span>
-                   {showUpdateFlash && (
-                     <motion.span 
-                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                       className="text-[8px] text-yellow-600 font-bold"
-                     >
-                       Actualización automática: {dolarBlue.timestamp}hs
-                     </motion.span>
-                   )}
-                 </div>
-               </div>
-            )}
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">Informal - Mercado paralelo</span>
+                    <span className="text-[8px] text-gray-400">Ref: {dolarBlue.timestamp}hs</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                </div>
+              )}
+            </div>
 
-            {dolarCripto && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+            <div className="flex flex-col">
+              {dolarCripto ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-yellow-600">CRIPTO</span>
                     <span>${dolarCripto.venta}</span>
-                 </div>
-                 <div className="flex flex-col mt-0.5">
-                   <span className="text-[9px] text-gray-500 font-medium">USDT/USDC - Paridad estable</span>
-                   <span className="text-[8px] text-gray-400">Ref: {dolarCripto.timestamp}hs</span>
-                   {showUpdateFlash && (
-                     <motion.span 
-                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                       className="text-[8px] text-yellow-600 font-bold"
-                     >
-                       Actualización automática: {dolarCripto.timestamp}hs
-                     </motion.span>
-                   )}
-                 </div>
-               </div>
-            )}
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">USDT/USDC - Paridad estable</span>
+                    <span className="text-[8px] text-gray-400">Ref: {dolarCripto.timestamp}hs</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                </div>
+              )}
+            </div>
 
-            {dolarMep && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+            <div className="flex flex-col">
+              {dolarMep ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-orange-500">MEP</span>
                     <span>${dolarMep.venta}</span>
-                 </div>
-                 <div className="flex flex-col mt-0.5">
-                   <span className="text-[9px] text-gray-500 font-medium">Dólar Bolsa - Operativa bonos</span>
-                   <span className="text-[8px] text-gray-400">Ref: {dolarMep.timestamp}hs</span>
-                   {showUpdateFlash && (
-                     <motion.span 
-                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                       className="text-[8px] text-yellow-600 font-bold"
-                     >
-                       Actualización automática: {dolarMep.timestamp}hs
-                     </motion.span>
-                   )}
-                 </div>
-               </div>
-            )}
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">Dólar Bolsa - Operativa bonos</span>
+                    <span className="text-[8px] text-gray-400">Ref: {dolarMep.timestamp}hs</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                </div>
+              )}
+            </div>
 
-            {dolarCcl && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+            <div className="flex flex-col">
+              {dolarCcl ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-purple-600">CCL</span>
                     <span>${dolarCcl.venta}</span>
-                 </div>
-                 <div className="flex flex-col mt-0.5">
-                   <span className="text-[9px] text-gray-500 font-medium">Liqui - Contado con Liquidación</span>
-                   <span className="text-[8px] text-gray-400">Ref: {dolarCcl.timestamp}hs</span>
-                   {showUpdateFlash && (
-                     <motion.span 
-                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                       className="text-[8px] text-yellow-600 font-bold"
-                     >
-                       Actualización automática: {dolarCcl.timestamp}hs
-                     </motion.span>
-                   )}
-                 </div>
-               </div>
-            )}
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">Liqui - Contado con Liquidación</span>
+                    <span className="text-[8px] text-gray-400">Ref: {dolarCcl.timestamp}hs</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                </div>
+              )}
+            </div>
 
-            {dolarMayorista && (
-               <div className="flex flex-col">
-                 <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+            <div className="flex flex-col">
+              {dolarMayorista ? (
+                <>
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-gray-700">MAYORISTA</span>
                     <span>${dolarMayorista.venta}</span>
-                 </div>
-                 <div className="flex flex-col mt-0.5">
-                   <span className="text-[9px] text-gray-500 font-medium">Comex - Comercio exterior</span>
-                   <span className="text-[8px] text-gray-400">Ref: {dolarMayorista.timestamp}hs</span>
-                   {showUpdateFlash && (
-                     <motion.span 
-                       initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-                       className="text-[8px] text-yellow-600 font-bold"
-                     >
-                       Actualización automática: {dolarMayorista.timestamp}hs
-                     </motion.span>
-                   )}
-                 </div>
-               </div>
-            )}
+                  </div>
+                  <div className="flex flex-col mt-0.5">
+                    <span className="text-[9px] text-gray-500 font-medium">Comex - Comercio exterior</span>
+                    <span className="text-[8px] text-gray-400">Ref: {dolarMayorista.timestamp}hs</span>
+                  </div>
+                </>
+              ) : (
+                <div className="animate-pulse space-y-2">
+                  <div className="h-3 bg-gray-100 rounded w-16"></div>
+                  <div className="h-2 bg-gray-50 rounded w-24"></div>
+                </div>
+              )}
+            </div>
         </div>
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
             <span className="font-semibold">Fuente:</span> Cotizaciones con retraso de 20min aprox. (Ámbito, DolarApi y Mercados).
