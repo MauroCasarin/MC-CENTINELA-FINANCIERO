@@ -150,6 +150,9 @@ export default function NewsFeed() {
   const [isYieldsOpen, setIsYieldsOpen] = useState(false);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [showUpdateFlash, setShowUpdateFlash] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
+  const [lastUpdate, setLastUpdate] = useState<string>('');
+  const [newNewsCount, setNewNewsCount] = useState(0);
   const [activeTerm, setActiveTerm] = useState<{ term: string, definition: string, x: number, y: number } | null>(null);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const loadingMessages = [
@@ -474,15 +477,16 @@ export default function NewsFeed() {
       return parseFloat(val.replace(/\./g, '').replace(',', '.'));
     };
 
-    const fetchData = async () => {
+    const fetchData = async (isRefresh = false) => {
       try {
-        setProgress(10);
+        if (isRefresh) setIsRefreshing(true);
+        else setProgress(10);
         
         // Fetch News
         const newsResponse = await fetch(API_URL);
         if (!newsResponse.ok) throw new Error(`Failed to fetch news: ${newsResponse.statusText}`);
         const newsData = await newsResponse.json();
-        setProgress(30);
+        if (!isRefresh) setProgress(30);
         
         // Process News Data
         let items: NewsItem[] = [];
@@ -508,8 +512,14 @@ export default function NewsFeed() {
              uniqueItems.push(item);
            }
         }
+
+        if (isRefresh && news.length > 0) {
+          const newCount = uniqueItems.length - news.length;
+          if (newCount > 0) setNewNewsCount(prev => prev + newCount);
+        }
+
         setNews(uniqueItems);
-        setProgress(45);
+        if (!isRefresh) setProgress(45);
 
         // Fetch Financial Data (Non-blocking)
         const fetchJsonSafe = async (url: string) => {
@@ -542,82 +552,86 @@ export default function NewsFeed() {
                 fetchJsonSafe('/api/rem')
             ]);
 
-            setProgress(70);
+            if (!isRefresh) setProgress(70);
             const now = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
+            const fullDate = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
+            setLastUpdate(fullDate);
 
             // Prioritize Ambito for overlapping data
             if (ambitoData && Array.isArray(ambitoData)) {
                 // Dolar Oficial
                 const ambitoOficial = ambitoData.find((i: any) => i.nombre === "Dólar Oficial");
                 if (ambitoOficial) {
-                    setDolar({ 
-                        compra: parseAmbitoValue(ambitoOficial.compra), 
-                        venta: parseAmbitoValue(ambitoOficial.venta), 
-                        timestamp: now 
-                    });
-                } else if (oficial) setDolar({ ...oficial, timestamp: now });
+                    const compra = parseAmbitoValue(ambitoOficial.compra);
+                    const venta = parseAmbitoValue(ambitoOficial.venta);
+                    setDolar(prev => (prev && prev.compra === compra && prev.venta === venta) ? prev : { compra, venta, timestamp: now });
+                } else if (oficial) {
+                    setDolar(prev => (prev && prev.compra === oficial.compra && prev.venta === oficial.venta) ? prev : { ...oficial, timestamp: now });
+                }
 
                 // Dolar Blue
                 const ambitoBlue = ambitoData.find((i: any) => i.nombre === "Dólar Blue");
                 if (ambitoBlue) {
-                    setDolarBlue({ 
-                        compra: parseAmbitoValue(ambitoBlue.compra), 
-                        venta: parseAmbitoValue(ambitoBlue.venta), 
-                        timestamp: now 
-                    });
-                } else if (blue) setDolarBlue({ ...blue, timestamp: now });
+                    const compra = parseAmbitoValue(ambitoBlue.compra);
+                    const venta = parseAmbitoValue(ambitoBlue.venta);
+                    setDolarBlue(prev => (prev && prev.compra === compra && prev.venta === venta) ? prev : { compra, venta, timestamp: now });
+                } else if (blue) {
+                    setDolarBlue(prev => (prev && prev.compra === blue.compra && prev.venta === blue.venta) ? prev : { ...blue, timestamp: now });
+                }
 
                 // Dolar Mayorista
                 const ambitoMayorista = ambitoData.find((i: any) => i.nombre === "Dólar Mayorista");
                 if (ambitoMayorista) {
-                    setDolarMayorista({ 
-                        compra: parseAmbitoValue(ambitoMayorista.compra), 
-                        venta: parseAmbitoValue(ambitoMayorista.venta), 
-                        timestamp: now 
-                    });
-                } else if (mayorista) setDolarMayorista({ ...mayorista, timestamp: now });
+                    const compra = parseAmbitoValue(ambitoMayorista.compra);
+                    const venta = parseAmbitoValue(ambitoMayorista.venta);
+                    setDolarMayorista(prev => (prev && prev.compra === compra && prev.venta === venta) ? prev : { compra, venta, timestamp: now });
+                } else if (mayorista) {
+                    setDolarMayorista(prev => (prev && prev.compra === mayorista.compra && prev.venta === mayorista.venta) ? prev : { ...mayorista, timestamp: now });
+                }
 
                 // Merval
                 const mervalItem = ambitoData.find((item: any) => item.nombre === "S&P Merval");
                 if (mervalItem) {
                     const valor = parseAmbitoValue(mervalItem.val1 || mervalItem.ultimo);
                     const variacion = parseFloat((mervalItem.variacion || "0").replace('%', '').replace(',', '.'));
-                    setMerval({ valor, variacion, timestamp: now });
+                    setMerval(prev => (prev && prev.valor === valor && prev.variacion === variacion) ? prev : { valor, variacion, timestamp: now });
                 }
 
                 // Riesgo Pais
                 const riesgoPaisItem = ambitoData.find((item: any) => item.nombre === "Riesgo País" || item.nombre === "Riesgo Pa\u00eds");
                 if (riesgoPaisItem) {
                     const valor = parseAmbitoValue(riesgoPaisItem.val1 || riesgoPaisItem.ultimo);
-                    setRiesgoPais({ valor, fecha: riesgoPaisItem.fecha, timestamp: now });
+                    setRiesgoPais(prev => (prev && prev.valor === valor) ? prev : { valor, fecha: riesgoPaisItem.fecha, timestamp: now });
                 } else if (riesgo && Array.isArray(riesgo) && riesgo.length > 0) {
-                    setRiesgoPais({ ...riesgo[riesgo.length - 1], timestamp: now });
+                    const lastRiesgo = riesgo[riesgo.length - 1];
+                    setRiesgoPais(prev => (prev && prev.valor === lastRiesgo.valor) ? prev : { ...lastRiesgo, timestamp: now });
                 }
 
                 // Oro (Local gram price calculation using Ambito's Blue if possible)
                 const blueVenta = ambitoBlue ? parseAmbitoValue(ambitoBlue.venta) : (blue?.venta || 0);
                 if (oroData && blueVenta > 0) {
                     const pricePerGram = (oroData.price * blueVenta) / 31.1035;
-                    setOro({ valor: pricePerGram, timestamp: now });
+                    setOro(prev => (prev && Math.abs(prev.valor - pricePerGram) < 0.01) ? prev : { valor: pricePerGram, timestamp: now });
                 }
             } else {
                 // Fallback to individual APIs if Ambito fails
-                if (oficial) setDolar({ ...oficial, timestamp: now });
-                if (blue) setDolarBlue({ ...blue, timestamp: now });
-                if (mayorista) setDolarMayorista({ ...mayorista, timestamp: now });
+                if (oficial) setDolar(prev => (prev && prev.compra === oficial.compra && prev.venta === oficial.venta) ? prev : { ...oficial, timestamp: now });
+                if (blue) setDolarBlue(prev => (prev && prev.compra === blue.compra && prev.venta === blue.venta) ? prev : { ...blue, timestamp: now });
+                if (mayorista) setDolarMayorista(prev => (prev && prev.compra === mayorista.compra && prev.venta === mayorista.venta) ? prev : { ...mayorista, timestamp: now });
                 if (riesgo && Array.isArray(riesgo) && riesgo.length > 0) {
-                    setRiesgoPais({ ...riesgo[riesgo.length - 1], timestamp: now });
+                    const lastRiesgo = riesgo[riesgo.length - 1];
+                    setRiesgoPais(prev => (prev && prev.valor === lastRiesgo.valor) ? prev : { ...lastRiesgo, timestamp: now });
                 }
                 if (oroData && blue) {
                     const pricePerGram = (oroData.price * blue.venta) / 31.1035;
-                    setOro({ valor: pricePerGram, timestamp: now });
+                    setOro(prev => (prev && Math.abs(prev.valor - pricePerGram) < 0.01) ? prev : { valor: pricePerGram, timestamp: now });
                 }
             }
 
             // Non-overlapping data from other APIs
-            if (mep) setDolarMep({ ...mep, timestamp: now });
-            if (ccl) setDolarCcl({ ...ccl, timestamp: now });
-            if (cripto) setDolarCripto({ ...cripto, timestamp: now });
+            if (mep) setDolarMep(prev => (prev && prev.compra === mep.compra && prev.venta === mep.venta) ? prev : { ...mep, timestamp: now });
+            if (ccl) setDolarCcl(prev => (prev && prev.compra === ccl.compra && prev.venta === ccl.venta) ? prev : { ...ccl, timestamp: now });
+            if (cripto) setDolarCripto(prev => (prev && prev.compra === cripto.compra && prev.venta === cripto.venta) ? prev : { ...cripto, timestamp: now });
             
             if (inflacion) {
                 const lastValue = Array.isArray(inflacion) ? inflacion[inflacion.length - 1] : null;
@@ -703,7 +717,7 @@ export default function NewsFeed() {
             const topWallets = walletRates.slice(0, 4);
             setBilleteras(topWallets);
 
-            setProgress(100);
+            if (!isRefresh) setProgress(100);
             // AI Analysis is now manual via button
           } catch (e) {
             console.error("Error fetching financial data:", e);
@@ -714,10 +728,18 @@ export default function NewsFeed() {
         setError(err instanceof Error ? err.message : 'An unknown error occurred');
       } finally {
         setLoading(false);
+        setIsRefreshing(false);
       }
     };
 
     fetchData();
+
+    // Real-time polling every 5 minutes
+    const pollInterval = setInterval(() => {
+      fetchData(true);
+    }, 300000);
+
+    return () => clearInterval(pollInterval);
   }, []);
 
   // Group news by source (memoized for performance)
@@ -1200,36 +1222,52 @@ export default function NewsFeed() {
 
       {/* Financial Indicators Container */}
       <div className="w-full bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
-        <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center px-4 shrink-0">
-           <TrendingUp className="w-4 h-4 text-green-600 mr-2" />
-           <button 
-             onClick={() => setIframeUrl('https://cotizaciones-fawn.vercel.app/')}
-             className="relative flex items-center gap-2 group px-2 py-1 rounded-md hover:bg-blue-50 transition-all duration-300"
-           >
-             <div className="flex items-center gap-1.5">
-               <span className="font-bold text-gray-800 text-sm uppercase tracking-wide group-hover:text-blue-600 transition-colors">
-                 Mercado
-               </span>
-               <div className="flex items-center gap-1">
-                 <span className="relative flex h-2 w-2">
-                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
-                   <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
-                 </span>
-                 <span className="text-[9px] font-bold text-green-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">En Vivo</span>
-               </div>
-             </div>
-             <motion.div
-               whileHover={{ scale: 1.2, x: 2, y: -2 }}
-               className="text-gray-400 group-hover:text-blue-600 transition-colors"
+        <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 shrink-0">
+           <div className="flex items-center">
+             <TrendingUp className="w-4 h-4 text-green-600 mr-2" />
+             <button 
+               onClick={() => setIframeUrl('https://cotizaciones-fawn.vercel.app/')}
+               className="relative flex items-center gap-2 group px-2 py-1 rounded-md hover:bg-blue-50 transition-all duration-300"
              >
-               <ExternalLink className="w-3.5 h-3.5" />
-             </motion.div>
-             
-             {/* Tooltip hint */}
-             <div className="absolute left-0 -bottom-8 hidden group-hover:block bg-gray-900 text-white text-[9px] px-2 py-1 rounded shadow-xl whitespace-nowrap z-20 pointer-events-none font-bold uppercase tracking-widest border border-white/10">
-               Click para expandir terminal
-             </div>
-           </button>
+               <div className="flex items-center gap-1.5">
+                 <span className="font-bold text-gray-800 text-sm uppercase tracking-wide group-hover:text-blue-600 transition-colors">
+                   Mercado
+                 </span>
+                 <div className="flex items-center gap-1">
+                   <span className="relative flex h-2 w-2">
+                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                     <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                   </span>
+                   <span className="text-[9px] font-bold text-green-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">En Vivo</span>
+                 </div>
+               </div>
+               <motion.div
+                 whileHover={{ scale: 1.2, x: 2, y: -2 }}
+                 className="text-gray-400 group-hover:text-blue-600 transition-colors"
+               >
+                 <ExternalLink className="w-3.5 h-3.5" />
+               </motion.div>
+               
+               {/* Tooltip hint */}
+               <div className="absolute left-0 -bottom-8 hidden group-hover:block bg-gray-900 text-white text-[9px] px-2 py-1 rounded shadow-xl whitespace-nowrap z-20 pointer-events-none font-bold uppercase tracking-widest border border-white/10">
+                 Click para expandir terminal
+               </div>
+             </button>
+           </div>
+
+           <div className="flex items-center gap-3">
+             {isRefreshing && (
+               <div className="flex items-center gap-1.5">
+                 <Loader2 className="w-3 h-3 text-blue-500 animate-spin" />
+                 <span className="text-[9px] font-bold text-blue-500 uppercase tracking-widest animate-pulse">Actualizando...</span>
+               </div>
+             )}
+             {lastUpdate && (
+               <div className="text-[8px] text-gray-400 font-medium uppercase tracking-tighter text-right">
+                 Última actualización:<br/>{lastUpdate}
+               </div>
+             )}
+           </div>
         </div>
         
         <div className="p-4 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
@@ -1422,7 +1460,7 @@ export default function NewsFeed() {
             </div>
         </div>
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
-            <span className="font-semibold">Fuente:</span> Cotizaciones con retraso de 20min aprox. (Ámbito, DolarApi y Mercados).
+            <span className="font-semibold">Fuente:</span> Cotizaciones con retraso (Ámbito, DolarApi, Mercados, BCRA y otras).
         </div>
       </div>
 
@@ -1570,7 +1608,10 @@ export default function NewsFeed() {
            <div className="flex items-center shrink-0 mr-4">
              <Newspaper className="w-4 h-4 text-blue-600 mr-2" />
              <button 
-               onClick={() => setIframeUrl('https://noticias-pi-beryl.vercel.app/')}
+               onClick={() => {
+                 setIframeUrl('https://noticias-pi-beryl.vercel.app/');
+                 setNewNewsCount(0);
+               }}
                className="relative flex items-center gap-2 group px-2 py-1 rounded-md hover:bg-blue-50 transition-all duration-300"
              >
                <div className="flex items-center gap-1.5">
@@ -1585,6 +1626,15 @@ export default function NewsFeed() {
                    <span className="text-[9px] font-bold text-blue-600 uppercase tracking-tighter opacity-0 group-hover:opacity-100 transition-opacity">Actualizado</span>
                  </div>
                </div>
+               {newNewsCount > 0 && (
+                 <motion.span 
+                   initial={{ scale: 0 }}
+                   animate={{ scale: 1 }}
+                   className="absolute -top-1 -right-1 bg-red-500 text-white text-[8px] font-bold px-1 rounded-full min-w-[14px] h-[14px] flex items-center justify-center border border-white"
+                 >
+                   {newNewsCount}
+                 </motion.span>
+               )}
                <motion.div
                  whileHover={{ scale: 1.2, x: 2, y: -2 }}
                  className="text-gray-400 group-hover:text-blue-600 transition-colors"
