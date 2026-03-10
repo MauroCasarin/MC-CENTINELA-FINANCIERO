@@ -11,12 +11,20 @@ export default function UserRegistrationModal() {
   useEffect(() => {
     // Verificar si ya se registró antes
     const hasRegistered = localStorage.getItem('centinela_user_registered');
-    if (hasRegistered) {
+    const userName = localStorage.getItem('centinela_user_name');
+    
+    if (hasRegistered && userName) {
       setIsRegistered(true);
+      // Registrar visita automática para usuarios ya conocidos
+      fetch('/api/register-user', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: userName }),
+      }).catch(err => console.error('Error tracking visit:', err));
       return;
     }
 
-    // Temporizador de 1 minuto (60000 ms)
+    // Temporizador de 1 minuto (60000 ms) para nuevos usuarios
     const timer = setTimeout(() => {
       setIsOpen(true);
     }, 60000);

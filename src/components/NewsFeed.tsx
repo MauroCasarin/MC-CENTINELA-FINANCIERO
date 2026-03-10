@@ -149,6 +149,20 @@ export default function NewsFeed() {
   const [isYieldsOpen, setIsYieldsOpen] = useState(false);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [showUpdateFlash, setShowUpdateFlash] = useState(false);
+  const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const loadingMessages = [
+    "Esperando conexión con terminales financieras...",
+    "Cargando datos necesarios para el análisis..."
+  ];
+
+  useEffect(() => {
+    if (loading) {
+      const interval = setInterval(() => {
+        setLoadingMessageIndex((prev) => (prev + 1) % loadingMessages.length);
+      }, 3000);
+      return () => clearInterval(interval);
+    }
+  }, [loading]);
 
   const getLoadingState = (p: number) => {
     if (p < 35) return { text: "Calculando métricas...", icon: Activity };
@@ -900,9 +914,25 @@ export default function NewsFeed() {
           </button>
         </div>
 
-        <div className="p-6 relative min-h-[120px]">
-          {isAnalyzing ? (
-            <div className="flex flex-col items-center justify-center py-8 space-y-4">
+        <div className="p-4 relative min-h-[100px]">
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-6 space-y-3">
+              <div className="flex items-center gap-3">
+                <Loader2 className="w-5 h-5 text-blue-300 animate-spin" />
+                <p className="text-sm font-medium text-blue-100/80 italic">
+                  {loadingMessages[loadingMessageIndex]}
+                </p>
+              </div>
+              <div className="w-32 h-1 bg-white/10 rounded-full overflow-hidden">
+                <motion.div 
+                  className="h-full bg-blue-400"
+                  animate={{ x: ["-100%", "100%"] }}
+                  transition={{ repeat: Infinity, duration: 1.5, ease: "linear" }}
+                />
+              </div>
+            </div>
+          ) : isAnalyzing ? (
+            <div className="flex flex-col items-center justify-center py-6 space-y-4">
               <div className="relative">
                 <div className="w-12 h-12 border-4 border-white/20 border-t-white rounded-full animate-spin"></div>
                 <Brain className="w-6 h-6 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 text-white/50" />
@@ -938,7 +968,7 @@ export default function NewsFeed() {
               </div>
             </motion.div>
           ) : (
-            <div className="flex flex-col items-center justify-center py-10 space-y-4">
+            <div className="flex flex-col items-center justify-center py-6 space-y-4">
               <button 
                 onClick={() => {
                   const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;

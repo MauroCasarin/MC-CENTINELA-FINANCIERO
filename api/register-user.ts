@@ -22,8 +22,11 @@ export default async function handler(req: any, res: any) {
     const timestamp = new Date().toISOString();
     const userData = { name: name.trim(), timestamp };
     
-    // Guardamos en una lista de usuarios en Vercel KV
+    // Guardamos en una lista de usuarios en Vercel KV (log de registros)
     await kv.lpush('site_users', JSON.stringify(userData));
+    
+    // Incrementamos el contador de visitas para este usuario
+    await kv.hincrby('user_visit_counts', name.trim(), 1);
     
     return res.status(200).json({ success: true });
   } catch (error: any) {
