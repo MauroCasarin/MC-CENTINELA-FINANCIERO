@@ -1,8 +1,9 @@
 import { useState, useEffect, useRef, RefObject, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen } from 'lucide-react';
+import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen, Info } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
 import { NewsItem } from '../types';
+import { DICCIONARIO_FINANCIERO } from '../constants';
 
 const API_URL = "https://script.google.com/macros/s/AKfycbyXl8OB3W2nNyMRZJefyjsfJzYVUgBLAQDTSVCefEC2iUBUUlf3kKRCbIM5y0VA3kizdw/exec";
 const DOLAR_API_URL = "https://dolarapi.com/v1/dolares/oficial";
@@ -149,6 +150,7 @@ export default function NewsFeed() {
   const [isYieldsOpen, setIsYieldsOpen] = useState(false);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [showUpdateFlash, setShowUpdateFlash] = useState(false);
+  const [activeTerm, setActiveTerm] = useState<{ term: string, definition: string, x: number, y: number } | null>(null);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const loadingMessages = [
     "Esperando conexión con terminales financieras...",
@@ -163,6 +165,46 @@ export default function NewsFeed() {
       return () => clearInterval(interval);
     }
   }, [loading]);
+
+  const renderAnalysisWithTerms = (text: string) => {
+    if (!text) return null;
+
+    // Sort terms by length descending to match longer phrases first
+    const sortedTerms = Object.keys(DICCIONARIO_FINANCIERO).sort((a, b) => b.length - a.length);
+    
+    // Create a regex that matches any of the terms (case insensitive)
+    // We use word boundaries \b to ensure we don't match parts of words
+    const escapedTerms = sortedTerms.map(t => t.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'));
+    const regex = new RegExp(`(\\b${escapedTerms.join('\\b|\\b')}\\b)`, 'gi');
+
+    const parts = text.split(regex);
+
+    return parts.map((part, i) => {
+      const lowerPart = part.toLowerCase();
+      const termKey = sortedTerms.find(t => t.toLowerCase() === lowerPart);
+      
+      if (termKey) {
+        return (
+          <span 
+            key={i}
+            onClick={(e) => {
+              const rect = (e.target as HTMLElement).getBoundingClientRect();
+              setActiveTerm({
+                term: termKey,
+                definition: DICCIONARIO_FINANCIERO[termKey],
+                x: rect.left + rect.width / 2,
+                y: rect.top
+              });
+            }}
+            className="font-bold text-blue-300 underline decoration-dotted underline-offset-4 cursor-help hover:text-white transition-colors"
+          >
+            {part}
+          </span>
+        );
+      }
+      return part;
+    });
+  };
 
   const getLoadingState = (p: number) => {
     if (p < 35) return { text: "Calculando métricas...", icon: Activity };
@@ -957,16 +999,68 @@ export default function NewsFeed() {
               </div>
             </div>
           ) : aiAnalysis ? (
-            <motion.div 
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="prose prose-invert prose-sm max-w-none"
-            >
-              <div className="whitespace-pre-wrap text-blue-50 leading-relaxed text-sm font-medium">
-                {displayedAnalysis}
-                <span className="animate-pulse inline-block w-1.5 h-4 bg-blue-400 ml-1 align-middle"></span>
-              </div>
-            </motion.div>
+            <div className="relative">
+              <motion.div 
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="prose prose-invert prose-sm max-w-none"
+              >
+                <div className="whitespace-pre-wrap text-blue-50 leading-relaxed text-sm font-medium">
+                  {renderAnalysisWithTerms(displayedAnalysis)}
+                  <span className="animate-pulse inline-block w-1.5 h-4 bg-blue-400 ml-1 align-middle"></span>
+                </div>
+              </motion.div>
+
+              {/* Popover de Diccionario */}
+              <AnimatePresence>
+                {activeTerm && (
+                  <>
+                    <div 
+                      className="fixed inset-0 z-[100]" 
+                      onClick={() => setActiveTerm(null)}
+                    />
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                      style={{ 
+                        position: 'fixed',
+                        left: activeTerm.x,
+                        top: activeTerm.y - 12,
+                        transform: 'translateX(-50%) translateY(-100%)'
+                      }}
+                      className="z-[110] w-64 bg-white rounded-xl shadow-2xl p-4 border border-blue-100"
+                    >
+                      <div className="flex items-start justify-between mb-2">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-blue-50 rounded-lg">
+                            <BookOpen className="w-3.5 h-3.5 text-blue-600" />
+                          </div>
+                          <h4 className="font-bold text-gray-900 text-xs uppercase tracking-tight">
+                            {activeTerm.term}
+                          </h4>
+                        </div>
+                        <button 
+                          onClick={() => setActiveTerm(null)}
+                          className="text-gray-400 hover:text-gray-600 transition-colors"
+                        >
+                          <X className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                      <p className="text-[11px] text-gray-600 leading-relaxed font-medium">
+                        {activeTerm.definition}
+                      </p>
+                      <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between">
+                        <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Diccionario Argento</span>
+                        <Info className="w-3 h-3 text-blue-200" />
+                      </div>
+                      {/* Arrow */}
+                      <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-blue-100 rotate-45"></div>
+                    </motion.div>
+                  </>
+                )}
+              </AnimatePresence>
+            </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-6 space-y-4">
               <button 
