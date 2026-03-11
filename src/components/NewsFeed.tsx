@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, RefObject, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen, Info, Clock, FileText } from 'lucide-react';
-import { GoogleGenAI } from "@google/genai";
+import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen, Info, Clock, FileText, Volume2, AudioLines, VolumeX } from 'lucide-react';
+import { GoogleGenAI, Modality } from "@google/genai";
 import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { db } from '../firebase';
 import { NewsItem } from '../types';
@@ -172,6 +172,7 @@ export default function NewsFeed() {
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
   const [showUpdateFlash, setShowUpdateFlash] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const [lastUpdate, setLastUpdate] = useState<string>('');
   const [newNewsCount, setNewNewsCount] = useState(0);
   const [activeTerm, setActiveTerm] = useState<{ term: string, definition: string, x: number, y: number } | null>(null);
@@ -200,6 +201,51 @@ export default function NewsFeed() {
       setAnalysisDate(savedDate);
     }
   }, []);
+
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis.cancel();
+    };
+  }, []);
+
+  const handleSpeak = () => {
+    if (!aiAnalysis) return;
+
+    // Si está hablando, pausar
+    if (isSpeaking) {
+      window.speechSynthesis.pause();
+      setIsSpeaking(false);
+      return;
+    }
+
+    // Si está pausado, reanudar
+    if (window.speechSynthesis.paused) {
+      window.speechSynthesis.resume();
+      setIsSpeaking(true);
+      return;
+    }
+
+    // Si es una nueva lectura, iniciar
+    window.speechSynthesis.cancel();
+    
+    const cleanText = aiAnalysis.replace(/[#*`_~]/g, '').trim();
+    const utterance = new SpeechSynthesisUtterance(cleanText);
+    
+    // Configurar voz en español
+    const voices = window.speechSynthesis.getVoices();
+    const spanishVoice = voices.find(v => v.lang.startsWith('es')) || voices[0];
+    if (spanishVoice) utterance.voice = spanishVoice;
+    
+    utterance.lang = 'es-ES';
+    utterance.rate = 1.0;
+    utterance.pitch = 1.0;
+
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+
+    window.speechSynthesis.speak(utterance);
+  };
 
   // Save analysis when it changes
   useEffect(() => {
@@ -1043,20 +1089,38 @@ export default function NewsFeed() {
               </div>
             </div>
           </div>
-          <button 
-            onClick={() => {
-                const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
-                generateAIAnalysis({
-                    dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
-                    oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos
-                });
-            }}
-            disabled={isAnalyzing}
-            className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
-            title="Actualizar análisis"
-          >
-            <RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
-          </button>
+          <div className="flex items-center gap-1">
+            <button 
+              onClick={handleSpeak}
+              disabled={!aiAnalysis || isAnalyzing}
+              className={`p-2 rounded-full transition-all duration-300 flex items-center justify-center ${
+                isSpeaking 
+                  ? 'bg-white/20 text-yellow-300 shadow-[0_0_15px_rgba(253,224,71,0.3)]' 
+                  : 'hover:bg-white/10 text-blue-100'
+              } disabled:opacity-30 disabled:cursor-not-allowed`}
+              title={isSpeaking ? "Pausar lectura" : "Escuchar análisis (instantáneo)"}
+            >
+              {isSpeaking ? (
+                <AudioLines className="w-4 h-4 animate-pulse" />
+              ) : (
+                <Volume2 className="w-4 h-4" />
+              )}
+            </button>
+            <button 
+              onClick={() => {
+                  const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
+                  generateAIAnalysis({
+                      dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
+                      oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos
+                  });
+              }}
+              disabled={isAnalyzing}
+              className="p-2 hover:bg-white/10 rounded-full transition-colors disabled:opacity-50"
+              title="Actualizar análisis"
+            >
+              <RefreshCw className={`w-4 h-4 ${isAnalyzing ? 'animate-spin' : ''}`} />
+            </button>
+          </div>
         </div>
 
         <div className="p-4 relative min-h-[100px]">
