@@ -1113,56 +1113,6 @@ export default function NewsFeed() {
                   <span className="animate-pulse inline-block w-1.5 h-4 bg-blue-400 ml-1 align-middle"></span>
                 </div>
               </motion.div>
-
-              {/* Popover de Diccionario */}
-              <AnimatePresence>
-                {activeTerm && (
-                  <>
-                    <div 
-                      className="fixed inset-0 z-[100]" 
-                      onClick={() => setActiveTerm(null)}
-                    />
-                    <motion.div
-                      initial={{ opacity: 0, scale: 0.9, y: 10 }}
-                      animate={{ opacity: 1, scale: 1, y: 0 }}
-                      exit={{ opacity: 0, scale: 0.9, y: 10 }}
-                      style={{ 
-                        position: 'fixed',
-                        left: activeTerm.x,
-                        top: activeTerm.y - 12,
-                        transform: 'translateX(-50%) translateY(-100%)'
-                      }}
-                      className="z-[110] w-64 bg-white rounded-xl shadow-2xl p-4 border border-blue-100"
-                    >
-                      <div className="flex items-start justify-between mb-2">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-blue-50 rounded-lg">
-                            <BookOpen className="w-3.5 h-3.5 text-blue-600" />
-                          </div>
-                          <h4 className="font-bold text-gray-900 text-xs uppercase tracking-tight">
-                            {activeTerm.term}
-                          </h4>
-                        </div>
-                        <button 
-                          onClick={() => setActiveTerm(null)}
-                          className="text-gray-400 hover:text-gray-600 transition-colors"
-                        >
-                          <X className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                      <p className="text-[11px] text-gray-600 leading-relaxed font-medium">
-                        {activeTerm.definition}
-                      </p>
-                      <div className="mt-3 pt-2 border-t border-gray-100 flex items-center justify-between">
-                        <span className="text-[8px] text-gray-400 font-bold uppercase tracking-widest">Diccionario Argento</span>
-                        <Info className="w-3 h-3 text-blue-200" />
-                      </div>
-                      {/* Arrow */}
-                      <div className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-blue-100 rotate-45"></div>
-                    </motion.div>
-                  </>
-                )}
-              </AnimatePresence>
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-6 space-y-4">
@@ -1912,6 +1862,76 @@ export default function NewsFeed() {
           </div>
         </div>
       </footer>
+
+      {/* Popover de Diccionario - Movido al final para evitar problemas de posicionamiento fixed */}
+      <AnimatePresence>
+        {activeTerm && (
+          <>
+            <div 
+              className="fixed inset-0 z-[100]" 
+              onClick={() => setActiveTerm(null)}
+            />
+            {(() => {
+              const isMobile = typeof window !== 'undefined' && window.innerWidth < 640;
+              const popoverWidth = isMobile ? Math.min(320, window.innerWidth - 48) : 280;
+              const margin = 24;
+              const halfWidth = popoverWidth / 2;
+              const centerX = activeTerm.x;
+              
+              // En móviles centramos horizontalmente en la pantalla. En desktop seguimos al término.
+              const safeLeft = isMobile ? (typeof window !== 'undefined' ? window.innerWidth / 2 : 0) : Math.max(halfWidth + margin, Math.min(window.innerWidth - halfWidth - margin, centerX));
+              const arrowOffset = centerX - safeLeft;
+
+              return (
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                  style={{ 
+                    position: 'fixed',
+                    left: safeLeft,
+                    top: activeTerm.y - 12,
+                    transform: 'translateX(-50%) translateY(-100%)',
+                    width: popoverWidth
+                  }}
+                  className="z-[110] bg-white rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.2)] p-5 border border-blue-100"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2.5">
+                      <div className="p-2 bg-blue-50 rounded-xl">
+                        <BookOpen className="w-4 h-4 text-blue-600" />
+                      </div>
+                      <h4 className="font-extrabold text-gray-900 text-sm uppercase tracking-tight">
+                        {activeTerm.term}
+                      </h4>
+                    </div>
+                    <button 
+                      onClick={() => setActiveTerm(null)}
+                      className="p-1 hover:bg-gray-100 rounded-full transition-colors text-gray-400 hover:text-gray-600"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <p className="text-xs text-gray-600 leading-relaxed font-medium">
+                    {activeTerm.definition}
+                  </p>
+                  <div className="mt-4 pt-3 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-[9px] text-gray-400 font-black uppercase tracking-[0.2em]">Diccionario Argento</span>
+                    <Info className="w-3.5 h-3.5 text-blue-200" />
+                  </div>
+                  {/* Arrow - Solo se muestra si no está muy desplazada */}
+                  {Math.abs(arrowOffset) < popoverWidth / 2 - 20 && (
+                    <div 
+                      style={{ left: `calc(50% + ${arrowOffset}px)` }}
+                      className="absolute -bottom-1.5 -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-blue-100 rotate-45"
+                    ></div>
+                  )}
+                </motion.div>
+              );
+            })()}
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
