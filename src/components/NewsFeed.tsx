@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef, RefObject, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen, Info } from 'lucide-react';
+import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen, Info, Clock, FileText } from 'lucide-react';
 import { GoogleGenAI } from "@google/genai";
+import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { db } from '../firebase';
 import { NewsItem } from '../types';
 import { DICCIONARIO_FINANCIERO } from '../constants';
 
@@ -102,6 +104,25 @@ const MiniDottedLoader = () => (
   </div>
 );
 
+const isMarketOpen = () => {
+  try {
+    const now = new Date();
+    // Argentina is UTC-3
+    const argTime = new Date(now.toLocaleString("en-US", { timeZone: "America/Argentina/Buenos_Aires" }));
+    const day = argTime.getDay(); // 0 is Sunday, 6 is Saturday
+    const hour = argTime.getHours();
+    
+    // Market is open Mon-Fri, 11:00 to 17:00
+    return day >= 1 && day <= 5 && hour >= 11 && hour < 17;
+  } catch (e) {
+    // Fallback if timeZone is not supported
+    const now = new Date();
+    const utcHour = now.getUTCHours();
+    const argHour = (utcHour - 3 + 24) % 24;
+    return argHour >= 11 && argHour < 17;
+  }
+};
+
 const Marquee = ({ text }: { text: string }) => {
   return (
     <div className="w-full overflow-hidden bg-black/20 py-1.5 border-b border-white/5">
@@ -109,7 +130,7 @@ const Marquee = ({ text }: { text: string }) => {
         <motion.div
           animate={{ x: [0, "-50%"] }}
           transition={{
-            duration: 50,
+            duration: 30,
             repeat: Infinity,
             ease: "linear",
           }}
@@ -155,6 +176,7 @@ export default function NewsFeed() {
   const [newNewsCount, setNewNewsCount] = useState(0);
   const [activeTerm, setActiveTerm] = useState<{ term: string, definition: string, x: number, y: number } | null>(null);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
+  const [showLatestGlobal, setShowLatestGlobal] = useState(false);
   const loadingMessages = [
     "Esperando conexión con terminales financieras...",
     "Cargando datos necesarios para el análisis..."
@@ -168,6 +190,59 @@ export default function NewsFeed() {
       return () => clearInterval(interval);
     }
   }, [loading]);
+
+  // Load saved analysis on mount
+  useEffect(() => {
+    const savedAnalysis = localStorage.getItem('market_analysis');
+    const savedDate = localStorage.getItem('market_analysis_date');
+    if (savedAnalysis && savedDate) {
+      setAiAnalysis(savedAnalysis);
+      setAnalysisDate(savedDate);
+    }
+  }, []);
+
+  // Save analysis when it changes
+  useEffect(() => {
+    if (aiAnalysis && analysisDate && !aiAnalysis.startsWith("Error:")) {
+      localStorage.setItem('market_analysis', aiAnalysis);
+      localStorage.setItem('market_analysis_date', analysisDate);
+    }
+  }, [aiAnalysis, analysisDate]);
+
+  // Save analysis to Firestore
+  const saveAnalysisToFirestore = async (content: string, date: string) => {
+    try {
+      await setDoc(doc(db, 'global_analysis', 'latest'), {
+        content,
+        timestamp: serverTimestamp(),
+        displayDate: date
+      });
+    } catch (err) {
+      console.error("Error saving to Firestore:", err);
+    }
+  };
+
+  // Fetch latest analysis from Firestore
+  const fetchLatestAnalysisFromFirestore = async () => {
+    setIsAnalyzing(true);
+    try {
+      const docRef = doc(db, 'global_analysis', 'latest');
+      const docSnap = await getDoc(docRef);
+      if (docSnap.exists()) {
+        const data = docSnap.data();
+        setAiAnalysis(data.content);
+        setAnalysisDate(data.displayDate || "Reciente");
+        setShowLatestGlobal(true);
+      } else {
+        setAiAnalysis("No hay informes de cierre disponibles aún.");
+      }
+    } catch (err) {
+      console.error("Error fetching from Firestore:", err);
+      setAiAnalysis("Error al recuperar el informe global.");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
 
   const renderAnalysisWithTerms = (text: string) => {
     if (!text) return null;
@@ -344,13 +419,19 @@ export default function NewsFeed() {
       }
 
       setAiAnalysis(resultText || "No se pudo generar el análisis en este momento.");
-      setAnalysisDate(new Date().toLocaleString('es-AR', { 
+      const dateStr = new Date().toLocaleString('es-AR', { 
         day: '2-digit', 
         month: '2-digit', 
         year: 'numeric', 
         hour: '2-digit', 
         minute: '2-digit' 
-      }));
+      });
+      setAnalysisDate(dateStr);
+      
+      // Save globally if it's a valid analysis
+      if (resultText && !resultText.startsWith("Error:")) {
+        saveAnalysisToFirestore(resultText, dateStr);
+      }
     } catch (err: any) {
       console.error("AI Analysis Final Error:", err);
       setAiAnalysis(`Error: ${err.message || "Error al procesar el análisis."}`);
@@ -1020,7 +1101,7 @@ export default function NewsFeed() {
                 </div>
               </div>
             </div>
-          ) : aiAnalysis ? (
+          ) : (aiAnalysis || showLatestGlobal) ? (
             <div className="relative">
               <motion.div 
                 initial={{ opacity: 0 }}
@@ -1085,21 +1166,53 @@ export default function NewsFeed() {
             </div>
           ) : (
             <div className="flex flex-col items-center justify-center py-6 space-y-4">
-              <button 
-                onClick={() => {
-                  const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
-                  generateAIAnalysis({
-                      dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
-                      oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos
-                  });
-                }}
-                className="px-8 py-3 bg-white text-blue-700 rounded-full font-bold text-sm shadow-xl hover:bg-blue-50 transition-all flex items-center gap-2 group"
-              >
-                <Brain className="w-5 h-5 group-hover:scale-110 transition-transform" />
-                ANALIZAR MERCADO
-              </button>
+              {isMarketOpen() ? (
+                <button 
+                  onClick={() => {
+                    const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
+                    generateAIAnalysis({
+                        dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
+                        oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos
+                    });
+                  }}
+                  className="px-8 py-3 bg-white text-blue-700 rounded-full font-bold text-sm shadow-xl hover:bg-blue-50 transition-all flex items-center gap-2 group"
+                >
+                  <Brain className="w-5 h-5 group-hover:scale-110 transition-transform" />
+                  ANALIZAR MERCADO
+                </button>
+              ) : (
+                <div className="text-center px-6 flex flex-col items-center">
+                  <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-900/40 rounded-full text-blue-200 text-xs font-bold mb-3 border border-blue-400/20">
+                    <Clock className="w-3.5 h-3.5" />
+                    MERCADO CERRADO
+                  </div>
+                  <p className="text-blue-100/70 text-[11px] font-medium max-w-[280px] leading-relaxed mb-4">
+                    El análisis en tiempo real se habilita durante la rueda operativa (11:00 - 17:00).
+                  </p>
+                  <button 
+                    onClick={fetchLatestAnalysisFromFirestore}
+                    className="flex items-center gap-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full transition-all border border-white/10"
+                  >
+                    <FileText className="w-4 h-4" />
+                    VER ÚLTIMO INFORME DE CIERRE
+                  </button>
+                </div>
+              )}
             </div>
           )}
+          
+          {/* Market Hours Note */}
+          <div className="mt-4 pt-4 border-t border-white/10 flex items-center justify-between">
+            <div className="flex items-center gap-2 text-[10px] text-blue-200/50 font-bold uppercase tracking-widest">
+              <Activity className="w-3 h-3" />
+              Estado: {isMarketOpen() ? 'Rueda Operativa' : 'Mercado Cerrado'}
+            </div>
+            <div className="text-[9px] text-blue-100/40 font-medium italic">
+              {isMarketOpen() 
+                ? "Análisis en tiempo real habilitado." 
+                : "Se muestra el último informe de cierre."}
+            </div>
+          </div>
           
           {/* Decorative elements */}
           <div className="absolute -bottom-6 -right-6 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
