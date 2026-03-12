@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, RefObject, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
+import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
 import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen, Info, Clock, FileText, Volume2, AudioLines, VolumeX } from 'lucide-react';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { NewsItem } from '../types';
@@ -38,6 +39,32 @@ const TypewriterText = ({ text, speed = 50 }: { text: string, speed?: number }) 
   }, [text, speed]);
 
   return <span>{displayedText}</span>;
+};
+
+const Sparkline = ({ data, color }: { data: any[], color: string }) => {
+  if (!data || data.length === 0) return null;
+  
+  const min = Math.min(...data.map(d => d.venta));
+  const max = Math.max(...data.map(d => d.venta));
+  const padding = (max - min) * 0.1;
+
+  return (
+    <div className="h-6 w-16 ml-2">
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data}>
+          <YAxis domain={[min - padding, max + padding]} hide />
+          <Line 
+            type="monotone" 
+            dataKey="venta" 
+            stroke={color} 
+            strokeWidth={1.5} 
+            dot={false} 
+            isAnimationActive={false}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  );
 };
 
 const DottedProgress = ({ size = 100 }: { size?: number }) => {
@@ -152,6 +179,7 @@ export default function NewsFeed() {
   const [dolarCcl, setDolarCcl] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
   const [dolarMayorista, setDolarMayorista] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
   const [dolarCripto, setDolarCripto] = useState<{compra: number, venta: number, timestamp?: string} | null>(null);
+  const [historicoDolares, setHistoricoDolares] = useState<Record<string, any[]> | null>(null);
   const [riesgoPais, setRiesgoPais] = useState<{valor: number, fecha: string, timestamp?: string} | null>(null);
   const [inflacion, setInflacion] = useState<{valor: number, fecha: string} | null>(null);
   const [inflacionREM, setInflacionREM] = useState<{valor: number, fecha: string} | null>(null);
@@ -654,7 +682,7 @@ export default function NewsFeed() {
         };
 
         try {
-            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData, ambitoData, remData] = await Promise.all([
+            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData, ambitoData, remData, historicoData] = await Promise.all([
                 fetchJsonSafe(DOLAR_API_URL),
                 fetchJsonSafe(DOLAR_BLUE_API_URL),
                 fetchJsonSafe(DOLAR_MEP_API_URL),
@@ -669,13 +697,16 @@ export default function NewsFeed() {
                 fetchJsonSafe(BILLETERAS_RENDIMIENTOS),
                 fetchJsonSafe(ORO_API_URL),
                 fetchJsonSafe(AMBITO_GENERAL_URL),
-                fetchJsonSafe('/api/rem')
+                fetchJsonSafe('/api/rem'),
+                fetchJsonSafe('/api/historico')
             ]);
 
             if (!isRefresh) setProgress(70);
             const now = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
             const fullDate = new Date().toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit', year: 'numeric' });
             setLastUpdate(fullDate);
+
+            if (historicoData) setHistoricoDolares(historicoData);
 
             // Prioritize Ambito for overlapping data
             if (ambitoData && Array.isArray(ambitoData)) {
@@ -1447,6 +1478,7 @@ export default function NewsFeed() {
                   <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-green-600">OFICIAL</span>
                     <span>${dolar.venta}</span>
+                    {historicoDolares?.oficial && <Sparkline data={historicoDolares.oficial} color="#16a34a" />}
                   </div>
                   <div className="flex flex-col mt-0.5">
                     <span className="text-[9px] text-gray-500 font-medium">BNA Venta - Cotización Banco Nación</span>
@@ -1470,6 +1502,7 @@ export default function NewsFeed() {
                   <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-blue-600">BLUE</span>
                     <span>${dolarBlue.venta}</span>
+                    {historicoDolares?.blue && <Sparkline data={historicoDolares.blue} color="#2563eb" />}
                   </div>
                   <div className="flex flex-col mt-0.5">
                     <span className="text-[9px] text-gray-500 font-medium">Informal - Mercado paralelo</span>
@@ -1493,6 +1526,7 @@ export default function NewsFeed() {
                   <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-yellow-600">CRIPTO</span>
                     <span>${dolarCripto.venta}</span>
+                    {historicoDolares?.cripto && <Sparkline data={historicoDolares.cripto} color="#ca8a04" />}
                   </div>
                   <div className="flex flex-col mt-0.5">
                     <span className="text-[9px] text-gray-500 font-medium">USDT/USDC - Paridad estable</span>
@@ -1516,6 +1550,7 @@ export default function NewsFeed() {
                   <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-orange-500">MEP</span>
                     <span>${dolarMep.venta}</span>
+                    {historicoDolares?.bolsa && <Sparkline data={historicoDolares.bolsa} color="#f97316" />}
                   </div>
                   <div className="flex flex-col mt-0.5">
                     <span className="text-[9px] text-gray-500 font-medium">Dólar Bolsa - Operativa bonos</span>
@@ -1539,6 +1574,7 @@ export default function NewsFeed() {
                   <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-purple-600">CCL</span>
                     <span>${dolarCcl.venta}</span>
+                    {historicoDolares?.contadoconliqui && <Sparkline data={historicoDolares.contadoconliqui} color="#9333ea" />}
                   </div>
                   <div className="flex flex-col mt-0.5">
                     <span className="text-[9px] text-gray-500 font-medium">Liqui - Contado con Liquidación</span>
@@ -1562,6 +1598,7 @@ export default function NewsFeed() {
                   <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
                     <span className="text-gray-700">MAYORISTA</span>
                     <span>${dolarMayorista.venta}</span>
+                    {historicoDolares?.mayorista && <Sparkline data={historicoDolares.mayorista} color="#374151" />}
                   </div>
                   <div className="flex flex-col mt-0.5">
                     <span className="text-[9px] text-gray-500 font-medium">Comex - Comercio exterior</span>

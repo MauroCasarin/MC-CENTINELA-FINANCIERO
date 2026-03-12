@@ -156,6 +156,36 @@ app.get("/api/visits", async (req, res) => {
   }
 });
 
+// Ruta para historial de dólares
+app.get("/api/historico", async (req, res) => {
+  try {
+    const response = await fetch('https://api.argentinadatos.com/v1/cotizaciones/dolares');
+    if (!response.ok) {
+      throw new Error(`API responded with status: ${response.status}`);
+    }
+    const data = await response.json();
+    
+    const grouped: Record<string, any[]> = {};
+    for (const item of data) {
+      if (!grouped[item.casa]) {
+        grouped[item.casa] = [];
+      }
+      grouped[item.casa].push(item);
+    }
+    
+    const result: Record<string, any[]> = {};
+    for (const casa in grouped) {
+      result[casa] = grouped[casa].slice(-15);
+    }
+    
+    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching historico:', error);
+    res.status(500).json({ error: 'Failed to fetch historical data' });
+  }
+});
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", env: process.env.NODE_ENV, local: true });
 });
