@@ -145,6 +145,17 @@ app.post("/api/analysis/latest", async (req, res) => {
   }
 });
 
+// Ruta para contador de visitas
+app.get("/api/visits", async (req, res) => {
+  try {
+    const visits = await kv.incr('site_visits');
+    res.json({ visits });
+  } catch (error) {
+    console.error("KV Error (visits):", error);
+    res.status(500).json({ error: "Error al actualizar visitas" });
+  }
+});
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", env: process.env.NODE_ENV, local: true });
 });

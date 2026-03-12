@@ -176,10 +176,20 @@ export default function NewsFeed() {
   const [activeTerm, setActiveTerm] = useState<{ term: string, definition: string, x: number, y: number } | null>(null);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [showLatestGlobal, setShowLatestGlobal] = useState(false);
+  const [visits, setVisits] = useState<number | null>(null);
   const loadingMessages = [
     "Esperando conexión con terminales financieras...",
     "Cargando datos necesarios para el análisis..."
   ];
+
+  useEffect(() => {
+    fetch('/api/visits')
+      .then(res => res.json())
+      .then(data => {
+        if (data.visits) setVisits(data.visits);
+      })
+      .catch(err => console.error("Error fetching visits:", err));
+  }, []);
 
   useEffect(() => {
     if (loading) {
@@ -1906,6 +1916,11 @@ export default function NewsFeed() {
                 Seguir en Instagram
               </motion.div>
             </motion.a>
+            {visits !== null && (
+              <div className="mt-4 text-[9px] text-gray-400/60 font-medium tracking-widest" title="Visitas totales">
+                V {visits}
+              </div>
+            )}
           </div>
         </div>
       </footer>
