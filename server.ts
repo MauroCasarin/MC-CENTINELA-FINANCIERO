@@ -110,6 +110,41 @@ app.get("/api/users", async (req, res) => {
   }
 });
 
+// Ruta para obtener el último análisis
+app.get("/api/analysis/latest", async (req, res) => {
+  try {
+    const latestAnalysis = await kv.get("latest_global_analysis");
+    if (latestAnalysis) {
+      res.json(latestAnalysis);
+    } else {
+      res.status(404).json({ error: "No hay informes de cierre disponibles aún." });
+    }
+  } catch (error: any) {
+    console.error("KV Error (get analysis):", error);
+    res.status(500).json({ error: "Error al recuperar el informe global." });
+  }
+});
+
+// Ruta para guardar el último análisis
+app.post("/api/analysis/latest", async (req, res) => {
+  const { content, displayDate } = req.body;
+  if (!content || !displayDate) {
+    return res.status(400).json({ error: "Content and displayDate are required" });
+  }
+
+  try {
+    await kv.set("latest_global_analysis", {
+      content,
+      displayDate,
+      timestamp: Date.now()
+    });
+    res.json({ success: true });
+  } catch (error: any) {
+    console.error("KV Error (set analysis):", error);
+    res.status(500).json({ error: "Error al guardar el informe global." });
+  }
+});
+
 app.get("/api/health", (req, res) => {
   res.json({ status: "ok", env: process.env.NODE_ENV, local: true });
 });

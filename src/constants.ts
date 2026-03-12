@@ -20,10 +20,18 @@ export const DICCIONARIO_FINANCIERO: Record<string, string> = {
   "Parking": "Es el tiempo obligatorio que tenés que 'quedarte quieto' con un bono en la mano antes de poder venderlo para recibir dólares (Dólar MEP).",
   "Obligaciones Negociables": "Le prestás plata a empresas grandes (YPF, Pampa, IRSA). Te pagan intereses y te devuelven el capital, generalmente en dólares billete.",
   "ON": "Obligaciones Negociables. Títulos de deuda emitidos por empresas privadas.",
-  "CEDEARs": "Son 'pedacitos' de empresas de afuera (Apple, Google, Coca-Cola) que comprás acá con pesos. Te cubren si el dólar sube.",
+  "CEDEARs": "Son 'pedacitos' de empresas de afuera (Apple, Google, Coca-Cola) que comprás acá con pesos. Te cubren si el dólar suba.",
   "Acciones": "Sos socio de empresas. Es una inversión emocionante porque si al país le va bien pueden subir mucho, pero son muy volátiles.",
   "Bonos": "Títulos de deuda del Estado a largo plazo. Su precio depende totalmente de la confianza que el mundo le tenga al país para pagar sus deudas.",
   "Futuros": "Es como 'congelar' el precio de algo hoy para pagarlo o venderlo más adelante.",
   "Opciones": "Contratos que dan el derecho, pero no la obligación, de comprar o vender un activo a un precio determinado.",
   "Stop Loss": "Es una orden automática que le das a tu broker para que venda tu inversión si el precio cae hasta cierto punto."
 };
+
+export const loadingMessages = [
+  "Analizando el mercado...",
+  "Consultando fuentes financieras...",
+  "Calculando proyecciones...",
+  "Preparando el informe...",
+  "Casi listo..."
+];

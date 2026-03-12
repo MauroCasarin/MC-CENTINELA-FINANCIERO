@@ -2,8 +2,6 @@ import { useState, useEffect, useRef, RefObject, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen, Info, Clock, FileText, Volume2, AudioLines, VolumeX } from 'lucide-react';
 import { GoogleGenAI, Modality } from "@google/genai";
-import { doc, getDoc, setDoc, serverTimestamp } from 'firebase/firestore';
-import { db } from '../firebase';
 import { NewsItem } from '../types';
 import { DICCIONARIO_FINANCIERO } from '../constants';
 
@@ -192,16 +190,6 @@ export default function NewsFeed() {
     }
   }, [loading]);
 
-  // Load saved analysis on mount
-  useEffect(() => {
-    const savedAnalysis = localStorage.getItem('market_analysis');
-    const savedDate = localStorage.getItem('market_analysis_date');
-    if (savedAnalysis && savedDate) {
-      setAiAnalysis(savedAnalysis);
-      setAnalysisDate(savedDate);
-    }
-  }, []);
-
   useEffect(() => {
     return () => {
       window.speechSynthesis.cancel();
@@ -247,43 +235,38 @@ export default function NewsFeed() {
     window.speechSynthesis.speak(utterance);
   };
 
-  // Save analysis when it changes
-  useEffect(() => {
-    if (aiAnalysis && analysisDate && !aiAnalysis.startsWith("Error:")) {
-      localStorage.setItem('market_analysis', aiAnalysis);
-      localStorage.setItem('market_analysis_date', analysisDate);
-    }
-  }, [aiAnalysis, analysisDate]);
-
-  // Save analysis to Firestore
-  const saveAnalysisToFirestore = async (content: string, date: string) => {
+  // Save analysis to Vercel KV
+  const saveAnalysisToKV = async (content: string, date: string) => {
     try {
-      await setDoc(doc(db, 'global_analysis', 'latest'), {
-        content,
-        timestamp: serverTimestamp(),
-        displayDate: date
+      await fetch('/api/analysis/latest', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ content, displayDate: date }),
       });
     } catch (err) {
-      console.error("Error saving to Firestore:", err);
+      console.error("Error saving to KV:", err);
     }
   };
 
-  // Fetch latest analysis from Firestore
-  const fetchLatestAnalysisFromFirestore = async () => {
+  // Fetch latest analysis from Vercel KV
+  const fetchLatestAnalysisFromKV = async () => {
     setIsAnalyzing(true);
     try {
-      const docRef = doc(db, 'global_analysis', 'latest');
-      const docSnap = await getDoc(docRef);
-      if (docSnap.exists()) {
-        const data = docSnap.data();
+      const response = await fetch('/api/analysis/latest');
+      if (response.ok) {
+        const data = await response.json();
         setAiAnalysis(data.content);
         setAnalysisDate(data.displayDate || "Reciente");
         setShowLatestGlobal(true);
-      } else {
+      } else if (response.status === 404) {
         setAiAnalysis("No hay informes de cierre disponibles aún.");
+      } else {
+        throw new Error("Failed to fetch");
       }
     } catch (err) {
-      console.error("Error fetching from Firestore:", err);
+      console.error("Error fetching from KV:", err);
       setAiAnalysis("Error al recuperar el informe global.");
     } finally {
       setIsAnalyzing(false);
@@ -476,7 +459,7 @@ export default function NewsFeed() {
       
       // Save globally if it's a valid analysis
       if (resultText && !resultText.startsWith("Error:")) {
-        saveAnalysisToFirestore(resultText, dateStr);
+        saveAnalysisToKV(resultText, dateStr);
       }
     } catch (err: any) {
       console.error("AI Analysis Final Error:", err);
@@ -1204,7 +1187,7 @@ export default function NewsFeed() {
                     El análisis en tiempo real se habilita durante la rueda operativa (11:00 - 17:00).
                   </p>
                   <button 
-                    onClick={fetchLatestAnalysisFromFirestore}
+                    onClick={fetchLatestAnalysisFromKV}
                     className="flex items-center gap-2 text-xs font-bold text-white bg-white/10 hover:bg-white/20 px-4 py-2 rounded-full transition-all border border-white/10"
                   >
                     <FileText className="w-4 h-4" />
