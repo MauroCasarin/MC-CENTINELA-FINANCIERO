@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, RefObject, useMemo } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { LineChart, Line, ResponsiveContainer, YAxis } from 'recharts';
-import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen, Info, Clock, FileText, Volume2, AudioLines, VolumeX } from 'lucide-react';
+import { ExternalLink, Loader2, AlertCircle, Newspaper, ChevronRight, ChevronLeft, ChevronDown, TrendingUp, Brain, Sparkles, RefreshCw, BarChart3, Activity, Cpu, Zap, X, BookOpen, Info, Clock, FileText, Volume2, AudioLines, VolumeX } from 'lucide-react';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { NewsItem } from '../types';
 import { DICCIONARIO_FINANCIERO } from '../constants';
@@ -188,6 +188,7 @@ export default function NewsFeed() {
   const [oro, setOro] = useState<{valor: number, timestamp?: string} | null>(null);
   const [merval, setMerval] = useState<{valor: number, variacion: number, timestamp?: string} | null>(null);
   const [bonos, setBonos] = useState<any[]>([]);
+  const [macroData, setMacroData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
   const [progress, setProgress] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -195,7 +196,9 @@ export default function NewsFeed() {
   const [analysisDate, setAnalysisDate] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isYieldsOpen, setIsYieldsOpen] = useState(false);
+  const [isMacroOpen, setIsMacroOpen] = useState(false);
   const [iframeUrl, setIframeUrl] = useState<string | null>(null);
+  const [selectedNews, setSelectedNews] = useState<NewsItem | null>(null);
   const [showUpdateFlash, setShowUpdateFlash] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -204,17 +207,28 @@ export default function NewsFeed() {
   const [activeTerm, setActiveTerm] = useState<{ term: string, definition: string, x: number, y: number } | null>(null);
   const [loadingMessageIndex, setLoadingMessageIndex] = useState(0);
   const [showLatestGlobal, setShowLatestGlobal] = useState(false);
-  const [visits, setVisits] = useState<number | null>(null);
+  const [visitData, setVisitData] = useState<{ visits: number, newUsers: number } | null>(null);
   const loadingMessages = [
     "Esperando conexión con terminales financieras...",
     "Cargando datos necesarios para el análisis..."
   ];
 
   useEffect(() => {
-    fetch('/api/visits')
+    const hasVisited = localStorage.getItem('has_visited_before');
+    const isNew = !hasVisited;
+    
+    fetch(`/api/visits?isNew=${isNew}`)
       .then(res => res.json())
       .then(data => {
-        if (data.visits) setVisits(data.visits);
+        if (data.visits !== undefined) {
+          setVisitData({ 
+            visits: data.visits, 
+            newUsers: data.newUsers || 0 
+          });
+          if (isNew) {
+            localStorage.setItem('has_visited_before', 'true');
+          }
+        }
       })
       .catch(err => console.error("Error fetching visits:", err));
   }, []);
@@ -410,6 +424,12 @@ export default function NewsFeed() {
         Riesgo País: ${currentData.riesgoPais?.valor} bps | Inflación: ${currentData.inflacion?.valor}% mensual.
         Tasas: TNA Plazo Fijo ${currentData.plazosFijos?.[0]?.tna * 100}% | Tasa Real (Pasada): ${currentData.tasaReal?.toFixed(2)}% | Tasa Real (REM): ${currentData.tasaRealREM?.toFixed(2)}%.
         Oro (Gramo local): $${currentData.oro?.valor?.toFixed(0)}.
+
+        INDICADORES MACRO (CONTEXTO ESTRUCTURAL)
+        Reservas Internacionales: USD ${currentData.macro?.reservas?.valor?.toLocaleString()} M
+        Base Monetaria: ARS ${currentData.macro?.baseMonetaria?.valor?.toLocaleString()} M
+        Actividad Económica (EMAE): ${currentData.macro?.emae?.valor} (Índice base 2004)
+        Tasa BADLAR: ${currentData.macro?.badlar?.valor}%
 
         CONTEXTO DE NOTICIAS
         ${currentData.news?.slice(0, 20).map((n: any) => `- ${n.titulo || n.title}`).join('\n')}
@@ -682,7 +702,7 @@ export default function NewsFeed() {
         };
 
         try {
-            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData, ambitoData, remData, historicoData] = await Promise.all([
+            const [oficial, blue, mep, ccl, mayorista, cripto, riesgo, inflacion, pf, fciUltimo, fciPenultimo, rendimientos, oroData, ambitoData, remData, historicoData, macroResult] = await Promise.all([
                 fetchJsonSafe(DOLAR_API_URL),
                 fetchJsonSafe(DOLAR_BLUE_API_URL),
                 fetchJsonSafe(DOLAR_MEP_API_URL),
@@ -698,7 +718,8 @@ export default function NewsFeed() {
                 fetchJsonSafe(ORO_API_URL),
                 fetchJsonSafe(AMBITO_GENERAL_URL),
                 fetchJsonSafe('/api/rem'),
-                fetchJsonSafe('/api/historico')
+                fetchJsonSafe('/api/historico'),
+                fetchJsonSafe('/api/macro')
             ]);
 
             if (!isRefresh) setProgress(70);
@@ -707,6 +728,12 @@ export default function NewsFeed() {
             setLastUpdate(fullDate);
 
             if (historicoData) setHistoricoDolares(historicoData);
+            if (macroResult && macroResult.data) {
+                console.log("Macro data loaded:", macroResult.data);
+                setMacroData(macroResult.data);
+            } else {
+                console.warn("Macro data failed to load or empty:", macroResult);
+            }
 
             // Prioritize Ambito for overlapping data
             if (ambitoData && Array.isArray(ambitoData)) {
@@ -1069,16 +1096,51 @@ export default function NewsFeed() {
                   </div>
                 </div>
                 <button 
-                  onClick={() => setIframeUrl(null)}
+                  onClick={() => {
+                    setIframeUrl(null);
+                    setSelectedNews(null);
+                  }}
                   className="p-1.5 hover:bg-gray-200 rounded-full transition-colors text-gray-500"
                 >
                   <X className="w-5 h-5" />
                 </button>
               </div>
+              
+              {selectedNews && (
+                <div className="px-6 py-2 bg-white border-b border-gray-100 flex flex-col gap-1">
+                  <h3 className="text-sm font-bold text-gray-900 line-clamp-1">
+                    {selectedNews.titulo || selectedNews.title || selectedNews.headline}
+                  </h3>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2 text-[10px] text-gray-500 font-medium">
+                      <span className="text-blue-600 uppercase font-bold">{selectedNews.source || 'Fuente desconocida'}</span>
+                      {selectedNews.date && <span>• {selectedNews.date}</span>}
+                    </div>
+                    <a 
+                      href={iframeUrl} 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-[10px] font-bold text-blue-600 hover:underline flex items-center gap-1"
+                    >
+                      Abrir en pestaña nueva <ExternalLink className="w-2.5 h-2.5" />
+                    </a>
+                  </div>
+                </div>
+              )}
+
               <div className="flex-1 bg-gray-100 relative overflow-y-auto custom-scrollbar">
+                <div className="absolute inset-0 flex items-center justify-center -z-10 bg-gray-50">
+                  <div className="flex flex-col items-center gap-3 text-center p-8">
+                    <Loader2 className="w-8 h-8 text-blue-500 animate-spin opacity-20" />
+                    <p className="text-xs text-gray-400 font-medium max-w-xs">
+                      Cargando contenido externo... <br/>
+                      Si el sitio bloquea la visualización, usá el botón superior para abrirlo en una pestaña nueva.
+                    </p>
+                  </div>
+                </div>
                 <iframe 
                   src={iframeUrl} 
-                  className="w-full h-full border-none min-h-[100%]"
+                  className="w-full h-full border-none min-h-[100%] relative z-10"
                   title="External Content"
                 />
               </div>
@@ -1135,7 +1197,7 @@ export default function NewsFeed() {
                   const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
                   generateAIAnalysis({
                       dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
-                      oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos
+                      oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos, macro: macroData
                   });
               }}
               disabled={isAnalyzing}
@@ -1210,7 +1272,7 @@ export default function NewsFeed() {
                     const brechaVal = dolar && dolarBlue ? ((dolarBlue.venta - dolar.venta) / dolar.venta * 100).toFixed(1) : null;
                     generateAIAnalysis({
                         dolar, dolarBlue, dolarMep, dolarCcl, dolarCripto, dolarMayorista, riesgoPais, inflacion, plazosFijos, billeteras, news,
-                        oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos
+                        oro, brecha: brechaVal, tasaReal, tasaRealREM, merval, bonos, macro: macroData
                     });
                   }}
                   className="px-8 py-3 bg-white text-blue-700 rounded-full font-bold text-sm shadow-xl hover:bg-blue-50 transition-all flex items-center gap-2 group"
@@ -1368,6 +1430,132 @@ export default function NewsFeed() {
         </div>
         <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
             <span className="font-semibold">Fuente:</span> INDEC (IPC), JP Morgan (Riesgo) y REM (BCRA). Últimos datos oficiales.
+        </div>
+      </div>
+
+      {/* Macro Indicators Container */}
+      <div className="w-full bg-white border border-gray-200 rounded-xl shadow-sm flex flex-col overflow-hidden">
+        <div className="h-9 bg-gray-50 border-b border-gray-200 flex items-center justify-between px-4 shrink-0 cursor-pointer hover:bg-gray-100 transition-colors"
+             onClick={() => setIsMacroOpen(!isMacroOpen)}>
+            <div className="flex items-center">
+              <Activity className="w-4 h-4 text-indigo-600 mr-2" />
+              <h2 className="font-bold text-gray-800 text-sm uppercase tracking-wide">Contexto Macro</h2>
+            </div>
+            <motion.div
+              animate={{ rotate: isMacroOpen ? 180 : 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              <ChevronDown className="w-4 h-4 text-gray-400" />
+            </motion.div>
+        </div>
+        
+        <AnimatePresence>
+          {isMacroOpen && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: "auto", opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+              className="overflow-hidden"
+            >
+              <div className="p-4 grid grid-cols-2 gap-6 border-b border-gray-200">
+                  {/* Reservas */}
+                  <div className="flex flex-col">
+                    {macroData?.reservas ? (
+                      <>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                          <span className="text-blue-600 uppercase">Reservas</span>
+                          <span>USD {typeof macroData.reservas.valor === 'number' ? macroData.reservas.valor.toLocaleString() : 'N/D'} M</span>
+                        </div>
+                        <div className="flex flex-col mt-0.5">
+                          <span className="text-[9px] text-gray-500 font-medium">Saldos internacionales BCRA</span>
+                          <span className="text-[8px] text-gray-400">Actualizado: {macroData.reservas.fecha}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                          <MiniDottedLoader />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Base Monetaria */}
+                  <div className="flex flex-col">
+                    {macroData?.baseMonetaria ? (
+                      <>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                          <span className="text-purple-600 uppercase">Base Mon.</span>
+                          <span>ARS {typeof macroData.baseMonetaria.valor === 'number' ? (macroData.baseMonetaria.valor / 1000000).toFixed(1) : 'N/D'} T</span>
+                        </div>
+                        <div className="flex flex-col mt-0.5">
+                          <span className="text-[9px] text-gray-500 font-medium">Pesos en circulación y depósitos</span>
+                          <span className="text-[8px] text-gray-400">Actualizado: {macroData.baseMonetaria.fecha}</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                          <MiniDottedLoader />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* EMAE */}
+                  <div className="flex flex-col">
+                    {macroData?.emae ? (
+                      <>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                          <span className="text-emerald-600 uppercase">Actividad (EMAE)</span>
+                          <span>{typeof macroData.emae.valor === 'number' ? macroData.emae.valor.toFixed(1) : 'N/D'}</span>
+                        </div>
+                        <div className="flex flex-col mt-0.5">
+                          <span className="text-[9px] text-gray-500 font-medium">Nivel de actividad económica</span>
+                          <span className="text-[8px] text-gray-400">Base 2004 = 100 | INDEC</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                          <MiniDottedLoader />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* BADLAR */}
+                  <div className="flex flex-col">
+                    {macroData?.badlar ? (
+                      <>
+                        <div className="flex items-center gap-1.5 text-xs font-bold text-gray-800">
+                          <span className="text-indigo-600 uppercase">Tasa BADLAR</span>
+                          <span>{typeof macroData.badlar.valor === 'number' ? macroData.badlar.valor.toFixed(2) : 'N/D'}%</span>
+                        </div>
+                        <div className="flex flex-col mt-0.5">
+                          <span className="text-[9px] text-gray-500 font-medium">Tasa para depósitos &gt; $1M</span>
+                          <span className="text-[8px] text-gray-400">Referencia bancaria BCRA</span>
+                        </div>
+                      </>
+                    ) : (
+                      <div className="space-y-2">
+                        <div className="flex items-center gap-2">
+                          <div className="h-3 bg-gray-100 rounded w-16 animate-pulse"></div>
+                          <MiniDottedLoader />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+        <div className="px-4 py-2 bg-gray-50 border-t border-gray-100 text-[10px] text-gray-400 flex items-center gap-1">
+            <span className="font-semibold">Fuente:</span> APIs oficiales datos.gob.ar (BCRA e INDEC).
         </div>
       </div>
 
@@ -1953,9 +2141,17 @@ export default function NewsFeed() {
                 Seguir en Instagram
               </motion.div>
             </motion.a>
-            {visits !== null && (
-              <div className="mt-4 text-[9px] text-gray-400/60 font-medium tracking-widest" title="Visitas totales">
-                V {visits}
+            {visitData !== null && (
+              <div className="mt-4 flex items-center gap-2 text-[9px] text-gray-400/60 font-medium tracking-widest">
+                <div className="flex items-center gap-0.5" title="Visitas totales">
+                  <span>V</span>
+                  <span>{visitData.visits}</span>
+                </div>
+                <div className="w-[1px] h-2 bg-gray-200/30"></div>
+                <div className="flex items-center gap-0.5" title="Visitantes nuevos">
+                  <span>N</span>
+                  <span>{visitData.newUsers}</span>
+                </div>
               </div>
             )}
           </div>

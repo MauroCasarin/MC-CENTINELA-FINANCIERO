@@ -1,5 +1,5 @@
 import React from 'react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { ComposedChart, Line, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 
 const mockData = [
   { date: '06/03', merval: 1200000, dolarBlue: 1200, dolarMep: 1180, dolarCcl: 1210, oro: 85000 },
@@ -17,18 +17,22 @@ export const MarketCharts: React.FC = () => {
       <h3 className="text-lg font-semibold text-white mb-4">Evolución últimos 7 días</h3>
       <div className="h-64">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={mockData}>
+          <ComposedChart data={mockData}>
             <CartesianGrid strokeDasharray="3 3" stroke="#334155" />
             <XAxis dataKey="date" stroke="#94a3b8" />
-            <YAxis stroke="#94a3b8" />
-            <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', color: '#fff' }} />
+            <YAxis yAxisId="left" stroke="#94a3b8" />
+            <YAxis yAxisId="right" orientation="right" stroke="#3b82f6" />
+            <Tooltip 
+              contentStyle={{ backgroundColor: '#1e293b', border: 'none', color: '#fff' }}
+              itemStyle={{ fontSize: '12px' }}
+            />
             <Legend />
-            <Line type="monotone" dataKey="merval" stroke="#3b82f6" name="Merval" />
-            <Line type="monotone" dataKey="dolarBlue" stroke="#ef4444" name="Blue" />
-            <Line type="monotone" dataKey="dolarMep" stroke="#10b981" name="MEP" />
-            <Line type="monotone" dataKey="dolarCcl" stroke="#f59e0b" name="CCL" />
-            <Line type="monotone" dataKey="oro" stroke="#eab308" name="Oro" />
-          </LineChart>
+            <Bar yAxisId="right" dataKey="merval" fill="#3b82f6" name="Merval" fillOpacity={0.3} radius={[4, 4, 0, 0]} />
+            <Line yAxisId="left" type="monotone" dataKey="dolarBlue" stroke="#ef4444" name="Blue" strokeWidth={2} dot={{ r: 4 }} />
+            <Line yAxisId="left" type="monotone" dataKey="dolarMep" stroke="#10b981" name="MEP" strokeWidth={2} dot={{ r: 4 }} />
+            <Line yAxisId="left" type="monotone" dataKey="dolarCcl" stroke="#f59e0b" name="CCL" strokeWidth={2} dot={{ r: 4 }} />
+            <Line yAxisId="left" type="monotone" dataKey="oro" stroke="#eab308" name="Oro" strokeWidth={2} dot={{ r: 4 }} />
+          </ComposedChart>
         </ResponsiveContainer>
       </div>
     </div>

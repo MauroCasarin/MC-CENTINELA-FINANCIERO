@@ -148,8 +148,15 @@ app.post("/api/analysis/latest", async (req, res) => {
 // Ruta para contador de visitas
 app.get("/api/visits", async (req, res) => {
   try {
+    const isNew = req.query.isNew === 'true';
     const visits = await kv.incr('site_visits');
-    res.json({ visits });
+    let newUsers = await kv.get<number>('new_users') || 0;
+    
+    if (isNew) {
+      newUsers = await kv.incr('new_users');
+    }
+    
+    res.json({ visits, newUsers });
   } catch (error) {
     console.error("KV Error (visits):", error);
     res.status(500).json({ error: "Error al actualizar visitas" });
@@ -183,6 +190,67 @@ app.get("/api/historico", async (req, res) => {
   } catch (error) {
     console.error('Error fetching historico:', error);
     res.status(500).json({ error: 'Failed to fetch historical data' });
+  }
+});
+
+// Ruta para indicadores macro
+app.get("/api/macro", async (req, res) => {
+  const SERIES_IDS = {
+    reservas: "174.1_RRVAS_IDOS_0_0_36",
+    baseMonetaria: "331.2_SALDO_BASERIA__15", // Usamos diaria para mejor disponibilidad
+    emae: "302.2_S_ORIGINALRAL_0_M_21",
+    badlar: "89.2_TS_INTELAR_0_D_20"
+  };
+
+  try {
+    const fetchSeries = async (id: string) => {
+      // Pedimos los últimos 5 registros para asegurarnos de encontrar uno no nulo
+      const url = `https://apis.datos.gob.ar/series/api/series?ids=${id}&limit=5&sort=desc`;
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      const json = await response.json();
+      
+      if (json && json.data && json.data.length > 0) {
+        // Buscamos el primer registro donde el valor (índice 1) no sea null
+        const latestValid = json.data.find((row: any[]) => row[1] !== null);
+        if (latestValid) {
+          return {
+            data: [latestValid],
+            meta: json.meta
+          };
+        }
+      }
+      return json;
+    };
+
+    const keys = Object.keys(SERIES_IDS);
+    const results = await Promise.all(keys.map(key => fetchSeries((SERIES_IDS as any)[key])));
+    
+    const result: any = {
+      timestamp: Date.now(),
+      data: {}
+    };
+
+    results.forEach((data, index) => {
+      const key = keys[index];
+      if (data && data.data && data.data[0]) {
+        // Buscamos el objeto meta que contiene el campo 'field'
+        const metaWithField = data.meta.find((m: any) => m.field);
+        if (metaWithField) {
+          result.data[key] = {
+            valor: data.data[0][1],
+            fecha: data.data[0][0],
+            unidades: metaWithField.field.units,
+            descripcion: metaWithField.field.description
+          };
+        }
+      }
+    });
+
+    res.json(result);
+  } catch (error) {
+    console.error("Error fetching macro data:", error);
+    res.status(500).json({ error: "Failed to fetch macro indicators" });
   }
 });
 
