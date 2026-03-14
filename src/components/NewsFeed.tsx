@@ -6,7 +6,7 @@ import { GoogleGenAI, Modality } from "@google/genai";
 import { NewsItem } from '../types';
 import { DICCIONARIO_FINANCIERO } from '../constants';
 
-const API_URL = "https://script.google.com/macros/s/AKfycbyXl8OB3W2nNyMRZJefyjsfJzYVUgBLAQDTSVCefEC2iUBUUlf3kKRCbIM5y0VA3kizdw/exec";
+const API_URL = "https://script.google.com/macros/s/AKfycbxIVYnUl0Nl_-Mu1vQDCWeBpckrhSn3wIQ8A5yqHgM5MSgxEoMAXAEXoPI7FaVITGiopg/exec";
 const DOLAR_API_URL = "https://dolarapi.com/v1/dolares/oficial";
 const DOLAR_BLUE_API_URL = "https://dolarapi.com/v1/dolares/blue";
 const DOLAR_MEP_API_URL = "https://dolarapi.com/v1/dolares/bolsa";
